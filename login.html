@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0e1117">
+  <title>Đăng nhập · ThảoChi Stock</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="auth-page">
+    <div class="auth-card">
+      <h1 class="brand brand-lg">ThảoChi<span>Stock</span></h1>
+      <p class="auth-sub">Dashboard chứng khoán Việt Nam</p>
+
+      <div id="msg" class="auth-msg" role="status" hidden></div>
+
+      <!-- Đang kiểm tra phiên đăng nhập -->
+      <section data-view="loading">
+        <p class="auth-text center">Đang kiểm tra đăng nhập…</p>
+      </section>
+
+      <!-- Đăng nhập / Đăng ký -->
+      <section data-view="login" hidden>
+        <div class="seg seg-block" role="tablist">
+          <button type="button" class="active" data-goto="login">Đăng nhập</button>
+          <button type="button" data-goto="signup">Đăng ký</button>
+        </div>
+        <form id="login-form" class="auth-form" novalidate>
+          <label>Email
+            <input name="email" type="email" autocomplete="email" inputmode="email" required>
+          </label>
+          <label>Mật khẩu
+            <input name="password" type="password" autocomplete="current-password" required>
+          </label>
+          <button type="submit" class="btn btn-primary btn-block">Đăng nhập</button>
+        </form>
+        <button type="button" class="auth-link" data-goto="forgot">Quên mật khẩu?</button>
+      </section>
+
+      <section data-view="signup" hidden>
+        <div class="seg seg-block" role="tablist">
+          <button type="button" data-goto="login">Đăng nhập</button>
+          <button type="button" class="active" data-goto="signup">Đăng ký</button>
+        </div>
+        <form id="signup-form" class="auth-form" novalidate>
+          <label>Email
+            <input name="email" type="email" autocomplete="email" inputmode="email" required>
+          </label>
+          <label>Mật khẩu <small>(ít nhất 8 ký tự)</small>
+            <input name="password" type="password" autocomplete="new-password" minlength="8" required>
+          </label>
+          <label>Nhập lại mật khẩu
+            <input name="password2" type="password" autocomplete="new-password" minlength="8" required>
+          </label>
+          <button type="submit" class="btn btn-primary btn-block">Tạo tài khoản</button>
+        </form>
+        <p class="auth-note">Tài khoản mới cần được quản trị viên duyệt trước khi sử dụng.</p>
+      </section>
+
+      <!-- Quên mật khẩu -->
+      <section data-view="forgot" hidden>
+        <h2 class="auth-title">Quên mật khẩu</h2>
+        <p class="auth-text">Nhập email đã đăng ký, chúng tôi sẽ gửi link đặt lại mật khẩu.</p>
+        <form id="forgot-form" class="auth-form" novalidate>
+          <label>Email
+            <input name="email" type="email" autocomplete="email" inputmode="email" required>
+          </label>
+          <button type="submit" class="btn btn-primary btn-block">Gửi link đặt lại</button>
+        </form>
+        <button type="button" class="auth-link" data-goto="login">← Quay lại đăng nhập</button>
+      </section>
+
+      <!-- Đã đăng ký, chờ xác nhận email -->
+      <section data-view="check-email" hidden>
+        <div class="auth-icon" aria-hidden="true">✉</div>
+        <h2 class="auth-title">Kiểm tra hộp thư</h2>
+        <p class="auth-text">Chúng tôi đã gửi email xác nhận tới <b id="check-email-addr"></b>.
+          Mở link trong email để xác nhận (xem cả thư mục Spam/Quảng cáo).</p>
+        <p class="auth-text">Sau khi xác nhận, tài khoản sẽ ở trạng thái <b>chờ duyệt</b> cho đến khi
+          quản trị viên phê duyệt.</p>
+        <button type="button" class="btn btn-block" data-goto="login">Về trang đăng nhập</button>
+      </section>
+
+      <!-- Chờ duyệt -->
+      <section data-view="pending" hidden>
+        <div class="auth-icon pending" aria-hidden="true">⏳</div>
+        <h2 class="auth-title">Tài khoản đang chờ duyệt</h2>
+        <p class="auth-text">Tài khoản <b class="js-email"></b> đã đăng ký thành công và đang chờ
+          quản trị viên phê duyệt.</p>
+        <p class="auth-text">Bạn sẽ vào được dashboard ngay sau khi được duyệt. Hãy quay lại sau
+          hoặc bấm “Kiểm tra lại”.</p>
+        <button type="button" class="btn btn-primary btn-block" data-action="recheck">Kiểm tra lại</button>
+        <button type="button" class="btn btn-block" data-action="signout">Đăng xuất</button>
+      </section>
+
+      <!-- Bị khóa -->
+      <section data-view="locked" hidden>
+        <div class="auth-icon locked" aria-hidden="true">🔒</div>
+        <h2 class="auth-title">Tài khoản đã bị khóa</h2>
+        <p class="auth-text">Tài khoản <b class="js-email"></b> hiện đang bị khóa.
+          Vui lòng liên hệ quản trị viên nếu bạn cho rằng đây là nhầm lẫn.</p>
+        <button type="button" class="btn btn-block" data-action="signout">Đăng xuất</button>
+      </section>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/login.js"></script>
+</body>
+</html>

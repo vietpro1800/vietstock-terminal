@@ -28,3 +28,11 @@ VST.config = {
   // Chỉ báo mặc định bật.
   defaultIndicators: { ma20: true, ma50: true, ma200: false, bb: false, rsi: true, macd: false },
 };
+
+// Supabase Auth. Publishable key là khóa CÔNG KHAI theo thiết kế (thay cho anon key),
+// được phép nằm trong code web tĩnh; an toàn dữ liệu dựa vào Row Level Security.
+// TUYỆT ĐỐI không đưa khóa secret / service_role vào đây hay bất kỳ file nào khác.
+VST.config.supabase = {
+  url: 'https://vrotlzkbcedsodbvhbqn.supabase.co',
+  publishableKey: 'sb_publishable_96iNlSt5G1o1KBsSazQLgQ_ArrLxOdk',
+};
