@@ -1,4 +1,4 @@
-# CLAUDE.md — Quy ước dự án VietStock Terminal
+# CLAUDE.md — Quy ước dự án ThảoChi Stock
 
 Web dashboard chứng khoán Việt Nam, chạy tĩnh trên GitHub Pages. Hiện dùng cá nhân,
 sau này mở rộng nhiều người dùng có đăng nhập.
@@ -23,11 +23,27 @@ sau này mở rộng nhiều người dùng có đăng nhập.
   - `js/chart.js` — vẽ biểu đồ (Lightweight Charts).
   - `js/board.js` — bảng giá.
   - `js/app.js` — khởi tạo, gắn sự kiện, tự làm mới.
+  - `js/auth.js` — Supabase client, `VST.auth.guard()`, thanh người dùng, dịch lỗi sang tiếng Việt.
+  - `js/login.js`, `js/reset.js`, `js/admin.js` — logic riêng của `login.html`,
+    `reset-password.html`, `admin.html`.
+  - `supabase/schema.sql` — bảng, trigger, RLS. Phải chạy lại được nhiều lần (idempotent).
   - Các file JS dùng chung namespace `window.VST`, nạp theo thứ tự trong `index.html`.
 - **Không bao giờ đưa khóa bí mật vào code**: không API key, token, mật khẩu, chuỗi kết nối
   trong bất kỳ file nào được commit. Web tĩnh thì mọi thứ trong code đều công khai.
-  Khi cần đăng nhập/khóa riêng, phải đi qua backend hoặc dịch vụ xác thực (ví dụ proxy/serverless)
-  giữ bí mật phía máy chủ.
+  Ngoại lệ duy nhất: Supabase **publishable key** (`sb_publishable_...`) trong `js/config.js` — khóa công khai
+  theo thiết kế. **Tuyệt đối không dùng/yêu cầu khóa `secret` (`sb_secret_...`) hay `service_role`.**
+  Khi cần quyền cao hơn, phải đi qua backend/serverless giữ bí mật phía máy chủ.
+
+## Đăng nhập & phân quyền (Supabase Auth)
+
+- Mọi trang dashboard (hiện là `index.html`, `admin.html`) phải: đặt `class="auth-checking"` trên `<html>`,
+  nạp supabase-js + `config.js` + `auth.js`, và chỉ chạy code trang bên trong `VST.auth.guard().then(...)`
+  (`guard({ admin: true })` cho trang quản trị). Chưa đăng nhập / chưa `active` → tự chuyển về `login.html`.
+- Bảng `profiles`: `role` ∈ admin/user, `status` ∈ pending/active/locked. Người mới luôn là `pending`.
+- **Quyền thật nằm ở RLS** trong `supabase/schema.sql`; kiểm tra phía trình duyệt chỉ để hiển thị.
+  Mọi bảng mới trong Supabase phải bật RLS và có policy dựa trên `auth.uid()` / `public.is_admin()`.
+- Link trong email (xác nhận, quên mật khẩu) dùng `VST.auth.pageUrl(...)` để chạy đúng cả GitHub Pages lẫn localhost.
+- Dùng `flowType: 'implicit'` để link email mở được trên thiết bị khác nơi đăng ký.
 
 ## Dữ liệu
 
@@ -41,3 +57,4 @@ sau này mở rộng nhiều người dùng có đăng nhập.
 
 - Mở trang ở độ rộng ~375px và trên máy tính, kiểm tra không lỗi console.
 - Thử bật/tắt từng chỉ báo và đổi cả 4 khung thời gian.
+- Nếu sửa phần đăng nhập: thử chưa đăng nhập, tài khoản pending, locked, user thường vào `admin.html`, và admin.

@@ -1,5 +1,6 @@
 // Khởi tạo ứng dụng, gắn sự kiện giao diện và tự làm mới.
-(function () {
+// Chỉ chạy sau khi xác nhận đã đăng nhập và tài khoản đang hoạt động.
+VST.auth.guard().then(function (ctx) {
   const cfg = VST.config;
   const $ = (id) => document.getElementById(id);
   const STORE_KEY = 'vst.prefs.v1';
@@ -25,6 +26,7 @@
   }
 
   const board = new VST.PriceBoard($('board-body'), source, selectSymbol);
+  VST.auth.mountUserBar($('user-bar'), ctx.profile, 'dashboard');
 
   buildControls();
   selectSymbol(state.symbol);
@@ -84,7 +86,7 @@
     state.symbol = symbol;
     $('symbol-input').value = symbol;
     $('chart-title').textContent = symbol;
-    document.title = symbol + ' · VietStock Terminal';
+    document.title = symbol + ' · ThảoChi Stock';
     board.setActive(symbol);
     savePrefs();
     if (state.lastRefresh === 0) refreshAll();
@@ -182,4 +184,4 @@
       localStorage.setItem(STORE_KEY, JSON.stringify({ symbol: state.symbol, tfKey: state.tfKey, indicators: state.indicators }));
     } catch (e) { /* bỏ qua: chế độ ẩn danh hoặc bị chặn lưu trữ */ }
   }
-})();
+});

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="vi" class="auth-checking">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0e1117">
+  <title>Quản trị · ThảoChi Stock</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="brand"><a href="index.html">ThảoChi<span>Stock</span></a></h1>
+    <div id="user-bar" class="user-bar"></div>
+  </header>
+
+  <div id="notice" class="notice" role="alert" hidden>
+    <span id="notice-text"></span>
+    <button id="notice-close" type="button" aria-label="Đóng thông báo">×</button>
+  </div>
+
+  <main class="admin">
+    <section class="panel">
+      <div class="admin-head">
+        <h2>Quản lý tài khoản</h2>
+        <button id="reload" type="button" class="btn btn-sm">Tải lại</button>
+      </div>
+      <div id="filter" class="seg seg-wrap" role="group" aria-label="Lọc theo trạng thái">
+        <button type="button" data-filter="pending">Chờ duyệt <span class="count"></span></button>
+        <button type="button" data-filter="active">Hoạt động <span class="count"></span></button>
+        <button type="button" data-filter="locked">Đã khóa <span class="count"></span></button>
+        <button type="button" data-filter="all">Tất cả <span class="count"></span></button>
+      </div>
+      <label class="sr-only" for="search">Tìm theo email</label>
+      <input id="search" class="input search" type="search" placeholder="Tìm theo email…" autocomplete="off">
+      <div id="list" class="user-list" aria-live="polite">
+        <p class="dim center">Đang tải…</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
