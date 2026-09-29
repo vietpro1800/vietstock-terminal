@@ -14,6 +14,9 @@ sau này mở rộng nhiều người dùng có đăng nhập.
 - **HTML/CSS/JS thuần, không build**: không npm, không bundler, không framework.
   Thư viện ngoài chỉ nạp qua CDN, **ghim phiên bản cụ thể** (ví dụ `lightweight-charts@4.2.3`).
   Mở `index.html` qua một web server tĩnh bất kỳ là chạy được.
+- **Chống bộ nhớ đệm cũ**: mọi `css/…` và `js/…` trong các file HTML đều có `?v=YYYYMMDD`.
+  Mỗi lần sửa CSS/JS phải **đổi số này ở tất cả file HTML** (cùng một giá trị), nếu không trình duyệt
+  có thể chạy HTML mới với JS/CSS cũ (GitHub Pages cho cache 10 phút).
 - **Tách file rõ ràng**:
   - `css/style.css` — toàn bộ style.
   - `js/config.js` — hằng số cấu hình (danh sách mã, chu kỳ làm mới, khung thời gian).
