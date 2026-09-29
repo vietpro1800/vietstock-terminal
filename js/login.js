@@ -23,6 +23,7 @@
     btn.addEventListener('click', function () { route(true); });
   });
 
+  auth.enhancePasswordFields();
   $('#login-form').addEventListener('submit', onLogin);
   $('#signup-form').addEventListener('submit', onSignup);
   $('#forgot-form').addEventListener('submit', onForgot);

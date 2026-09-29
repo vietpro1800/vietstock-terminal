@@ -93,6 +93,29 @@ window.VST = window.VST || {};
     el.querySelector('[data-action="signout"]').addEventListener('click', signOut);
   }
 
+  // Thêm nút hiện/ẩn mật khẩu cho mọi ô mật khẩu trong .field (cần icon #i-eye, #i-eye-off trên trang).
+  function enhancePasswordFields(root) {
+    (root || document).querySelectorAll('.field input[type="password"]').forEach(function (input) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'field-toggle';
+      const render = function () {
+        const shown = input.type === 'text';
+        btn.setAttribute('aria-pressed', shown);
+        btn.setAttribute('aria-label', shown ? 'Ẩn mật khẩu' : 'Hiện mật khẩu');
+        btn.innerHTML = '<svg aria-hidden="true"><use href="#' + (shown ? 'i-eye-off' : 'i-eye') + '"/></svg>';
+      };
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        input.type = input.type === 'password' ? 'text' : 'password';
+        render();
+        input.focus();
+      });
+      render();
+      input.after(btn);
+    });
+  }
+
   function showGateError(msg) {
     document.documentElement.classList.remove('auth-checking');
     document.body.innerHTML =
@@ -153,6 +176,7 @@ window.VST = window.VST || {};
     guard: guard,
     signOut: signOut,
     mountUserBar: mountUserBar,
+    enhancePasswordFields: enhancePasswordFields,
     errorMessage: errorMessage,
   };
 })();
