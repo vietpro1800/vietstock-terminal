@@ -1,4 +1,4 @@
-# CLAUDE.md — Quy ước dự án VietStock Terminal
+# CLAUDE.md — Quy ước dự án ThảoChi Stock
 
 Web dashboard chứng khoán Việt Nam, chạy tĩnh trên GitHub Pages. Hiện dùng cá nhân,
 sau này mở rộng nhiều người dùng có đăng nhập.

@@ -1,4 +1,4 @@
-# VietStock Terminal
+# ThảoChi Stock
 
 Web dashboard chứng khoán Việt Nam: biểu đồ nến kèm chỉ báo kỹ thuật và bảng giá 20 mã lớn.
 Web tĩnh (HTML/CSS/JS thuần), chạy trực tiếp trên GitHub Pages, không cần build.

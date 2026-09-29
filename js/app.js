@@ -84,7 +84,7 @@
     state.symbol = symbol;
     $('symbol-input').value = symbol;
     $('chart-title').textContent = symbol;
-    document.title = symbol + ' · VietStock Terminal';
+    document.title = symbol + ' · ThảoChi Stock';
     board.setActive(symbol);
     savePrefs();
     if (state.lastRefresh === 0) refreshAll();
