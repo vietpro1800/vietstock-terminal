@@ -31,12 +31,13 @@
     showMsg(auth.errorMessage(e), 'error');
   });
 
+  auth.enhancePasswordFields();
   document.getElementById('reset-form').addEventListener('submit', async function (e) {
     e.preventDefault();
     const f = e.target;
     if (f.password.value.length < MIN_PASSWORD) return showMsg('Mật khẩu cần ít nhất ' + MIN_PASSWORD + ' ký tự.', 'error');
     if (f.password.value !== f.password2.value) return showMsg('Hai mật khẩu không khớp.', 'error');
-    const btn = f.querySelector('button');
+    const btn = f.querySelector('button[type="submit"]');
     btn.disabled = true;
     btn.textContent = 'Đang lưu…';
     try {
