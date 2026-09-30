@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="vi" class="auth-checking">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0e1117">
+  <title>Backtest · ThảoChi Stock</title>
+  <link rel="stylesheet" href="css/style.css?v=20260930b">
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="brand"><a href="index.html">ThảoChi<span>Stock</span></a></h1>
+    <span class="page-tag">Backtest</span>
+    <div id="user-bar" class="user-bar"></div>
+  </header>
+
+  <div id="notice" class="notice" role="alert" hidden>
+    <span id="notice-text"></span>
+    <button id="notice-close" type="button" aria-label="Đóng thông báo">×</button>
+  </div>
+
+  <main class="bt">
+    <aside class="bt-disclaimer" role="note">
+      <b>Lưu ý:</b> Dữ liệu giá có thể <b>chưa được điều chỉnh</b> theo cổ tức, thưởng cổ phiếu hoặc chia tách,
+      nên kết quả trong thời gian dài có thể bị lệch. Kết quả trong quá khứ <b>không đảm bảo</b> cho tương lai.
+      Chỉ mang tính tham khảo, không phải khuyến nghị đầu tư.
+    </aside>
+
+    <form id="bt-form" class="panel bt-form" autocomplete="off" novalidate>
+      <h2>Thiết lập</h2>
+
+      <div class="form-row">
+        <label class="form-field">
+          <span>Mã chứng khoán</span>
+          <input id="bt-symbol" class="input upper" list="bt-symbol-list" maxlength="10" placeholder="Ví dụ HPG"
+                 autocapitalize="characters" spellcheck="false" required>
+          <datalist id="bt-symbol-list"></datalist>
+        </label>
+        <label class="form-field">
+          <span>Vốn ban đầu (đồng)</span>
+          <input id="bt-capital" class="input" type="number" inputmode="numeric" min="1000000" step="1000000" required>
+        </label>
+      </div>
+
+      <div class="form-field">
+        <span id="bt-period-label">Khoảng thời gian</span>
+        <div id="bt-period" class="seg seg-4" role="group" aria-labelledby="bt-period-label">
+          <button type="button" data-period="1">1 năm</button>
+          <button type="button" data-period="3">3 năm</button>
+          <button type="button" data-period="5">5 năm</button>
+          <button type="button" data-period="custom">Tùy chọn</button>
+        </div>
+      </div>
+      <div id="bt-custom" class="form-row" hidden>
+        <label class="form-field"><span>Từ ngày</span><input id="bt-from" class="input" type="date"></label>
+        <label class="form-field"><span>Đến ngày</span><input id="bt-to" class="input" type="date"></label>
+      </div>
+
+      <label class="form-field">
+        <span>Chiến lược</span>
+        <select id="bt-strategy" class="input"></select>
+      </label>
+      <p id="bt-strategy-desc" class="form-hint"></p>
+      <div id="bt-params" class="form-row"></div>
+
+      <div class="form-row">
+        <label class="form-field">
+          <span>Cắt lỗ (%)</span>
+          <input id="bt-sl" class="input" type="number" inputmode="decimal" min="0" max="99" step="0.5" placeholder="Tắt">
+        </label>
+        <label class="form-field">
+          <span>Chốt lời (%)</span>
+          <input id="bt-tp" class="input" type="number" inputmode="decimal" min="0" max="1000" step="0.5" placeholder="Tắt">
+        </label>
+      </div>
+
+      <details class="bt-costs">
+        <summary>Phí giao dịch &amp; thuế</summary>
+        <div class="form-row form-row-3">
+          <label class="form-field"><span>Phí mua (%)</span><input id="bt-buy-fee" class="input" type="number" inputmode="decimal" min="0" max="5" step="0.01"></label>
+          <label class="form-field"><span>Phí bán (%)</span><input id="bt-sell-fee" class="input" type="number" inputmode="decimal" min="0" max="5" step="0.01"></label>
+          <label class="form-field"><span>Thuế bán (%)</span><input id="bt-sell-tax" class="input" type="number" inputmode="decimal" min="0" max="5" step="0.01"></label>
+        </div>
+        <p class="form-hint">Mua theo lô 100 cổ phiếu. Cổ phiếu về tài khoản sau T+2 mới được bán.
+          Lệnh khớp ở giá mở cửa phiên sau tín hiệu; cắt lỗ/chốt lời xét theo giá đóng cửa.</p>
+      </details>
+
+      <button id="bt-run" type="submit" class="btn btn-primary btn-block">Chạy backtest</button>
+    </form>
+
+    <section id="bt-result" class="bt-result" hidden aria-live="polite">
+      <div id="bt-data-warn" class="bt-warn" role="status" hidden></div>
+
+      <section class="panel">
+        <div class="bt-head">
+          <h2 id="bt-title">Kết quả</h2>
+          <span id="bt-range" class="unit"></span>
+        </div>
+        <div class="table-scroll">
+          <table id="bt-metrics" class="board bt-table"></table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="bt-head"><h2>Đường vốn</h2><span class="unit">đồng</span></div>
+        <div class="bt-legend">
+          <span><i class="sw sw-strategy"></i>Chiến lược</span>
+          <span><i class="sw sw-hold"></i>Mua và giữ</span>
+          <span><i class="sw sw-index"></i>VN-Index</span>
+        </div>
+        <div id="bt-equity" class="bt-chart-equity"></div>
+      </section>
+
+      <section class="panel">
+        <div class="bt-head"><h2>Điểm mua / bán</h2><span class="unit">Giá: nghìn đồng</span></div>
+        <div id="bt-candles" class="bt-chart-candles"></div>
+      </section>
+
+      <section class="panel">
+        <div class="bt-head"><h2>Giao dịch</h2><span id="bt-trade-count" class="unit"></span></div>
+        <div class="table-scroll">
+          <table class="board bt-table">
+            <thead>
+              <tr>
+                <th>#</th><th>Ngày mua</th><th class="num">Giá mua</th><th>Ngày bán</th><th class="num">Giá bán</th>
+                <th class="num">SL CP</th><th class="num">Lãi/lỗ (đ)</th><th class="num">%</th><th class="num">Phiên</th><th>Lý do bán</th>
+              </tr>
+            </thead>
+            <tbody id="bt-trades"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <footer class="footer">
+    Dữ liệu: VNDirect (dchart). Biểu đồ: <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView Lightweight Charts</a>.
+    Tính toán chạy ngay trên trình duyệt của bạn.
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+  <script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
+  <script src="js/config.js?v=20260930b"></script>
+  <script src="js/auth.js?v=20260930b"></script>
+  <script src="js/data.js?v=20260930b"></script>
+  <script src="js/indicators.js?v=20260930b"></script>
+  <script src="js/chart.js?v=20260930b"></script>
+  <script src="js/backtest.js?v=20260930b"></script>
+  <script src="js/backtest-page.js?v=20260930b"></script>
+</body>
+</html>
