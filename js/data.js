@@ -76,7 +76,8 @@ window.VST = window.VST || {};
     }
 
     // Tải nhiều mã theo nhóm nhỏ. Trả về { [symbol]: {bars} | {error} } — không bao giờ reject.
-    async getHistoryBatch(symbols, tf) {
+    // onProgress(đã xong, tổng) — tùy chọn, gọi sau mỗi nhóm.
+    async getHistoryBatch(symbols, tf, onProgress) {
       const out = {};
       for (let i = 0; i < symbols.length; i += this.batchSize) {
         const group = symbols.slice(i, i + this.batchSize);
@@ -84,6 +85,7 @@ window.VST = window.VST || {};
         results.forEach(function (r, k) {
           out[group[k]] = r.status === 'fulfilled' ? { bars: r.value } : { error: r.reason };
         });
+        if (onProgress) onProgress(Math.min(i + this.batchSize, symbols.length), symbols.length);
       }
       return out;
     }
