@@ -141,6 +141,120 @@ create policy "Chỉ admin được sửa hồ sơ"
 -- Không có policy INSERT/DELETE: hồ sơ chỉ được tạo bởi trigger ở trên và
 -- tự xóa khi xóa người dùng trong Authentication → Users.
 
+-- 6. Tên hiển thị trong phần thảo luận --------------------------------
+-- Để trống thì dùng phần trước @ của email. Admin đặt bằng SQL:
+--   update public.profiles set display_name = 'Tên' where email = '...';
+alter table public.profiles add column if not exists display_name text
+  check (display_name is null or char_length(display_name) between 1 and 40);
+
+-- Tài khoản đang hoạt động (dùng trong RLS của các bảng khác).
+create or replace function public.is_active()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.profiles
+    where id = (select auth.uid())
+      and status = 'active'
+  );
+$$;
+
+revoke execute on function public.is_active() from public, anon;
+grant  execute on function public.is_active() to authenticated;
+
+-- 7. Thảo luận theo mã chứng khoán ------------------------------------
+create table if not exists public.stock_comments (
+  id           bigint generated always as identity primary key,
+  symbol       text not null check (symbol ~ '^[A-Z0-9]{2,10}$'),
+  user_id      uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  author_name  text not null default '',
+  body         text not null check (char_length(btrim(body)) between 1 and 1000),
+  created_at   timestamptz not null default now()
+);
+
+comment on table public.stock_comments is 'Bình luận của người dùng theo từng mã chứng khoán.';
+
+create index if not exists stock_comments_symbol_created_idx
+  on public.stock_comments (symbol, created_at desc);
+
+-- Điền tên tác giả, giờ gửi do máy chủ quyết định, và chống spam (tối đa 5 tin / 30 giây).
+create or replace function public.prepare_stock_comment()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  recent int;
+begin
+  new.user_id := (select auth.uid());
+  new.created_at := now();
+  new.body := btrim(new.body);
+  select coalesce(nullif(btrim(p.display_name), ''), split_part(p.email, '@', 1))
+    into new.author_name
+    from public.profiles p where p.id = new.user_id;
+  new.author_name := coalesce(new.author_name, '');
+  select count(*) into recent from public.stock_comments
+    where user_id = new.user_id and created_at > now() - interval '30 seconds';
+  if recent >= 5 then
+    raise exception 'Bạn gửi quá nhanh, vui lòng đợi một lát.';
+  end if;
+  return new;
+end;
+$$;
+
+revoke execute on function public.prepare_stock_comment() from public, anon, authenticated;
+
+drop trigger if exists stock_comments_prepare on public.stock_comments;
+create trigger stock_comments_prepare
+  before insert on public.stock_comments
+  for each row execute function public.prepare_stock_comment();
+
+alter table public.stock_comments enable row level security;
+
+revoke all on public.stock_comments from anon, authenticated;
+grant select, delete on public.stock_comments to authenticated;
+grant insert (symbol, body) on public.stock_comments to authenticated;
+
+drop policy if exists "Tài khoản hoạt động được đọc bình luận" on public.stock_comments;
+create policy "Tài khoản hoạt động được đọc bình luận"
+  on public.stock_comments
+  for select
+  to authenticated
+  using ((select public.is_active()));
+
+drop policy if exists "Tài khoản hoạt động được viết bình luận" on public.stock_comments;
+create policy "Tài khoản hoạt động được viết bình luận"
+  on public.stock_comments
+  for insert
+  to authenticated
+  with check (user_id = (select auth.uid()) and (select public.is_active()));
+
+drop policy if exists "Xóa bình luận của mình hoặc admin xóa" on public.stock_comments;
+create policy "Xóa bình luận của mình hoặc admin xóa"
+  on public.stock_comments
+  for delete
+  to authenticated
+  using ((user_id = (select auth.uid()) and (select public.is_active())) or (select public.is_admin()));
+
+-- Không có policy UPDATE: bình luận không sửa được sau khi gửi.
+
+-- Bật realtime cho bảng bình luận (bỏ qua nếu đã bật).
+do $$
+begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
+     and not exists (
+       select 1 from pg_publication_tables
+       where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'stock_comments'
+     ) then
+    alter publication supabase_realtime add table public.stock_comments;
+  end if;
+end;
+$$;
+
 -- =====================================================================
 -- SAU KHI CHẠY FILE: đăng ký tài khoản trên web, xác nhận email, rồi chạy
 -- câu lệnh sau (thay email của bạn) để đặt làm admin đầu tiên:

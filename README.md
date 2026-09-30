@@ -151,8 +151,10 @@ js/rrg-chart.js     Vẽ biểu đồ RRG (SVG)
 js/rrg-page.js      Logic trang RRG
 tests/              Kiểm thử: `node tests/backtest.test.js`, `node tests/rrg.test.js` hoặc mở tests/index.html
 js/board.js         Bảng giá
+js/orderbook.js     Sổ lệnh 3 bước giá + khớp lệnh realtime
+js/chat.js          Thảo luận theo mã (Supabase realtime)
 js/app.js           Khởi tạo, sự kiện, tự làm mới
-supabase/schema.sql Bảng profiles, trigger, RLS — chạy trong Supabase SQL Editor
+supabase/schema.sql Bảng profiles, stock_comments, trigger, RLS — chạy trong Supabase SQL Editor
 CLAUDE.md           Quy ước phát triển
 ```
 
@@ -187,6 +189,17 @@ API công khai của VNDirect:
   đang chặn truy cập từ trình duyệt (CORS) hoặc tạm ngừng. Khi đó cần đổi nguồn dữ liệu
   hoặc dùng một proxy riêng — chỉ cần viết lớp mới trong `js/data.js`.
 - Đây là API không chính thức, có thể thay đổi bất cứ lúc nào. Dữ liệu chỉ mang tính tham khảo.
+
+## Sổ lệnh & thảo luận (Dashboard)
+
+- Cạnh biểu đồ là **sổ lệnh** (3 bước giá mua/bán), **khớp lệnh** và KL mua/bán chủ động, lấy realtime qua
+  WebSocket bảng giá SSI (nguồn không chính thức, có thể gián đoạn). KL mua/bán chủ động chỉ cộng từ các
+  lệnh khớp nhận được kể từ khi mở trang.
+- Tab **Thảo luận**: mọi tài khoản đang hoạt động đọc và bình luận theo mã; tin mới hiện ngay (Supabase Realtime).
+  Chỉ xóa được bình luận của mình (admin xóa được tất cả), tối đa 5 tin / 30 giây.
+- **Cần chạy lại `supabase/schema.sql`** trong SQL Editor để tạo bảng `stock_comments` (file chạy lại nhiều lần an toàn).
+- Tên hiển thị mặc định là phần trước `@` của email; admin đổi bằng
+  `update public.profiles set display_name = 'Tên' where email = '...';`.
 
 ## Bảo mật
 

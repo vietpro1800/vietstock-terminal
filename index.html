@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0e1117">
   <title>ThảoChi Stock</title>
-  <link rel="stylesheet" href="css/style.css?v=20260930c">
+  <link rel="stylesheet" href="css/style.css?v=20260930d">
 </head>
 <body>
   <header class="topbar">
@@ -58,22 +58,41 @@
       </div>
     </section>
 
-    <section class="panel board-panel">
-      <div class="board-head">
-        <h2>Bảng giá</h2>
-        <span class="unit">Giá: nghìn đồng</span>
-      </div>
-      <div class="board-scroll">
-        <table class="board">
-          <thead>
-            <tr><th>Mã</th><th class="num">Giá</th><th class="num">+/-</th><th class="num">%</th><th class="num">KL</th></tr>
-          </thead>
-          <tbody id="board-body">
-            <tr><td colspan="5" class="dim center">Đang tải…</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
+    <div class="side">
+      <section class="panel book-panel" aria-label="Sổ lệnh">
+        <div id="orderbook"></div>
+      </section>
+
+      <section class="panel side-tabs">
+        <div id="side-tabs" class="tabs" role="tablist" aria-label="Thảo luận và bảng giá">
+          <button type="button" role="tab" id="tab-chat" data-tab="chat" aria-controls="pane-chat">
+            Thảo luận <span id="chat-badge" class="count-badge" hidden></span>
+          </button>
+          <button type="button" role="tab" id="tab-board" data-tab="board" aria-controls="pane-board">Bảng giá</button>
+        </div>
+
+        <div id="pane-chat" role="tabpanel" aria-labelledby="tab-chat">
+          <div id="chat" class="chat"></div>
+        </div>
+
+        <div id="pane-board" role="tabpanel" aria-labelledby="tab-board" hidden>
+          <div class="board-head">
+            <h2 class="sr-only">Bảng giá</h2>
+            <span class="unit">Giá: nghìn đồng · nhấn vào mã để xem</span>
+          </div>
+          <div class="board-scroll">
+            <table class="board">
+              <thead>
+                <tr><th>Mã</th><th class="num">Giá</th><th class="num">+/-</th><th class="num">%</th><th class="num">KL</th></tr>
+              </thead>
+              <tbody id="board-body">
+                <tr><td colspan="5" class="dim center">Đang tải…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
   </main>
 
   <footer class="footer">
@@ -82,12 +101,14 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
   <script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
-  <script src="js/config.js?v=20260930c"></script>
-  <script src="js/auth.js?v=20260930c"></script>
-  <script src="js/data.js?v=20260930c"></script>
-  <script src="js/indicators.js?v=20260930c"></script>
-  <script src="js/chart.js?v=20260930c"></script>
-  <script src="js/board.js?v=20260930c"></script>
-  <script src="js/app.js?v=20260930c"></script>
+  <script src="js/config.js?v=20260930d"></script>
+  <script src="js/auth.js?v=20260930d"></script>
+  <script src="js/data.js?v=20260930d"></script>
+  <script src="js/indicators.js?v=20260930d"></script>
+  <script src="js/chart.js?v=20260930d"></script>
+  <script src="js/board.js?v=20260930d"></script>
+  <script src="js/orderbook.js?v=20260930d"></script>
+  <script src="js/chat.js?v=20260930d"></script>
+  <script src="js/app.js?v=20260930d"></script>
 </body>
 </html>

@@ -15,6 +15,7 @@ VST.auth.guard().then(function (ctx) {
     symbol: /^[A-Z0-9]{2,10}$/.test(urlSymbol) ? urlSymbol : (prefs.symbol || cfg.defaultSymbol),
     tfKey: cfg.timeframes[prefs.tfKey] ? prefs.tfKey : cfg.defaultTimeframe,
     indicators: Object.assign({}, cfg.defaultIndicators, prefs.indicators),
+    sideTab: prefs.sideTab === 'board' ? 'board' : 'chat',
     loadToken: 0,
     refreshing: false,
     lastRefresh: 0,
@@ -28,6 +29,17 @@ VST.auth.guard().then(function (ctx) {
   }
 
   const board = new VST.PriceBoard($('board-body'), source, selectSymbol);
+  // Sổ lệnh realtime (nguồn WebSocket trong data.js) và thảo luận theo mã.
+  const feed = new VST.SsiRealtimeFeed();
+  const book = new VST.OrderBook($('orderbook'));
+  const chat = new VST.StockChat($('chat'), {
+    user: ctx.user,
+    profile: ctx.profile,
+    onUnread: function (n) {
+      $('chat-badge').textContent = n > 99 ? '99+' : n;
+      $('chat-badge').hidden = !n;
+    },
+  });
   VST.auth.mountUserBar($('user-bar'), ctx.profile, 'dashboard');
 
   buildControls();
@@ -75,6 +87,26 @@ VST.auth.guard().then(function (ctx) {
     if (chart) chart.setIndicators(state.indicators);
 
     $('notice-close').addEventListener('click', hideNotice);
+
+    $('side-tabs').addEventListener('click', function (e) {
+      const b = e.target.closest('button[data-tab]');
+      if (!b) return;
+      state.sideTab = b.dataset.tab;
+      savePrefs();
+      renderSideTab();
+    });
+    renderSideTab();
+  }
+
+  function renderSideTab() {
+    $('side-tabs').querySelectorAll('button[data-tab]').forEach(function (b) {
+      const on = b.dataset.tab === state.sideTab;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-selected', on);
+    });
+    $('pane-chat').hidden = state.sideTab !== 'chat';
+    $('pane-board').hidden = state.sideTab !== 'board';
+    chat.setVisible(state.sideTab === 'chat');
   }
 
   function renderTf() {
@@ -90,6 +122,9 @@ VST.auth.guard().then(function (ctx) {
     $('chart-title').textContent = symbol;
     document.title = symbol + ' · ThảoChi Stock';
     board.setActive(symbol);
+    book.reset(symbol);
+    feed.watch(symbol, (q) => book.push(q), (s) => book.setStatus(s));
+    chat.setSymbol(symbol);
     savePrefs();
     if (state.lastRefresh === 0) refreshAll();
     else loadChart(false);
@@ -109,6 +144,8 @@ VST.auth.guard().then(function (ctx) {
       const bars = await source.getHistory(symbol, tf);
       if (token !== state.loadToken) return; // đã có yêu cầu mới hơn
       chart.setData(bars, tf, keepView);
+      // Nến ngày cho sổ lệnh hiện giá tham khảo khi chưa có dữ liệu realtime.
+      if (tf.resolution === 'D' && !tf.aggregate) book.setFallback(symbol, bars);
       return true;
     } catch (err) {
       if (token !== state.loadToken) return;
@@ -183,7 +220,9 @@ VST.auth.guard().then(function (ctx) {
 
   function savePrefs() {
     try {
-      localStorage.setItem(STORE_KEY, JSON.stringify({ symbol: state.symbol, tfKey: state.tfKey, indicators: state.indicators }));
+      localStorage.setItem(STORE_KEY, JSON.stringify({
+        symbol: state.symbol, tfKey: state.tfKey, indicators: state.indicators, sideTab: state.sideTab,
+      }));
     } catch (e) { /* bỏ qua: chế độ ẩn danh hoặc bị chặn lưu trữ */ }
   }
 });
