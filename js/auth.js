@@ -162,6 +162,7 @@ window.VST = window.VST || {};
     if (msg.includes('invalid login')) return MESSAGES.invalid_credentials;
     if (msg.includes('rate limit')) return MESSAGES.over_request_rate_limit;
     if (msg.includes('tự đổi quyền')) return 'Không thể tự đổi quyền hoặc trạng thái của chính mình.';
+    if (msg.includes('gửi quá nhanh')) return 'Bạn gửi quá nhanh, vui lòng đợi một lát.';
     return 'Có lỗi xảy ra, vui lòng thử lại.' + (err.message ? ' (Chi tiết: ' + err.message + ')' : '');
   }
 

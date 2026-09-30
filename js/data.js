@@ -177,6 +177,115 @@ window.VST = window.VST || {};
 
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 
+  // ---------- Sổ lệnh & khớp lệnh realtime (WebSocket bảng giá SSI iBoard) ----------
+  // Nguồn không chính thức: định dạng tin nhắn là chuỗi phân tách bằng "|" (vị trí trường theo
+  // thư viện mã nguồn mở vnstock-js). WebSocket không bị chặn CORS như fetch.
+  // Mỗi lúc chỉ theo dõi 1 mã: watch(symbol, onQuote, onStatus).
+  //   onQuote({ symbol, price, change, pct, vol, totalVol, side: 'M'|'B'|'', time, bids, asks })
+  //   price/change theo nghìn đồng; pct tự tính = change / (price − change).
+  //   onStatus('connecting' | 'open' | 'closed')
+  class SsiRealtimeFeed {
+    constructor(opts) {
+      this.url = (opts && opts.url) || 'wss://iboard-pushstream.ssi.com.vn/realtime';
+      this.symbol = null;
+      this.socket = null;
+      this.retry = 0;
+      this.timer = null;
+      this.onQuote = null;
+      this.onStatus = null;
+    }
+
+    watch(symbol, onQuote, onStatus) {
+      const prev = this.symbol;
+      this.symbol = String(symbol || '').toUpperCase();
+      this.onQuote = onQuote;
+      this.onStatus = onStatus;
+      if (this.socket && this.socket.readyState === 1) {
+        if (prev && prev !== this.symbol) this._send('unsub', [prev]);
+        this._send('sub', [this.symbol]);
+        this._status('open');
+      } else if (!this.socket) {
+        this._connect();
+      }
+    }
+
+    _connect() {
+      clearTimeout(this.timer);
+      if (typeof WebSocket === 'undefined') { this._status('closed'); return; }
+      this._status('connecting');
+      let ws;
+      try {
+        ws = new WebSocket(this.url);
+      } catch (e) {
+        this._status('closed');
+        this._schedule();
+        return;
+      }
+      this.socket = ws;
+      ws.onopen = () => {
+        this.retry = 0;
+        if (this.symbol) this._send('sub', [this.symbol]);
+        this._status('open');
+      };
+      ws.onmessage = (ev) => {
+        if (typeof ev.data !== 'string' || ev.data.indexOf('|') < 0) return;
+        const q = parseSsi(ev.data);
+        if (q && q.symbol === this.symbol && this.onQuote) this.onQuote(q);
+      };
+      ws.onclose = () => {
+        if (this.socket !== ws) return;
+        this.socket = null;
+        this._status('closed');
+        this._schedule();
+      };
+      ws.onerror = function () { /* onclose sẽ xử lý kết nối lại */ };
+    }
+
+    // Kết nối lại với thời gian chờ tăng dần (tối đa 30 giây).
+    _schedule() {
+      const delay = Math.min(30000, 2000 * Math.pow(2, this.retry++));
+      this.timer = setTimeout(() => this._connect(), delay);
+    }
+
+    _send(type, symbols) {
+      try {
+        this.socket.send(JSON.stringify({
+          type: type, topic: 'stockRealtimeBySymbolsAndBoards',
+          variables: { symbols: symbols, boardIds: ['MAIN'] }, component: 'priceTableEquities',
+        }));
+      } catch (e) { /* socket vừa đóng: onclose sẽ kết nối lại */ }
+    }
+
+    _status(s) { if (this.onStatus) this.onStatus(s); }
+  }
+
+  // Giá trong tin nhắn tính theo đồng → đổi sang nghìn đồng cho khớp với biểu đồ.
+  function parseSsi(str) {
+    const p = str.split('|');
+    const num = function (i) { const v = Number(p[i]); return isFinite(v) ? v : 0; };
+    const symbol = ((p[1] || '').split('#')[1] || '').toUpperCase();
+    if (!symbol) return null;
+    const level = function (i) { return { price: num(i) / 1000, vol: num(i + 1) }; };
+    const t = num(65);
+    const price = num(42) / 1000, change = num(52) / 1000;
+    const ref = price - change;
+    return {
+      symbol: symbol,
+      bids: [level(2), level(4), level(6)],
+      asks: [level(22), level(24), level(26)],
+      price: price,
+      vol: num(43),
+      change: change,
+      pct: ref > 0 ? (change / ref) * 100 : 0,
+      totalVol: num(54),
+      side: p[66] === 'b' ? 'M' : p[66] === 's' ? 'B' : '',
+      // lastUpdated có thể là mili giây hoặc giây; không rõ thì lấy giờ máy.
+      time: t > 1e12 ? t / 1000 : t > 1e9 ? t : Date.now() / 1000,
+    };
+  }
+
   VST.DataError = DataError;
   VST.VndirectSource = VndirectSource;
+  VST.SsiRealtimeFeed = SsiRealtimeFeed;
+  VST.parseSsiQuote = parseSsi;
 })();

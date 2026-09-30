@@ -25,6 +25,8 @@ sau này mở rộng nhiều người dùng có đăng nhập.
   - `js/indicators.js` — hàm tính chỉ báo thuần (không đụng DOM).
   - `js/chart.js` — vẽ biểu đồ (Lightweight Charts).
   - `js/board.js` — bảng giá.
+  - `js/orderbook.js` — khung sổ lệnh/khớp lệnh (chỉ hiển thị; dữ liệu từ `VST.SsiRealtimeFeed` trong `data.js`).
+  - `js/chat.js` — thảo luận theo mã (bảng `stock_comments` trong Supabase, realtime).
   - `js/app.js` — khởi tạo, gắn sự kiện, tự làm mới.
   - `js/backtest.js` — công cụ backtest thuần (không DOM, không mạng), chạy được cả trong Node.
     `js/backtest-page.js` — logic trang `backtest.html`. Kiểm thử: `node tests/backtest.test.js`
@@ -59,6 +61,8 @@ sau này mở rộng nhiều người dùng có đăng nhập.
 - Nguồn hiện tại: `https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=HPG&from=<unix>&to=<unix>`
   trả về `{ s, t[], o[], h[], l[], c[], v[] }`. Giá cổ phiếu tính theo **nghìn đồng**.
 - Gọi theo nhóm nhỏ (mặc định 4 request song song), có timeout và thử lại 1 lần.
+- Sổ lệnh realtime: WebSocket `wss://iboard-pushstream.ssi.com.vn/realtime` (không chính thức, định dạng
+  chuỗi `|` theo vnstock-js), lớp `SsiRealtimeFeed` trong `data.js`. Giá trong tin nhắn tính theo đồng → chia 1000.
 - Lỗi phải được đổi sang câu tiếng Việt dễ hiểu trước khi hiển thị (xem `DataError` trong `js/data.js`).
 - Thời gian API là Unix UTC; khi vẽ cộng 7 giờ để hiển thị giờ Việt Nam.
 
