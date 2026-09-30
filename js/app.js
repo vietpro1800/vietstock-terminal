@@ -9,8 +9,10 @@ VST.auth.guard().then(function (ctx) {
   const source = new VST.VndirectSource({ batchSize: cfg.batchSize });
 
   const prefs = loadPrefs();
+  // Cho phép mở thẳng một mã: index.html?symbol=HPG (ví dụ từ trang RRG).
+  const urlSymbol = (new URLSearchParams(location.search).get('symbol') || '').trim().toUpperCase();
   const state = {
-    symbol: prefs.symbol || cfg.defaultSymbol,
+    symbol: /^[A-Z0-9]{2,10}$/.test(urlSymbol) ? urlSymbol : (prefs.symbol || cfg.defaultSymbol),
     tfKey: cfg.timeframes[prefs.tfKey] ? prefs.tfKey : cfg.defaultTimeframe,
     indicators: Object.assign({}, cfg.defaultIndicators, prefs.indicators),
     loadToken: 0,

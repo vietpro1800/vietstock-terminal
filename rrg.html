@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="vi" class="auth-checking">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0e1117">
+  <title>RRG ngành · ThảoChi Stock</title>
+  <link rel="stylesheet" href="css/style.css?v=20260930c">
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="brand"><a href="index.html">ThảoChi<span>Stock</span></a></h1>
+    <span class="page-tag">RRG ngành</span>
+    <div id="user-bar" class="user-bar"></div>
+  </header>
+
+  <div id="notice" class="notice" role="alert" hidden>
+    <span id="notice-text"></span>
+    <button id="notice-close" type="button" aria-label="Đóng thông báo">×</button>
+  </div>
+
+  <main class="rrg">
+    <section class="panel">
+      <div class="rrg-head">
+        <button id="rrg-back" type="button" class="btn btn-sm" hidden>← Tất cả ngành</button>
+        <h2 id="rrg-title">Sức mạnh tương đối các ngành</h2>
+        <button id="rrg-reload" type="button" class="btn btn-sm rrg-reload">Tải lại</button>
+      </div>
+      <p id="rrg-summary" class="rrg-summary dim">Đang tải…</p>
+
+      <div class="rrg-controls">
+        <label class="form-field rrg-view-field">
+          <span>Xem</span>
+          <select id="rrg-view" class="input"></select>
+        </label>
+        <div class="form-field">
+          <span id="rrg-tf-label">Khung</span>
+          <div id="rrg-tf" class="seg" role="group" aria-labelledby="rrg-tf-label"></div>
+        </div>
+        <div class="form-field">
+          <span id="rrg-tail-label">Đuôi (số kỳ)</span>
+          <div id="rrg-tail" class="seg" role="group" aria-labelledby="rrg-tail-label"></div>
+        </div>
+        <div id="rrg-bench-field" class="form-field" hidden>
+          <span id="rrg-bench-label">So với</span>
+          <div id="rrg-bench" class="seg" role="group" aria-labelledby="rrg-bench-label">
+            <button type="button" data-bench="index">VN-Index</button>
+            <button type="button" data-bench="sector">Chỉ số ngành</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="rrg-chart-wrap">
+        <div id="rrg-chart" class="rrg-chart"></div>
+        <div id="rrg-loading" class="loading">
+          <div class="rrg-progress">
+            <span id="rrg-progress-text">Đang tải dữ liệu…</span>
+            <div class="bar"><i id="rrg-progress-bar"></i></div>
+          </div>
+        </div>
+      </div>
+      <p class="form-hint rrg-hint">Rê chuột hoặc chạm vào điểm đầu để xem chi tiết; nhấn vào ngành để xem các mã trong ngành.
+        Lăn chuột hoặc dùng nút +/− để phóng to, kéo để di chuyển, nhấp đúp để về khung gốc.</p>
+    </section>
+
+    <section class="panel">
+      <div class="bt-head">
+        <h2 id="rrg-list-title">Bảng xếp hạng</h2>
+        <span class="unit">Bỏ chọn ô để ẩn khỏi biểu đồ</span>
+      </div>
+      <div class="table-scroll">
+        <table class="board rrg-table">
+          <thead>
+            <tr>
+              <th><span class="sr-only">Hiện</span></th><th id="rrg-col-name">Ngành</th><th>Vùng</th>
+              <th class="num">RS-Ratio</th><th class="num">RS-Mom</th><th class="num" id="rrg-col-change">% giá</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="rrg-list"><tr><td colspan="7" class="dim center">Đang tải…</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <aside class="bt-disclaimer rrg-explain" role="note">
+      <p><b>Cách đọc RRG:</b> trục ngang (RS-Ratio) cho biết ngành/mã đang <b>mạnh hơn</b> (&gt;100) hay <b>yếu hơn</b> (&lt;100)
+        chỉ số chuẩn; trục dọc (RS-Momentum) cho biết sức mạnh đó đang <b>tăng</b> (&gt;100) hay <b>giảm</b> (&lt;100).
+        Các đường thường xoay theo chiều kim đồng hồ: <span class="q-improving">Cải thiện</span> →
+        <span class="q-leading">Dẫn dắt</span> → <span class="q-weakening">Suy yếu</span> → <span class="q-lagging">Tụt hậu</span>.</p>
+      <p>Chỉ số ngành = trung bình đồng tỷ trọng lợi nhuận hằng ngày của các mã trong ngành (bỏ qua phiên biến động quá ±15%,
+        thường do chia tách/cổ tức chưa điều chỉnh). Công thức RS-Ratio/RS-Momentum là bản xấp xỉ, không trùng khớp tuyệt đối
+        với RRG gốc. Chỉ mang tính tham khảo, không phải khuyến nghị đầu tư.</p>
+    </aside>
+  </main>
+
+  <footer class="footer">
+    Dữ liệu: VNDirect (dchart). Tính toán chạy ngay trên trình duyệt của bạn.
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+  <script src="js/config.js?v=20260930c"></script>
+  <script src="js/auth.js?v=20260930c"></script>
+  <script src="js/data.js?v=20260930c"></script>
+  <script src="js/indicators.js?v=20260930c"></script>
+  <script src="js/rrg.js?v=20260930c"></script>
+  <script src="js/rrg-chart.js?v=20260930c"></script>
+  <script src="js/rrg-page.js?v=20260930c"></script>
+</body>
+</html>

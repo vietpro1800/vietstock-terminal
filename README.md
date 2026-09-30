@@ -133,6 +133,7 @@ index.html          Trang chính (dashboard, cần đăng nhập)
 login.html          Đăng nhập / đăng ký / quên mật khẩu / chờ duyệt
 reset-password.html Đặt mật khẩu mới từ link trong email
 admin.html          Quản trị tài khoản (chỉ admin)
+rrg.html            RRG: sức mạnh tương đối các ngành và các mã trong ngành (cần đăng nhập)
 backtest.html       Backtest chiến lược (cần đăng nhập)
 css/style.css       Giao diện (biến màu ở :root)
 js/config.js        Cấu hình: danh sách mã, chu kỳ làm mới, khung thời gian, Supabase URL + publishable key
@@ -145,12 +146,25 @@ js/indicators.js    Tính MA, Bollinger, RSI, MACD
 js/chart.js         Vẽ biểu đồ (dashboard + backtest)
 js/backtest.js      Công cụ backtest: phí/thuế, lô 100, T+2, chiến lược, chỉ số (hàm thuần)
 js/backtest-page.js Logic trang backtest
-tests/              Kiểm thử backtest: `node tests/backtest.test.js` hoặc mở tests/index.html
+js/rrg.js           Tính RRG: chỉ số ngành, RS-Ratio, RS-Momentum (hàm thuần)
+js/rrg-chart.js     Vẽ biểu đồ RRG (SVG)
+js/rrg-page.js      Logic trang RRG
+tests/              Kiểm thử: `node tests/backtest.test.js`, `node tests/rrg.test.js` hoặc mở tests/index.html
 js/board.js         Bảng giá
 js/app.js           Khởi tạo, sự kiện, tự làm mới
 supabase/schema.sql Bảng profiles, trigger, RLS — chạy trong Supabase SQL Editor
 CLAUDE.md           Quy ước phát triển
 ```
+
+## RRG ngành
+
+Trang `rrg.html` vẽ Relative Rotation Graph của 16 nhóm ngành so với VN-Index; nhấn vào một ngành để xem
+các mã trong ngành (so với VN-Index hoặc với chỉ số ngành). Khung ngày/tuần, đuôi 4–20 kỳ.
+
+- Chỉ số ngành = trung bình đồng tỷ trọng lợi nhuận ngày của các mã (bỏ qua phiên biến động quá ±15%).
+- RS-Ratio = 100 × EMA(RS) / SMA(EMA(RS)); RS-Momentum = 100 × RS-Ratio / RS-Ratio n kỳ trước
+  (bản xấp xỉ, công thức gốc của RRG là độc quyền). Tham số trong `VST.config.rrg.timeframes`.
+- Sửa danh sách ngành/mã trong `VST.config.rrg.sectors` (`js/config.js`).
 
 ## Backtest
 

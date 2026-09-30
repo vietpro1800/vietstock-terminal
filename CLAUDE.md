@@ -29,6 +29,9 @@ sau này mở rộng nhiều người dùng có đăng nhập.
   - `js/backtest.js` — công cụ backtest thuần (không DOM, không mạng), chạy được cả trong Node.
     `js/backtest-page.js` — logic trang `backtest.html`. Kiểm thử: `node tests/backtest.test.js`
     (phải đạt hết trước khi commit nếu sửa `backtest.js` hoặc `indicators.js`).
+  - `js/rrg.js` — tính RRG thuần (chỉ số ngành, RS-Ratio, RS-Momentum). `js/rrg-chart.js` — vẽ RRG bằng SVG.
+    `js/rrg-page.js` — logic trang `rrg.html`. Danh sách ngành và mã nằm ở `VST.config.rrg.sectors`.
+    Kiểm thử: `node tests/rrg.test.js` (phải đạt hết nếu sửa `rrg.js` hoặc `indicators.js`).
   - `js/auth.js` — Supabase client, `VST.auth.guard()`, thanh người dùng, dịch lỗi sang tiếng Việt.
   - `js/login.js`, `js/reset.js`, `js/admin.js` — logic riêng của `login.html`,
     `reset-password.html`, `admin.html`.
@@ -42,7 +45,7 @@ sau này mở rộng nhiều người dùng có đăng nhập.
 
 ## Đăng nhập & phân quyền (Supabase Auth)
 
-- Mọi trang dashboard (hiện là `index.html`, `backtest.html`, `admin.html`) phải: đặt `class="auth-checking"` trên `<html>`,
+- Mọi trang dashboard (hiện là `index.html`, `rrg.html`, `backtest.html`, `admin.html`) phải: đặt `class="auth-checking"` trên `<html>`,
   nạp supabase-js + `config.js` + `auth.js`, và chỉ chạy code trang bên trong `VST.auth.guard().then(...)`
   (`guard({ admin: true })` cho trang quản trị). Chưa đăng nhập / chưa `active` → tự chuyển về `login.html`.
 - Bảng `profiles`: `role` ∈ admin/user, `status` ∈ pending/active/locked. Người mới luôn là `pending`.

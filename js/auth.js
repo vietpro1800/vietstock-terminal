@@ -82,10 +82,11 @@ window.VST = window.VST || {};
   }
 
   // Thanh người dùng trên topbar: link sang các trang khác + Đăng xuất.
-  // current: 'dashboard' | 'backtest' | 'admin'.
+  // current: 'dashboard' | 'rrg' | 'backtest' | 'admin'.
   function mountUserBar(el, profile, current) {
     const links = [];
     if (current !== 'dashboard') links.push('<a class="ub-link" href="index.html">Dashboard</a>');
+    if (current !== 'rrg') links.push('<a class="ub-link" href="rrg.html">RRG</a>');
     if (current !== 'backtest') links.push('<a class="ub-link" href="backtest.html">Backtest</a>');
     if (current !== 'admin' && profile.role === 'admin') links.push('<a class="ub-link" href="admin.html">Quản trị</a>');
     el.innerHTML =
