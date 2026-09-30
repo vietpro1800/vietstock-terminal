@@ -81,11 +81,13 @@ window.VST = window.VST || {};
     window.location.replace(pageUrl('login.html'));
   }
 
-  // Thanh người dùng trên topbar: link Quản trị/Dashboard + Đăng xuất.
+  // Thanh người dùng trên topbar: link sang các trang khác + Đăng xuất.
+  // current: 'dashboard' | 'backtest' | 'admin'.
   function mountUserBar(el, profile, current) {
     const links = [];
-    if (current === 'admin') links.push('<a class="ub-link" href="index.html">Dashboard</a>');
-    else if (profile.role === 'admin') links.push('<a class="ub-link" href="admin.html">Quản trị</a>');
+    if (current !== 'dashboard') links.push('<a class="ub-link" href="index.html">Dashboard</a>');
+    if (current !== 'backtest') links.push('<a class="ub-link" href="backtest.html">Backtest</a>');
+    if (current !== 'admin' && profile.role === 'admin') links.push('<a class="ub-link" href="admin.html">Quản trị</a>');
     el.innerHTML =
       '<span class="ub-email" title="' + escapeHtml(profile.email) + '">' + escapeHtml(profile.email) + '</span>' +
       links.join('') +

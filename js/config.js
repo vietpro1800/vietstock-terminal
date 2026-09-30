@@ -25,6 +25,13 @@ VST.config = {
   },
   defaultTimeframe: 'D',
 
+  // Trang backtest.
+  backtest: {
+    indexSymbol: 'VNINDEX',   // mã chỉ số để so sánh
+    defaultCapital: 100000000, // 100 triệu đồng
+    warmupDays: 450,          // tải thêm ~15 tháng trước ngày bắt đầu để MA200 có giá trị ngay
+  },
+
   // Chỉ báo mặc định bật.
   defaultIndicators: { ma20: true, ma50: true, ma200: false, bb: false, rsi: true, macd: false },
 };

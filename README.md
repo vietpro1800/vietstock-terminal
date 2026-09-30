@@ -133,6 +133,7 @@ index.html          Trang chính (dashboard, cần đăng nhập)
 login.html          Đăng nhập / đăng ký / quên mật khẩu / chờ duyệt
 reset-password.html Đặt mật khẩu mới từ link trong email
 admin.html          Quản trị tài khoản (chỉ admin)
+backtest.html       Backtest chiến lược (cần đăng nhập)
 css/style.css       Giao diện (biến màu ở :root)
 js/config.js        Cấu hình: danh sách mã, chu kỳ làm mới, khung thời gian, Supabase URL + publishable key
 js/auth.js          Supabase client, kiểm tra đăng nhập/quyền, thông báo lỗi tiếng Việt
@@ -141,12 +142,25 @@ js/reset.js         Logic trang đặt lại mật khẩu
 js/admin.js         Logic trang quản trị
 js/data.js          Lớp lấy dữ liệu (VndirectSource) — đổi nguồn dữ liệu tại đây
 js/indicators.js    Tính MA, Bollinger, RSI, MACD
-js/chart.js         Vẽ biểu đồ
+js/chart.js         Vẽ biểu đồ (dashboard + backtest)
+js/backtest.js      Công cụ backtest: phí/thuế, lô 100, T+2, chiến lược, chỉ số (hàm thuần)
+js/backtest-page.js Logic trang backtest
+tests/              Kiểm thử backtest: `node tests/backtest.test.js` hoặc mở tests/index.html
 js/board.js         Bảng giá
 js/app.js           Khởi tạo, sự kiện, tự làm mới
 supabase/schema.sql Bảng profiles, trigger, RLS — chạy trong Supabase SQL Editor
 CLAUDE.md           Quy ước phát triển
 ```
+
+## Backtest
+
+Trang `backtest.html` mô phỏng chiến lược ngay trên trình duyệt theo quy tắc thị trường VN:
+lô 100 cổ phiếu, phí mua/bán 0,15%, thuế bán 0,1% (chỉnh được), T+2 mới được bán,
+lệnh khớp ở giá mở cửa phiên sau tín hiệu, cắt lỗ/chốt lời xét theo giá đóng cửa.
+
+- Chưa xác nhận API VNDirect trả giá **đã điều chỉnh** cổ tức/chia tách hay chưa. Trang tự cảnh báo
+  khi thấy phiên giá giảm quá 7,5% (vượt biên độ HOSE) — dấu hiệu thường gặp của dữ liệu chưa điều chỉnh.
+- Kiểm thử phần tính phí, lô và T+2: `node tests/backtest.test.js`.
 
 ## Nguồn dữ liệu
 

@@ -23,13 +23,23 @@ window.VST = window.VST || {};
     // Trả về mảng nến [{time, open, high, low, close, volume}], time là Unix UTC (giây).
     // tf: một mục trong VST.config.timeframes.
     async getHistory(symbol, tf) {
+      const to = Math.floor(Date.now() / 1000);
+      let bars = await this._fetchBars(symbol, tf.resolution, to - tf.days * 86400, to);
+      if (tf.aggregate === 'week') bars = toWeekly(bars);
+      return bars;
+    }
+
+    // Nến ngày trong khoảng [from, to] (Unix giây). Dùng cho backtest.
+    getHistoryRange(symbol, from, to) {
+      return this._fetchBars(symbol, 'D', Math.floor(from), Math.floor(to));
+    }
+
+    async _fetchBars(symbol, resolution, from, to) {
       symbol = String(symbol || '').trim().toUpperCase();
       if (!/^[A-Z0-9]{2,10}$/.test(symbol)) {
         throw new DataError('Mã chứng khoán không hợp lệ: "' + symbol + '".', symbol);
       }
-      const to = Math.floor(Date.now() / 1000);
-      const from = to - tf.days * 86400;
-      const url = this.baseUrl + '?resolution=' + encodeURIComponent(tf.resolution) +
+      const url = this.baseUrl + '?resolution=' + encodeURIComponent(resolution) +
         '&symbol=' + encodeURIComponent(symbol) + '&from=' + from + '&to=' + to;
 
       let json;
@@ -52,7 +62,7 @@ window.VST = window.VST || {};
         throw new DataError('Máy chủ dữ liệu báo lỗi khi tải mã ' + symbol + '.', symbol);
       }
 
-      let bars = [];
+      const bars = [];
       for (let i = 0; i < json.t.length; i++) {
         const b = {
           time: json.t[i],
@@ -62,9 +72,7 @@ window.VST = window.VST || {};
         if (isFinite(b.open) && isFinite(b.close)) bars.push(b);
       }
       bars.sort(function (a, b) { return a.time - b.time; });
-      bars = dedupe(bars);
-      if (tf.aggregate === 'week') bars = toWeekly(bars);
-      return bars;
+      return dedupe(bars);
     }
 
     // Tải nhiều mã theo nhóm nhỏ. Trả về { [symbol]: {bars} | {error} } — không bao giờ reject.
