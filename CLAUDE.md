@@ -11,6 +11,8 @@ sau này mở rộng nhiều người dùng có đăng nhập.
   Màu giá theo thói quen thị trường VN: tăng = xanh lá, giảm = đỏ, đứng giá = vàng.
 - **Ưu tiên điện thoại (mobile-first)**: CSS viết cho màn hình hẹp trước, mở rộng bằng
   `@media (min-width: ...)`. Không để trang bị cuộn ngang; vùng bấm tối thiểu ~40px.
+  Dashboard (`index.html`, `<body class="dash">`): từ 768px chia 2 cột — biểu đồ 3/4 trái, sổ lệnh + thảo luận/bảng giá
+  1/4 phải; nếu cao ≥ 560px thì gói trong 1 màn hình (không cuộn trang), các khung danh sách tự co giãn và cuộn bên trong.
 - **HTML/CSS/JS thuần, không build**: không npm, không bundler, không framework.
   Thư viện ngoài chỉ nạp qua CDN, **ghim phiên bản cụ thể** (ví dụ `lightweight-charts@4.2.3`).
   Mở `index.html` qua một web server tĩnh bất kỳ là chạy được.

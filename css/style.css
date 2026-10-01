@@ -238,11 +238,62 @@ button, input { font: inherit; color: inherit; }
   .chart-sub { height: 130px; }
 }
 
-@media (min-width: 1000px) {
-  .layout { grid-template-columns: minmax(0, 1fr) 380px; align-items: start; }
-  .chart-main { height: calc(100vh - 390px); min-height: 380px; }
+/* Màn rộng: biểu đồ 3/4 bên trái, sổ lệnh + thảo luận 1/4 bên phải. */
+@media (min-width: 768px) {
+  .layout { grid-template-columns: minmax(0, 3fr) minmax(260px, 1fr); align-items: start; }
   .board-scroll { max-height: 60vh; overflow-y: auto; }
 }
+
+/* Màn rộng và đủ cao: cả Dashboard gói gọn trong 1 màn hình, không phải cuộn trang.
+   Biểu đồ chính, danh sách khớp lệnh và khung chat co giãn theo chiều cao còn lại. */
+@media (min-width: 768px) and (min-height: 560px) {
+  body.dash {
+    display: flex; flex-direction: column;
+    height: 100vh; height: 100dvh; overflow: hidden; padding-bottom: 0;
+  }
+  body.dash .topbar, body.dash .notice, body.dash .footer { flex: none; }
+  body.dash .footer { padding: 2px var(--gutter) 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  body.dash .layout {
+    flex: 1; min-height: 0; padding-bottom: 6px;
+    grid-template-rows: minmax(0, 1fr); align-items: stretch;
+  }
+
+  body.dash .chart-panel { display: flex; flex-direction: column; min-height: 0; }
+  body.dash .chips { margin: 8px 0 4px; }
+  body.dash .chart-wrap { flex: 1; min-height: 160px; }
+  body.dash .chart-main { height: 100%; min-height: 0; }
+  body.dash .chart-sub { height: clamp(70px, 12vh, 120px); }
+
+  body.dash .side { display: flex; flex-direction: column; min-height: 0; gap: 8px; }
+  body.dash .book-panel { flex: 0 1 auto; max-height: 64%; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+  body.dash #orderbook { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  body.dash .ob-head { margin-bottom: 4px; }
+  body.dash .ob-book td, body.dash .ob-trades td { height: 26px; }
+  body.dash .ob-sub { margin-top: 6px; }
+  body.dash .ob-head, body.dash .ob-book, body.dash .ob-sub, body.dash .ob-sum { flex: none; }
+  body.dash .ob-trades-scroll { flex: 1 1 auto; min-height: 0; max-height: none; }
+  body.dash .ob-sum { margin-top: 6px; }
+  body.dash .ob-sum div { padding: 2px 6px; }
+  body.dash .ob-note { display: none; }
+
+  body.dash .side-tabs { flex: 1 1 0; min-height: 140px; display: flex; flex-direction: column; }
+  body.dash .tabs { flex: none; margin-bottom: 8px; }
+  body.dash [role="tabpanel"]:not([hidden]) { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  body.dash .chat { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  body.dash .chat-list { flex: 1; min-height: 0; height: auto; }
+  body.dash .chat-note { display: none; }
+  body.dash .board-scroll { flex: 1; min-height: 0; max-height: none; }
+}
+
+/* Cột phải hẹp (máy tính bảng, máy gập): thu gọn chữ và khoảng cách trong sổ lệnh. */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .ob-book, .ob-trades { font-size: 12px; }
+  .ob-book td, .ob-trades td, .ob-book th, .ob-trades th { padding-left: 3px; padding-right: 3px; }
+  .ob-last { font-size: 19px; }
+  .ob-chg { font-size: 12px; }
+  .side .tabs button { padding: 0 10px; }
+}
+
 
 /* ---------- Cột bên: sổ lệnh + thảo luận/bảng giá ---------- */
 .side { display: grid; gap: var(--gutter); min-width: 0; align-content: start; }
@@ -314,10 +365,6 @@ button, input { font: inherit; color: inherit; }
 .chat-input { flex: 1; min-width: 0; height: auto; min-height: 44px; padding: 10px 12px; resize: vertical; line-height: 1.4; font-family: inherit; }
 .chat-send { flex: none; min-height: 44px; }
 .chat-note { margin: 0; font-size: 11px; color: var(--text-dim); line-height: 1.5; }
-
-@media (min-width: 1000px) {
-  .chat-list { height: 380px; }
-}
 
 /* ---------- Đang kiểm tra đăng nhập (trang được bảo vệ) ---------- */
 html.auth-checking body { visibility: hidden; }

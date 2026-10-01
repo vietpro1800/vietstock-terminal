@@ -32,7 +32,8 @@ window.VST = window.VST || {};
             '<tbody class="ob-trade-rows"></tbody>' +
           '</table>' +
         '</div>' +
-        '<dl class="ob-sum">' +
+        '<dl class="ob-sum" title="* KL mua/bán chủ động cộng từ các lệnh khớp nhận được kể từ khi mở trang/đổi mã. ' +
+          'Nguồn realtime: bảng giá SSI (không chính thức).">' +
           '<div><dt>Tổng KL khớp</dt><dd class="ob-total">—</dd></div>' +
           '<div><dt>KL mua chủ động<sup>*</sup></dt><dd class="ob-buy up">—</dd></div>' +
           '<div><dt>KL bán chủ động<sup>*</sup></dt><dd class="ob-sell down">—</dd></div>' +
