@@ -26,7 +26,8 @@ window.VST = window.VST || {};
         '<p class="chat-error" role="alert" hidden></p>' +
         '<form class="chat-form" autocomplete="off">' +
           '<label class="sr-only" for="chat-input">Nội dung bình luận</label>' +
-          '<textarea id="chat-input" class="input chat-input" rows="2" maxlength="1000" placeholder="Viết bình luận…"></textarea>' +
+          '<textarea id="chat-input" class="input chat-input" rows="2" maxlength="1000" placeholder="Viết bình luận…" ' +
+            'title="Enter để gửi, Shift+Enter để xuống dòng. Mọi tài khoản đang hoạt động đều đọc được."></textarea>' +
           '<button type="submit" class="btn btn-primary chat-send">Gửi</button>' +
         '</form>' +
         '<p class="chat-note">Enter để gửi, Shift+Enter để xuống dòng. Mọi tài khoản đang hoạt động đều đọc được. ' +

@@ -128,7 +128,7 @@ VST.auth.guard().then(function (ctx) {
     savePrefs();
     if (state.lastRefresh === 0) refreshAll();
     else loadChart(false);
-    if (window.innerWidth < 900) window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (window.innerWidth < 768) window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   // ---------- Dữ liệu ----------
