@@ -5,14 +5,24 @@ VST.auth.guard().then(function (ctx) {
   const $ = (id) => document.getElementById(id);
   const STORE_KEY = 'vst.prefs.v1';
 
-  // Đổi nguồn dữ liệu tại đây.
-  const source = new VST.VndirectSource({ batchSize: cfg.batchSize });
+  // Đổi nguồn dữ liệu tại đây. Cổ phiếu VN: VNDirect; vàng, tiền số, ngoại hối: Binance.
+  const source = new VST.MarketRouter(
+    new VST.VndirectSource({ batchSize: cfg.batchSize }),
+    new VST.BinanceSource(cfg.globalAssets));
+
+  // Tra tài sản thế giới theo mã hoặc tên gọi tắt (BTC, GOLD, VANG…).
+  const globalAssets = {};
+  cfg.globalAssets.forEach(function (a) {
+    globalAssets[a.symbol] = a;
+    (a.aliases || []).forEach(function (k) { globalAssets[k] = a; });
+  });
+  const canonical = (s) => (globalAssets[s] ? globalAssets[s].symbol : s);
 
   const prefs = loadPrefs();
   // Cho phép mở thẳng một mã: index.html?symbol=HPG (ví dụ từ trang RRG).
   const urlSymbol = (new URLSearchParams(location.search).get('symbol') || '').trim().toUpperCase();
   const state = {
-    symbol: /^[A-Z0-9]{2,10}$/.test(urlSymbol) ? urlSymbol : (prefs.symbol || cfg.defaultSymbol),
+    symbol: canonical(/^[A-Z0-9]{2,10}$/.test(urlSymbol) ? urlSymbol : (prefs.symbol || cfg.defaultSymbol)),
     tfKey: cfg.timeframes[prefs.tfKey] ? prefs.tfKey : cfg.defaultTimeframe,
     indicators: Object.assign({}, cfg.defaultIndicators, prefs.indicators),
     sideTab: prefs.sideTab === 'board' ? 'board' : 'chat',
@@ -53,11 +63,21 @@ VST.auth.guard().then(function (ctx) {
   // ---------- Giao diện ----------
 
   function buildControls() {
-    $('symbol-list').innerHTML = cfg.boardSymbols.map((s) => '<option value="' + s + '">').join('');
+    $('symbol-list').innerHTML = cfg.boardSymbols.map((s) => '<option value="' + s + '">').join('') +
+      cfg.globalAssets.map((a) => '<option value="' + a.symbol + '" label="' + VST.escapeHtml(a.name) + '">').join('');
+
+    const assetGroup = $('asset-group');
+    assetGroup.innerHTML = '<span class="chips-label">Thế giới:</span>' + cfg.globalAssets.map((a) =>
+      '<button type="button" class="chip" data-symbol="' + a.symbol + '" title="' + VST.escapeHtml(a.name) + '">' +
+      VST.escapeHtml(a.label) + '</button>').join('');
+    assetGroup.addEventListener('click', function (e) {
+      const b = e.target.closest('button[data-symbol]');
+      if (b && b.dataset.symbol !== state.symbol) selectSymbol(b.dataset.symbol);
+    });
 
     $('symbol-form').addEventListener('submit', function (e) {
       e.preventDefault();
-      const v = $('symbol-input').value.trim().toUpperCase();
+      const v = canonical($('symbol-input').value.trim().toUpperCase().replace(/[\s\/]/g, ''));
       if (!v) return;
       $('symbol-input').blur();
       selectSymbol(v);
@@ -117,13 +137,26 @@ VST.auth.guard().then(function (ctx) {
   }
 
   function selectSymbol(symbol) {
+    const asset = globalAssets[symbol] || null;
     state.symbol = symbol;
     $('symbol-input').value = symbol;
     $('chart-title').textContent = symbol;
+    $('chart-name').textContent = asset ? asset.name : '';
     document.title = symbol + ' · ThảoChi Stock';
+    $('asset-group').querySelectorAll('button[data-symbol]').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.symbol === symbol);
+      b.setAttribute('aria-pressed', b.dataset.symbol === symbol);
+    });
     board.setActive(symbol);
-    book.reset(symbol);
-    feed.watch(symbol, (q) => book.push(q), (s) => book.setStatus(s));
+    if (chart) chart.setPrecision(asset ? asset.decimals : 2);
+    book.reset(symbol, asset ? asset.decimals : 2);
+    if (asset) {
+      // Sổ lệnh realtime chỉ có cho cổ phiếu VN (bảng giá SSI).
+      feed.pause();
+      book.setUnavailable('Không có sổ lệnh · giá theo nến gần nhất');
+    } else {
+      feed.watch(symbol, (q) => book.push(q), (s) => book.setStatus(s));
+    }
     chat.setSymbol(symbol);
     savePrefs();
     if (state.lastRefresh === 0) refreshAll();

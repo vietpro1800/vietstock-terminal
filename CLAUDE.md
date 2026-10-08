@@ -63,6 +63,10 @@ sau này mở rộng nhiều người dùng có đăng nhập.
 - Nguồn hiện tại: `https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=HPG&from=<unix>&to=<unix>`
   trả về `{ s, t[], o[], h[], l[], c[], v[] }`. Giá cổ phiếu tính theo **nghìn đồng**.
 - Gọi theo nhóm nhỏ (mặc định 4 request song song), có timeout và thử lại 1 lần.
+- Vàng, tiền số, ngoại hối (`VST.config.globalAssets`): `BinanceSource` gọi
+  `https://data-api.binance.vision/api/v3/klines` (công khai, không khóa, giá theo USD, tối đa 1000 nến/lượt).
+  Vàng = `PAXGUSDT` (đại diện XAU/USD), EUR/USD = `EURUSDT`. `MarketRouter` chọn nguồn theo mã, nên biểu đồ
+  kỹ thuật dùng chung cho mọi tài sản; tài sản này không có sổ lệnh SSI (khung sổ lệnh chỉ hiện giá).
 - Sổ lệnh realtime: WebSocket `wss://iboard-pushstream.ssi.com.vn/realtime` (không chính thức, định dạng
   chuỗi `|` theo vnstock-js), lớp `SsiRealtimeFeed` trong `data.js`. Giá trong tin nhắn tính theo đồng → chia 1000.
 - Lỗi phải được đổi sang câu tiếng Việt dễ hiểu trước khi hiển thị (xem `DataError` trong `js/data.js`).

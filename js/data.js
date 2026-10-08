@@ -91,6 +91,77 @@ window.VST = window.VST || {};
     }
   }
 
+  // Vàng, tiền số, ngoại hối từ API thị trường công khai của Binance (cho phép CORS, không cần khóa).
+  // assets: VST.config.globalAssets. Giá trả về theo USD (không chia 1000 như cổ phiếu VN).
+  class BinanceSource {
+    constructor(assets, opts) {
+      this.baseUrl = (opts && opts.baseUrl) || 'https://data-api.binance.vision/api/v3/klines';
+      this.bySymbol = {};
+      (assets || []).forEach((a) => { this.bySymbol[a.symbol] = a; });
+    }
+
+    has(symbol) { return !!this.bySymbol[symbol]; }
+
+    async getHistory(symbol, tf) {
+      const asset = this.bySymbol[symbol];
+      if (!asset) throw new DataError('Không hỗ trợ mã ' + symbol + '.', symbol);
+      const interval = tf.aggregate === 'week' ? '1w'
+        : tf.resolution === '15' ? '15m' : tf.resolution === '60' ? '1h' : '1d';
+      const end = Date.now();
+      let start = end - tf.days * 86400000;
+      const bars = [];
+      // Mỗi lần tối đa 1000 nến → tải tiếp từ sau nến cuối cùng (vài lượt là đủ).
+      for (let guard = 0; guard < 10 && start < end; guard++) {
+        const url = this.baseUrl + '?symbol=' + asset.pair + '&interval=' + interval +
+          '&startTime=' + start + '&endTime=' + end + '&limit=1000';
+        let rows;
+        try {
+          rows = await fetchJson(url);
+        } catch (e) {
+          if (!e.retryable) throw toDataError(e, symbol);
+          await sleep(800);
+          rows = await fetchJson(url).catch(function (e2) { throw toDataError(e2, symbol); });
+        }
+        if (!Array.isArray(rows)) throw new DataError('Dữ liệu nhận về không đúng định dạng (mã ' + symbol + ').', symbol);
+        rows.forEach(function (r) {
+          const b = { time: Math.floor(r[0] / 1000), open: +r[1], high: +r[2], low: +r[3], close: +r[4], volume: +r[5] || 0 };
+          if (isFinite(b.open) && isFinite(b.close)) bars.push(b);
+        });
+        if (rows.length < 1000) break;
+        start = rows[rows.length - 1][0] + 1;
+      }
+      if (!bars.length) throw new DataError('Không có dữ liệu cho mã ' + symbol + '.', symbol);
+      return dedupe(bars);
+    }
+  }
+
+  // Chọn nguồn theo mã: tài sản thế giới → Binance, còn lại → nguồn cổ phiếu VN.
+  // Cùng giao diện getHistory / getHistoryBatch nên app.js và board.js dùng như một nguồn.
+  class MarketRouter {
+    constructor(vnSource, globalSource) {
+      this.vn = vnSource;
+      this.global = globalSource;
+      this.batchSize = vnSource.batchSize || 4;
+    }
+
+    _pick(symbol) { return this.global.has(symbol) ? this.global : this.vn; }
+
+    getHistory(symbol, tf) { return this._pick(symbol).getHistory(symbol, tf); }
+
+    async getHistoryBatch(symbols, tf, onProgress) {
+      const out = {};
+      for (let i = 0; i < symbols.length; i += this.batchSize) {
+        const group = symbols.slice(i, i + this.batchSize);
+        const results = await Promise.allSettled(group.map((s) => this.getHistory(s, tf)));
+        results.forEach(function (r, k) {
+          out[group[k]] = r.status === 'fulfilled' ? { bars: r.value } : { error: r.reason };
+        });
+        if (onProgress) onProgress(Math.min(i + this.batchSize, symbols.length), symbols.length);
+      }
+      return out;
+    }
+  }
+
   async function fetchJson(url) {
     const ctrl = new AbortController();
     const timer = setTimeout(function () { ctrl.abort(); }, TIMEOUT_MS);
@@ -209,6 +280,14 @@ window.VST = window.VST || {};
       }
     }
 
+    // Ngừng theo dõi mã hiện tại (giữ kết nối để watch lại nhanh). Dùng khi xem tài sản không có trên SSI.
+    pause() {
+      if (this.symbol && this.socket && this.socket.readyState === 1) this._send('unsub', [this.symbol]);
+      this.symbol = null;
+      this.onQuote = null;
+      this.onStatus = null;
+    }
+
     _connect() {
       clearTimeout(this.timer);
       if (typeof WebSocket === 'undefined') { this._status('closed'); return; }
@@ -286,6 +365,8 @@ window.VST = window.VST || {};
 
   VST.DataError = DataError;
   VST.VndirectSource = VndirectSource;
+  VST.BinanceSource = BinanceSource;
+  VST.MarketRouter = MarketRouter;
   VST.SsiRealtimeFeed = SsiRealtimeFeed;
   VST.parseSsiQuote = parseSsi;
 })();

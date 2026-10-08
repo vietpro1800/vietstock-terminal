@@ -181,6 +181,12 @@ button, input { font: inherit; color: inherit; }
 .c-rsi input:checked { accent-color: var(--rsi); }
 .c-macd input:checked { accent-color: var(--macd); }
 
+.asset-chips { margin-bottom: 0; }
+.asset-chips .chip { background: none; font: inherit; font-size: 12px; min-height: 40px; }
+.asset-chips .chip.active { color: var(--text); background: var(--bg-active); border-color: var(--accent); }
+.chips-label { align-self: center; font-size: 12px; color: var(--text-dim); }
+.chart-name { margin-left: 8px; font-size: 13px; font-weight: 400; color: var(--text-dim); }
+
 .legend {
   display: flex; flex-wrap: wrap; gap: 2px 10px;
   min-height: 20px; margin-bottom: 4px;
@@ -260,6 +266,8 @@ button, input { font: inherit; color: inherit; }
 
   body.dash .chart-panel { display: flex; flex-direction: column; min-height: 0; }
   body.dash .chips { margin: 8px 0 4px; }
+  body.dash .asset-chips { margin-bottom: 0; }
+  body.dash .asset-chips .chip { min-height: 30px; }
   body.dash .chart-wrap { flex: 1; min-height: 160px; }
   body.dash .chart-main { height: 100%; min-height: 0; }
   body.dash .chart-sub { height: clamp(70px, 12vh, 120px); }
@@ -317,6 +325,10 @@ button, input { font: inherit; color: inherit; }
 .ob-bar { position: absolute; top: 3px; bottom: 3px; opacity: 0.18; border-radius: 2px; }
 .ob-bar-bid { right: 0; background: var(--up); }
 .ob-bar-ask { left: 0; background: var(--down); }
+/* Tài sản không có sổ lệnh SSI (vàng, tiền số, ngoại hối): chỉ giữ phần giá. */
+#orderbook.ob-off .ob-book, #orderbook.ob-off .ob-sub, #orderbook.ob-off .ob-trades-scroll,
+#orderbook.ob-off .ob-sum, #orderbook.ob-off .ob-note { display: none; }
+#orderbook.ob-off .ob-head { margin-bottom: 0; }
 .ob-sub { margin: 10px 0 2px; font-size: 12px; font-weight: 600; color: var(--text-dim); }
 .ob-trades-scroll { max-height: 240px; overflow-y: auto; }
 .ob-trades th { position: sticky; top: 0; background: var(--bg-panel); }

@@ -45,9 +45,11 @@ window.VST = window.VST || {};
       this.reset(null);
     }
 
-    // Đổi mã: xóa sổ lệnh cũ.
-    reset(symbol) {
+    // Đổi mã: xóa sổ lệnh cũ. decimals: số chữ số thập phân của giá (mặc định 2).
+    reset(symbol, decimals) {
       this.symbol = symbol;
+      this.decimals = decimals == null ? 2 : decimals;
+      this.root.classList.remove('ob-off');
       this.quote = null;
       this.trades = [];
       this.lastTotal = null;
@@ -63,6 +65,13 @@ window.VST = window.VST || {};
       const last = bars[bars.length - 1], prev = bars[bars.length - 2];
       this.fallback = { price: last.close, change: last.close - prev.close, totalVol: last.volume };
       this._render();
+    }
+
+    // Mã không có trên bảng giá SSI (vàng, tiền số, ngoại hối): chỉ hiện giá, ẩn sổ lệnh/khớp lệnh.
+    setUnavailable(text) {
+      this.root.classList.add('ob-off');
+      this.q('.ob-live .dot').className = 'dot';
+      this.q('.ob-live-text').textContent = text;
     }
 
     setStatus(s) {
@@ -95,12 +104,13 @@ window.VST = window.VST || {};
       const ref = price != null ? price - change : null;
       const cls = colorOf(price, ref);
       const last = this.q('.ob-last');
-      last.textContent = price != null ? VST.fmtPrice(price) : '—';
+      const fp = (v) => VST.fmtPrice(v, this.decimals);
+      last.textContent = price != null ? fp(price) : '—';
       last.className = 'ob-last ' + cls;
       const chg = this.q('.ob-chg');
       chg.className = 'ob-chg ' + cls;
       chg.textContent = price != null
-        ? sign(change) + VST.fmtPrice(change) + ' / ' + sign(change) + VST.fmtPct(ref ? (change / ref) * 100 : 0) + '%'
+        ? sign(change) + fp(change) + ' / ' + sign(change) + VST.fmtPct(ref ? (change / ref) * 100 : 0) + '%'
         : '';
 
       // 3 bước giá: thanh nền dài theo khối lượng.
@@ -141,7 +151,7 @@ window.VST = window.VST || {};
 
   function colorOf(price, ref) {
     if (price == null || ref == null) return '';
-    const d = Math.round((price - ref) * 1000);
+    const d = Math.round((price - ref) * 1e6); // đủ nhỏ cho tỷ giá 4 chữ số thập phân
     return d > 0 ? 'up' : d < 0 ? 'down' : 'ref';
   }
   function sign(v) { return v > 0.0005 ? '+' : ''; }

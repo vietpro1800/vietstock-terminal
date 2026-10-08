@@ -16,6 +16,17 @@ VST.config = {
     'VHM', 'VIC', 'VNM', 'FPT', 'MSN', 'MWG', 'GAS', 'SAB', 'VJC', 'PLX',
   ],
 
+  // Tài sản thế giới xem chung biểu đồ kỹ thuật, dữ liệu từ Binance (public, không cần khóa).
+  // pair: cặp trên Binance; decimals: số chữ số thập phân khi hiển thị giá (USD).
+  // Vàng dùng PAXG (1 token = 1 ounce vàng London) làm đại diện cho XAU/USD;
+  // EUR/USD lấy từ cặp EURUSDT nên có thể lệch nhẹ so với tỷ giá liên ngân hàng.
+  globalAssets: [
+    { symbol: 'XAUUSD', label: 'Vàng', name: 'Vàng (USD/ounce)', pair: 'PAXGUSDT', decimals: 2, aliases: ['XAU', 'GOLD', 'VANG'] },
+    { symbol: 'BTCUSD', label: 'Bitcoin', name: 'Bitcoin (USD)', pair: 'BTCUSDT', decimals: 2, aliases: ['BTC', 'BITCOIN'] },
+    { symbol: 'ETHUSD', label: 'Ethereum', name: 'Ethereum (USD)', pair: 'ETHUSDT', decimals: 2, aliases: ['ETH'] },
+    { symbol: 'EURUSD', label: 'EUR/USD', name: 'Tỷ giá EUR/USD', pair: 'EURUSDT', decimals: 4, aliases: ['EUR'] },
+  ],
+
   // Khung thời gian: resolution gửi lên API và số ngày lịch sử cần tải.
   timeframes: {
     '15': { label: '15 phút', resolution: '15', days: 20, intraday: true },
