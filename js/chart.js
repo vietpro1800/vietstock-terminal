@@ -29,14 +29,17 @@ window.VST = window.VST || {};
     }, extra || {});
   }
 
-  function fmtPrice(p) {
-    return p.toLocaleString('vi-VN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  // decimals: số chữ số thập phân (mặc định 2; tỷ giá cần 4).
+  function fmtPrice(p, decimals) {
+    const d = decimals == null ? 2 : decimals;
+    return p.toLocaleString('vi-VN', { minimumFractionDigits: d, maximumFractionDigits: d });
   }
 
   class ChartView {
     constructor(els) {
       this.els = els; // { main, rsi, macd, legend }
       this.bars = [];
+      this.decimals = 2;
 
       this.main = LWC.createChart(els.main, baseOptions());
       this.candles = this.main.addCandlestickSeries({
@@ -138,6 +141,17 @@ window.VST = window.VST || {};
       this._updateLegend(null);
     }
 
+    // Số chữ số thập phân của giá (cổ phiếu VN, vàng, BTC: 2; tỷ giá: 4). Gọi trước setData.
+    setPrecision(decimals) {
+      if (decimals === this.decimals) return;
+      this.decimals = decimals;
+      const fmt = (p) => fmtPrice(p, decimals);
+      const minMove = Math.pow(10, -decimals);
+      this.main.applyOptions({ localization: { locale: 'vi-VN', priceFormatter: fmt } });
+      this.macdChart.applyOptions({ localization: { locale: 'vi-VN', priceFormatter: (p) => fmtPrice(p, decimals > 2 ? decimals + 1 : 2) } });
+      this.candles.applyOptions({ priceFormat: { type: 'price', precision: decimals, minMove: minMove } });
+    }
+
     setIndicators(on) {
       this.ma20.applyOptions({ visible: !!on.ma20 });
       this.ma50.applyOptions({ visible: !!on.ma50 });
@@ -165,13 +179,14 @@ window.VST = window.VST || {};
       const chg = prev ? b.close - prev.close : 0;
       const pct = prev && prev.close ? (chg / prev.close) * 100 : 0;
       const cls = chg > 0 ? 'up' : chg < 0 ? 'down' : 'ref';
+      const fp = (v) => fmtPrice(v, this.decimals);
       el.innerHTML =
         '<span class="lg-time">' + fmtTime(b.time, this.tf) + '</span>' +
-        '<span>M <b>' + fmtPrice(b.open) + '</b></span>' +
-        '<span>C <b>' + fmtPrice(b.high) + '</b></span>' +
-        '<span>T <b>' + fmtPrice(b.low) + '</b></span>' +
-        '<span>Đ <b class="' + cls + '">' + fmtPrice(b.close) + '</b></span>' +
-        '<span class="' + cls + '">' + (chg > 0 ? '+' : '') + fmtPrice(chg) + ' (' + (chg > 0 ? '+' : '') + VST.fmtPct(pct) + '%)</span>' +
+        '<span>M <b>' + fp(b.open) + '</b></span>' +
+        '<span>C <b>' + fp(b.high) + '</b></span>' +
+        '<span>T <b>' + fp(b.low) + '</b></span>' +
+        '<span>Đ <b class="' + cls + '">' + fp(b.close) + '</b></span>' +
+        '<span class="' + cls + '">' + (chg > 0 ? '+' : '') + fp(chg) + ' (' + (chg > 0 ? '+' : '') + VST.fmtPct(pct) + '%)</span>' +
         '<span>KL <b>' + VST.fmtVolume(b.volume) + '</b></span>';
     }
   }
