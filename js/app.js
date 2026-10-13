@@ -32,8 +32,8 @@ VST.auth.guard().then(function (ctx) {
   };
 
   let chart = null;
-  if (window.LightweightCharts) {
-    chart = new VST.ChartView({ main: $('chart-main'), rsi: $('chart-rsi'), macd: $('chart-macd'), legend: $('legend') });
+  if (window.klinecharts) {
+    chart = new VST.ChartView({ main: $('chart-main'), legend: $('legend'), tools: $('draw-tools') });
   } else {
     showNotice('Không tải được thư viện biểu đồ. Kiểm tra kết nối Internet rồi tải lại trang.');
   }
@@ -176,7 +176,7 @@ VST.auth.guard().then(function (ctx) {
     try {
       const bars = await source.getHistory(symbol, tf);
       if (token !== state.loadToken) return; // đã có yêu cầu mới hơn
-      chart.setData(bars, tf, keepView);
+      chart.setData(symbol, bars, tf, keepView);
       // Nến ngày cho sổ lệnh hiện giá tham khảo khi chưa có dữ liệu realtime.
       if (tf.resolution === 'D' && !tf.aggregate) book.setFallback(symbol, bars);
       return true;

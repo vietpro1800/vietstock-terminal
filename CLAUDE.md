@@ -25,7 +25,9 @@ sau này mở rộng nhiều người dùng có đăng nhập.
   - `js/data.js` — lớp lấy dữ liệu. **Mọi lệnh gọi mạng chỉ nằm ở đây.** Đổi nguồn dữ liệu
     = viết lớp mới cùng giao diện (`getHistory`, `getHistoryBatch`) rồi đổi một dòng trong `app.js`.
   - `js/indicators.js` — hàm tính chỉ báo thuần (không đụng DOM).
-  - `js/chart.js` — vẽ biểu đồ (Lightweight Charts).
+  - `js/chart.js` — biểu đồ kỹ thuật dashboard (KLineChart `klinecharts@10.0.3`): nến, KL, MA, BOLL, RSI, MACD
+    (chỉ báo tính bằng `VST.indicators`), công cụ vẽ (lưu `localStorage` theo mã), hàm định dạng dùng chung `VST.fmt*`.
+    `js/backtest-chart.js` — biểu đồ trang backtest (Lightweight Charts), nạp sau `chart.js`.
   - `js/board.js` — bảng giá.
   - `js/orderbook.js` — khung sổ lệnh/khớp lệnh (chỉ hiển thị; dữ liệu từ `VST.SsiRealtimeFeed` trong `data.js`).
   - `js/chat.js` — thảo luận theo mã (bảng `stock_comments` trong Supabase, realtime).
