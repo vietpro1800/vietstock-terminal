@@ -180,6 +180,7 @@ button, input { font: inherit; color: inherit; }
 .c-bb input:checked { accent-color: var(--bb); }
 .c-rsi input:checked { accent-color: var(--rsi); }
 .c-macd input:checked { accent-color: var(--macd); }
+.c-vol input:checked { accent-color: var(--text-dim); }
 
 .asset-chips { margin-bottom: 0; }
 .asset-chips .chip { background: none; font: inherit; font-size: 12px; min-height: 40px; }
@@ -198,18 +199,30 @@ button, input { font: inherit; color: inherit; }
 .legend b.ref { color: var(--ref); }
 .lg-time { color: var(--text); }
 
+/* Công cụ vẽ: một hàng nút, cuộn ngang bên trong nếu thiếu chỗ (không làm trang cuộn ngang). */
+.draw-tools {
+  display: flex; gap: 6px; margin: 0 0 6px; overflow-x: auto;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.draw-tools::-webkit-scrollbar { display: none; }
+.tool {
+  flex: none; min-height: 40px; padding: 0 10px;
+  background: none; border: 1px solid var(--border); border-radius: var(--radius);
+  color: var(--text-dim); font: inherit; font-size: 12px; cursor: pointer; white-space: nowrap;
+}
+.tool:hover { background: var(--bg-hover); color: var(--text); }
+.tool.active { background: var(--bg-active); color: var(--text); border-color: var(--accent); }
+.tool-clear { margin-left: auto; }
+
+/* Một biểu đồ gồm khung nến và các khung phụ (KL, RSI, MACD); --subs-h = tổng chiều cao khung phụ (chart.js đặt). */
 .chart-wrap { position: relative; }
-.chart-main { height: 340px; }
+.chart-main { height: calc(300px + var(--subs-h, 0px)); }
 .loading {
   position: absolute; inset: 0; display: grid; place-items: center;
   background: rgba(21, 26, 35, 0.6); color: var(--text-dim); font-size: 13px;
 }
 .loading[hidden] { display: none; }
 
-.subchart { position: relative; margin-top: 6px; border-top: 1px solid var(--border); padding-top: 4px; }
-.subchart[hidden] { display: none; }
-.subchart-label { position: absolute; top: 6px; left: 6px; z-index: 2; font-size: 11px; color: var(--text-dim); pointer-events: none; }
-.chart-sub { height: 110px; }
 
 /* ---------- Bảng giá ---------- */
 .board-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
@@ -240,8 +253,7 @@ button, input { font: inherit; color: inherit; }
   .status { order: 0; margin-left: auto; }
   .status + .user-bar { margin-left: 0; }
   .ub-email { display: inline; }
-  .chart-main { height: 420px; }
-  .chart-sub { height: 130px; }
+  .chart-main { height: calc(380px + var(--subs-h, 0px)); }
 }
 
 /* Màn rộng: biểu đồ 3/4 bên trái, sổ lệnh + thảo luận 1/4 bên phải. */
@@ -270,7 +282,8 @@ button, input { font: inherit; color: inherit; }
   body.dash .asset-chips .chip { min-height: 30px; }
   body.dash .chart-wrap { flex: 1; min-height: 160px; }
   body.dash .chart-main { height: 100%; min-height: 0; }
-  body.dash .chart-sub { height: clamp(70px, 12vh, 120px); }
+  body.dash .draw-tools { margin-bottom: 4px; }
+  body.dash .tool { min-height: 30px; }
 
   body.dash .side { display: flex; flex-direction: column; min-height: 0; gap: 8px; }
   body.dash .book-panel { flex: 0 1 auto; max-height: 64%; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0e1117">
   <title>ThảoChi Stock</title>
-  <link rel="stylesheet" href="css/style.css?v=20261008">
+  <link rel="stylesheet" href="css/style.css?v=20261013">
 </head>
 <body class="dash">
   <header class="topbar">
@@ -41,21 +41,15 @@
         <label class="chip c-ma50"><input type="checkbox" data-ind="ma50">MA50</label>
         <label class="chip c-ma200"><input type="checkbox" data-ind="ma200">MA200</label>
         <label class="chip c-bb"><input type="checkbox" data-ind="bb">Bollinger</label>
+        <label class="chip c-vol"><input type="checkbox" data-ind="vol">Khối lượng</label>
         <label class="chip c-rsi"><input type="checkbox" data-ind="rsi">RSI</label>
         <label class="chip c-macd"><input type="checkbox" data-ind="macd">MACD</label>
       </div>
+      <div id="draw-tools" class="draw-tools" role="toolbar" aria-label="Công cụ vẽ"></div>
       <div id="legend" class="legend"></div>
       <div class="chart-wrap">
         <div id="chart-main" class="chart-main"></div>
         <div id="chart-loading" class="loading" hidden>Đang tải dữ liệu…</div>
-      </div>
-      <div class="subchart">
-        <span class="subchart-label">RSI 14</span>
-        <div id="chart-rsi" class="chart-sub"></div>
-      </div>
-      <div class="subchart">
-        <span class="subchart-label">MACD 12, 26, 9</span>
-        <div id="chart-macd" class="chart-sub"></div>
       </div>
     </section>
 
@@ -97,19 +91,19 @@
   </main>
 
   <footer class="footer">
-    Dữ liệu: VNDirect (dchart); vàng, tiền số, ngoại hối: Binance (vàng theo PAXG, EUR/USD theo EURUSDT). Biểu đồ: <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView Lightweight Charts</a>. Tự làm mới mỗi 30 giây. Chỉ mang tính tham khảo, không phải khuyến nghị đầu tư.
+    Dữ liệu: VNDirect (dchart); vàng, tiền số, ngoại hối: Binance (vàng theo PAXG, EUR/USD theo EURUSDT). Biểu đồ: <a href="https://github.com/klinecharts/KLineChart" target="_blank" rel="noopener">KLineChart</a> (Apache-2.0). Tự làm mới mỗi 30 giây. Chỉ mang tính tham khảo, không phải khuyến nghị đầu tư.
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
-  <script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
-  <script src="js/config.js?v=20261008"></script>
-  <script src="js/auth.js?v=20261008"></script>
-  <script src="js/data.js?v=20261008"></script>
-  <script src="js/indicators.js?v=20261008"></script>
-  <script src="js/chart.js?v=20261008"></script>
-  <script src="js/board.js?v=20261008"></script>
-  <script src="js/orderbook.js?v=20261008"></script>
-  <script src="js/chat.js?v=20261008"></script>
-  <script src="js/app.js?v=20261008"></script>
+  <script src="https://cdn.jsdelivr.net/npm/klinecharts@10.0.3/dist/umd/klinecharts.min.js"></script>
+  <script src="js/config.js?v=20261013"></script>
+  <script src="js/auth.js?v=20261013"></script>
+  <script src="js/data.js?v=20261013"></script>
+  <script src="js/indicators.js?v=20261013"></script>
+  <script src="js/chart.js?v=20261013"></script>
+  <script src="js/board.js?v=20261013"></script>
+  <script src="js/orderbook.js?v=20261013"></script>
+  <script src="js/chat.js?v=20261013"></script>
+  <script src="js/app.js?v=20261013"></script>
 </body>
 </html>
