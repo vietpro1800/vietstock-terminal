@@ -76,6 +76,13 @@ VST.config = {
     ],
   },
 
+  // Trang lọc cổ phiếu. Danh sách mã = tất cả mã trong VST.config.rrg.sectors (kèm tên ngành).
+  scan: {
+    days: 420,       // số ngày lịch sử tải về (đủ ~250 phiên cho MA200 và đỉnh 52 tuần)
+    batchSize: 6,    // số mã gọi song song
+    cacheMinutes: 10, // giữ kết quả tính trong phiên trình duyệt, tránh tải lại khi quay lại trang
+  },
+
   // Chỉ báo mặc định bật.
   defaultIndicators: { ma20: true, ma50: true, ma200: false, bb: false, vol: true, rsi: true, macd: false },
 };

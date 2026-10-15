@@ -133,6 +133,7 @@ index.html          Trang chính (dashboard, cần đăng nhập)
 login.html          Đăng nhập / đăng ký / quên mật khẩu / chờ duyệt
 reset-password.html Đặt mật khẩu mới từ link trong email
 admin.html          Quản trị tài khoản (chỉ admin)
+scan.html           Lọc cổ phiếu theo nhiều tiêu chí kỹ thuật (cần đăng nhập)
 rrg.html            RRG: sức mạnh tương đối các ngành và các mã trong ngành (cần đăng nhập)
 backtest.html       Backtest chiến lược (cần đăng nhập)
 css/style.css       Giao diện (biến màu ở :root)
@@ -146,10 +147,12 @@ js/indicators.js    Tính MA, Bollinger, RSI, MACD
 js/chart.js         Vẽ biểu đồ (dashboard + backtest)
 js/backtest.js      Công cụ backtest: phí/thuế, lô 100, T+2, chiến lược, chỉ số (hàm thuần)
 js/backtest-page.js Logic trang backtest
+js/scan.js          Bộ lọc cổ phiếu: tính chỉ số mỗi mã, các tiêu chí, bộ lọc mẫu (hàm thuần)
+js/scan-page.js     Logic trang lọc cổ phiếu
 js/rrg.js           Tính RRG: chỉ số ngành, RS-Ratio, RS-Momentum (hàm thuần)
 js/rrg-chart.js     Vẽ biểu đồ RRG (SVG)
 js/rrg-page.js      Logic trang RRG
-tests/              Kiểm thử: `node tests/backtest.test.js`, `node tests/rrg.test.js` hoặc mở tests/index.html
+tests/              Kiểm thử: `node tests/backtest.test.js`, `node tests/rrg.test.js`, `node tests/scan.test.js` hoặc mở tests/index.html
 js/board.js         Bảng giá
 js/orderbook.js     Sổ lệnh 3 bước giá + khớp lệnh realtime
 js/chat.js          Thảo luận theo mã (Supabase realtime)
@@ -157,6 +160,16 @@ js/app.js           Khởi tạo, sự kiện, tự làm mới
 supabase/schema.sql Bảng profiles, stock_comments, trigger, RLS — chạy trong Supabase SQL Editor
 CLAUDE.md           Quy ước phát triển
 ```
+
+## Lọc cổ phiếu
+
+Trang `scan.html` lọc các mã trong danh sách ngành (`VST.config.rrg.sectors`, ~130 mã) theo nến ngày.
+Dữ liệu tải một lần (giữ 10 phút trong phiên trình duyệt), đổi tiêu chí là lọc lại ngay.
+
+10 tiêu chí, bật/tắt và chỉnh tham số tùy ý: thanh khoản (GTGD bình quân 20 phiên), vùng giá, giá trên MA20/50/200,
+xu hướng MA (MA20 > MA50 > MA200…), RSI(14) trong khoảng, MACD (cắt lên / trên đường tín hiệu), khối lượng đột biến,
+hiệu suất giá N phiên, gần đỉnh 52 tuần, vượt đỉnh 20/50 phiên. Có 4 bộ lọc mẫu và chế độ "thiếu tối đa 1–2 tiêu chí".
+Thêm tiêu chí mới: thêm một mục vào `CRITERIA` trong `js/scan.js` (giao diện tự sinh ô nhập).
 
 ## RRG ngành
 
