@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="vi" class="auth-checking">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0e1117">
+  <title>Lọc cổ phiếu · ThảoChi Stock</title>
+  <link rel="stylesheet" href="css/style.css?v=20261015">
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="brand"><a href="index.html">ThảoChi<span>Stock</span></a></h1>
+    <span class="page-tag">Lọc cổ phiếu</span>
+    <div id="user-bar" class="user-bar"></div>
+  </header>
+
+  <div id="notice" class="notice" role="alert" hidden>
+    <span id="notice-text"></span>
+    <button id="notice-close" type="button" aria-label="Đóng thông báo">×</button>
+  </div>
+
+  <main class="scan">
+    <section class="panel scan-form">
+      <div class="bt-head">
+        <h2>Tiêu chí lọc</h2>
+        <button id="scan-reset" type="button" class="btn btn-sm">Bỏ chọn hết</button>
+      </div>
+
+      <div class="form-field">
+        <span>Bộ lọc mẫu</span>
+        <div id="scan-presets" class="scan-presets"></div>
+      </div>
+
+      <label class="form-field">
+        <span>Phạm vi</span>
+        <select id="scan-universe" class="input"></select>
+      </label>
+
+      <div id="scan-criteria" class="scan-criteria"></div>
+    </section>
+
+    <section class="panel scan-result">
+      <div class="rrg-head">
+        <h2>Kết quả</h2>
+        <button id="scan-reload" type="button" class="btn btn-sm">Tải lại dữ liệu</button>
+      </div>
+      <p id="scan-summary" class="rrg-summary dim">Đang tải…</p>
+
+      <div class="scan-match form-field">
+        <span id="scan-miss-label">Mức khớp</span>
+        <div id="scan-miss" class="seg" role="group" aria-labelledby="scan-miss-label">
+          <button type="button" data-v="0">Đạt tất cả</button>
+          <button type="button" data-v="1">Thiếu tối đa 1</button>
+          <button type="button" data-v="2">Thiếu tối đa 2</button>
+        </div>
+      </div>
+
+      <div class="scan-table-wrap">
+        <div class="table-scroll">
+          <table class="board scan-table">
+            <thead id="scan-head"></thead>
+            <tbody id="scan-list"><tr><td class="dim center">Đang tải…</td></tr></tbody>
+          </table>
+        </div>
+        <div id="scan-loading" class="loading">
+          <div class="rrg-progress">
+            <span id="scan-progress-text">Đang tải dữ liệu…</span>
+            <div class="bar"><i id="scan-progress-bar"></i></div>
+          </div>
+        </div>
+      </div>
+      <p class="form-hint scan-hint">Nhấn tiêu đề cột để sắp xếp; nhấn vào mã để mở biểu đồ kỹ thuật.
+        Trong giờ giao dịch, phiên hôm nay chưa kết thúc nên khối lượng và tín hiệu có thể còn thay đổi.</p>
+    </section>
+
+    <aside class="bt-disclaimer" role="note">
+      Bộ lọc chạy trên các mã trong danh sách ngành (cùng danh sách với trang RRG), dữ liệu nến ngày từ VNDirect,
+      chưa điều chỉnh chia tách/cổ tức nên một số chỉ báo có thể lệch. Chỉ mang tính tham khảo, không phải khuyến nghị đầu tư.
+    </aside>
+  </main>
+
+  <footer class="footer">
+    Dữ liệu: VNDirect (dchart). Tính toán chạy ngay trên trình duyệt của bạn.
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+  <script src="js/config.js?v=20261015"></script>
+  <script src="js/auth.js?v=20261015"></script>
+  <script src="js/data.js?v=20261015"></script>
+  <script src="js/indicators.js?v=20261015"></script>
+  <script src="js/scan.js?v=20261015"></script>
+  <script src="js/scan-page.js?v=20261015"></script>
+</body>
+</html>

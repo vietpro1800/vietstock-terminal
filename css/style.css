@@ -746,3 +746,56 @@ select.input { appearance: none; padding-right: 32px;
 @media (min-width: 1000px) {
   .rrg-chart { height: calc(100vh - 290px); min-height: 520px; }
 }
+
+/* ---------- Trang lọc cổ phiếu ---------- */
+.scan { display: grid; gap: var(--gutter); padding: var(--gutter); max-width: 1400px; margin: 0 auto; }
+.scan-form { display: grid; gap: 12px; align-content: start; }
+.scan-form h2, .scan-result h2 { font-size: 16px; }
+.scan-form .bt-head { margin-bottom: 0; }
+.scan-presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.scan-presets .chip { min-height: 40px; background: none; font: inherit; font-size: 12px; }
+.scan-presets .chip:hover { color: var(--text); background: var(--bg-hover); }
+
+.scan-criteria { display: grid; gap: 6px; }
+.scan-crit { border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); }
+.scan-crit.on { border-color: var(--accent); }
+.scan-crit-head { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 10px; cursor: pointer; }
+.scan-crit-head input { width: 18px; height: 18px; margin: 0; accent-color: var(--accent); flex: none; }
+.scan-crit-name { flex: 1; min-width: 0; font-weight: 500; }
+.scan-crit:not(.on) .scan-crit-name { color: var(--text-dim); }
+.scan-count { font-size: 11px; color: var(--text-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.scan-crit-body { display: none; padding: 0 10px 10px; }
+.scan-crit.on .scan-crit-body { display: grid; gap: 8px; }
+.scan-crit-body .form-hint { margin: 0; }
+.scan-params { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.scan-params .form-field[hidden] { display: none; }
+.scan-params .input { width: 100%; }
+
+.scan-result { min-width: 0; }
+.scan-result .rrg-head .btn { min-height: 40px; }
+.scan-match { margin-bottom: 10px; }
+.scan-match .seg button { flex: 1; min-height: 40px; }
+.scan-table-wrap { position: relative; min-height: 160px; }
+.scan-table th { padding: 0; }
+.scan-table th button {
+  display: block; width: 100%; min-height: 40px; padding: 0 6px; border: 0; background: none;
+  color: inherit; font: inherit; text-align: inherit; white-space: nowrap; cursor: pointer;
+}
+.scan-table th.sorted { color: var(--text); }
+.scan-table tbody tr[data-symbol] { cursor: pointer; }
+.scan-table tbody tr[data-symbol]:hover { background: var(--bg-hover); }
+.scan-table .sym a { display: inline-flex; align-items: center; min-height: 40px; color: var(--accent); text-decoration: none; }
+.scan-table .scan-sector { display: none; } /* màn hẹp: ẩn cột ngành để thấy các cột số */
+.scan-table td.scan-sector { max-width: 140px; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
+.scan-empty { height: 80px; white-space: normal; }
+.scan-hint { margin-top: 8px; }
+
+@media (min-width: 600px) {
+  .scan-table .scan-sector { display: table-cell; }
+}
+
+@media (min-width: 1000px) {
+  .scan { grid-template-columns: 360px minmax(0, 1fr); align-items: start; }
+  .scan > .bt-disclaimer { grid-column: 1 / -1; }
+  .scan-form { position: sticky; top: 72px; max-height: calc(100vh - 84px); overflow-y: auto; }
+}
