@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="vi" class="auth-checking">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0e1117">
+  <title>Bảng giá · ThảoChi Stock</title>
+  <link rel="stylesheet" href="css/style.css?v=20261018">
+</head>
+<body class="pbpage">
+  <header class="topbar">
+    <h1 class="brand"><a href="index.html">ThảoChi<span>Stock</span></a></h1>
+    <span class="page-tag">Bảng giá</span>
+    <div class="status">
+      <span id="status-dot" class="dot"></span>
+      <span id="status-text">Đang tải…</span>
+    </div>
+    <div id="user-bar" class="user-bar"></div>
+  </header>
+
+  <div id="notice" class="notice" role="alert" hidden>
+    <span id="notice-text"></span>
+    <button id="notice-close" type="button" aria-label="Đóng thông báo">×</button>
+  </div>
+
+  <section id="pb-indices" class="pb-indices" aria-label="Chỉ số thị trường"></section>
+
+  <div class="pb-toolbar">
+    <form id="pb-search" class="pb-search" autocomplete="off" role="search">
+      <label for="pb-search-input" class="sr-only">Tìm mã chứng khoán</label>
+      <input id="pb-search-input" list="pb-search-list" maxlength="10" placeholder="Tìm kiếm CK"
+             autocapitalize="characters" spellcheck="false" enterkeyhint="search">
+      <datalist id="pb-search-list"></datalist>
+    </form>
+    <div id="pb-groups" class="pb-groups" role="group" aria-label="Nhóm cổ phiếu"></div>
+    <label for="pb-sector" class="sr-only">Chọn ngành</label>
+    <select id="pb-sector" class="pb-sector"></select>
+    <div id="pb-view" class="seg pb-view" role="group" aria-label="Kiểu hiển thị">
+      <button type="button" data-compact="1">Rút gọn</button>
+      <button type="button" data-compact="0">Đầy đủ</button>
+    </div>
+    <span class="pb-rt"><span id="pb-rt-dot" class="dot loading"></span><span id="pb-rt-text">Đang kết nối realtime…</span></span>
+  </div>
+
+  <main class="pb-wrap">
+    <table id="pb-table" class="pb-table">
+      <tbody><tr><td class="pb-empty">Đang tải…</td></tr></tbody>
+    </table>
+  </main>
+
+  <footer class="footer">
+    Giá × 1.000 đồng. Khối lượng × 1 cổ phiếu. Trần/sàn tính từ giá tham chiếu theo biên độ (HOSE ±7%, HNX ±10%, UPCoM ±15%).
+    Nhấn ☆ để thêm vào danh mục, nhấn vào dòng để mở biểu đồ kỹ thuật.
+    Dữ liệu: nến ngày và chỉ số VNDirect (dchart); sổ lệnh/khớp lệnh realtime từ bảng giá SSI (không chính thức, có thể gián đoạn).
+    Chỉ mang tính tham khảo, không phải khuyến nghị đầu tư.
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+  <script src="js/config.js?v=20261018"></script>
+  <script src="js/auth.js?v=20261018"></script>
+  <script src="js/data.js?v=20261018"></script>
+  <script src="js/priceboard.js?v=20261018"></script>
+  <script src="js/priceboard-page.js?v=20261018"></script>
+</body>
+</html>

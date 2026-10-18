@@ -76,6 +76,37 @@ VST.config = {
     ],
   },
 
+  // Trang bảng giá (priceboard.html), kiểu bảng giá SSI iBoard.
+  // Giá trần/sàn tính từ giá tham chiếu theo biên độ sàn (exchange: hose ±7%, hnx ±10%, upcom ±15%).
+  priceboard: {
+    refreshMs: 30000, // làm mới nến ngày (TC, cao, thấp) và biểu đồ chỉ số; sổ lệnh/khớp lệnh là realtime
+    batchSize: 6,
+    // Chỉ số ở đầu trang: biểu đồ trong ngày (nến 5 phút) từ VNDirect.
+    indices: [
+      { symbol: 'VNINDEX', name: 'VN-Index' },
+      { symbol: 'VN30', name: 'VN30' },
+      { symbol: 'HNX', name: 'HNX-Index' },
+      { symbol: 'HNX30', name: 'HNX30' },
+      { symbol: 'UPCOM', name: 'UPCoM' },
+    ],
+    // Rổ chỉ số. Cập nhật khi HOSE/HNX công bố kỳ cơ cấu (6 tháng/lần).
+    groups: [
+      { id: 'VN30', name: 'VN30', exchange: 'hose', symbols: [
+        'ACB', 'BID', 'BSR', 'CTG', 'FPT', 'GAS', 'GVR', 'HDB', 'HPG', 'LPB',
+        'MBB', 'MCH', 'MSN', 'MWG', 'SAB', 'SHB', 'SSB', 'SSI', 'STB', 'TCB',
+        'TCX', 'VCB', 'VHM', 'VIB', 'VIC', 'VJC', 'VNM', 'VPB', 'VPL', 'VRE',
+      ] },
+      { id: 'HNX30', name: 'HNX30', exchange: 'hnx', symbols: [
+        'BVS', 'CAP', 'CEO', 'DHT', 'DTD', 'DVM', 'DXP', 'HGM', 'HUT', 'IDC',
+        'IDV', 'L14', 'LAS', 'LHC', 'MBS', 'NTP', 'NVB', 'PLC', 'PSD', 'PVB',
+        'PVC', 'PVI', 'PVS', 'SHS', 'SLS', 'TIG', 'TNG', 'VC3', 'VCS', 'VFS',
+      ] },
+    ],
+    defaultGroup: 'VN30',
+    // Mã có sẵn trong "Danh mục của tôi" lần đầu mở trang.
+    defaultWatchlist: ['HPG', 'FPT', 'VCB', 'SSI', 'MWG'],
+  },
+
   // Trang lọc cổ phiếu. Danh sách mã = tất cả mã trong VST.config.rrg.sectors (kèm tên ngành).
   scan: {
     days: 420,       // số ngày lịch sử tải về (đủ ~250 phiên cho MA200 và đỉnh 52 tuần)
