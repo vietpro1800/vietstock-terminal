@@ -82,10 +82,11 @@ window.VST = window.VST || {};
   }
 
   // Thanh người dùng trên topbar: link sang các trang khác + Đăng xuất.
-  // current: 'dashboard' | 'scan' | 'rrg' | 'backtest' | 'admin'.
+  // current: 'dashboard' | 'priceboard' | 'scan' | 'rrg' | 'backtest' | 'admin'.
   function mountUserBar(el, profile, current) {
     const links = [];
     if (current !== 'dashboard') links.push('<a class="ub-link" href="index.html">Dashboard</a>');
+    if (current !== 'priceboard') links.push('<a class="ub-link" href="priceboard.html">Bảng giá</a>');
     if (current !== 'scan') links.push('<a class="ub-link" href="scan.html">Lọc mã</a>');
     if (current !== 'rrg') links.push('<a class="ub-link" href="rrg.html">RRG</a>');
     if (current !== 'backtest') links.push('<a class="ub-link" href="backtest.html">Backtest</a>');

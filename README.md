@@ -9,6 +9,9 @@ Web tĩnh (HTML/CSS/JS thuần), chạy trực tiếp trên GitHub Pages, không
 - Biểu đồ nến (TradingView Lightweight Charts) với 4 khung: **15 phút, 1 giờ, Ngày, Tuần**.
 - Chỉ báo bật/tắt được: **MA20, MA50, MA200, Bollinger (20, 2), RSI (14), MACD (12, 26, 9)**.
 - Bảng giá 20 mã vốn hóa lớn: giá, thay đổi, %, khối lượng.
+- Trang **Bảng giá** (`priceboard.html`) kiểu bảng giá SSI: biểu đồ chỉ số trong ngày (VN-Index, VN30, HNX-Index, HNX30, UPCoM),
+  bảng Trần/Sàn/TC, 3 bước giá mua/bán, khớp lệnh, tổng KL, cao/thấp cập nhật realtime, nháy ô khi giá đổi.
+  Nhóm: Danh mục của tôi (ghim ☆), VN30, HNX30 và các ngành; chế độ Rút gọn/Đầy đủ.
 - Tự làm mới mỗi **30 giây**, tạm dừng khi tab bị ẩn.
 - Giao diện nền tối, tối ưu cho điện thoại. Mã, khung thời gian và chỉ báo đã chọn được nhớ trên trình duyệt.
 - **Đăng nhập bằng Supabase Auth** (email + mật khẩu, quên mật khẩu). Người đăng ký mới phải được

@@ -251,14 +251,14 @@ window.VST = window.VST || {};
   // ---------- Sổ lệnh & khớp lệnh realtime (WebSocket bảng giá SSI iBoard) ----------
   // Nguồn không chính thức: định dạng tin nhắn là chuỗi phân tách bằng "|" (vị trí trường theo
   // thư viện mã nguồn mở vnstock-js). WebSocket không bị chặn CORS như fetch.
-  // Mỗi lúc chỉ theo dõi 1 mã: watch(symbol, onQuote, onStatus).
-  //   onQuote({ symbol, price, change, pct, vol, totalVol, side: 'M'|'B'|'', time, bids, asks })
+  // Theo dõi một danh sách mã: watch(symbols, onQuote, onStatus) — gọi lại để đổi danh sách.
+  //   onQuote({ symbol, exchange, price, change, pct, vol, totalVol, side: 'M'|'B'|'', time, bids, asks })
   //   price/change theo nghìn đồng; pct tự tính = change / (price − change).
   //   onStatus('connecting' | 'open' | 'closed')
-  class SsiRealtimeFeed {
+  class SsiBoardFeed {
     constructor(opts) {
       this.url = (opts && opts.url) || 'wss://iboard-pushstream.ssi.com.vn/realtime';
-      this.symbol = null;
+      this.symbols = [];
       this.socket = null;
       this.retry = 0;
       this.timer = null;
@@ -266,26 +266,20 @@ window.VST = window.VST || {};
       this.onStatus = null;
     }
 
-    watch(symbol, onQuote, onStatus) {
-      const prev = this.symbol;
-      this.symbol = String(symbol || '').toUpperCase();
+    watch(symbols, onQuote, onStatus) {
+      const prev = this.symbols;
+      this.symbols = (symbols || []).map((s) => String(s || '').toUpperCase()).filter(Boolean);
       this.onQuote = onQuote;
       this.onStatus = onStatus;
       if (this.socket && this.socket.readyState === 1) {
-        if (prev && prev !== this.symbol) this._send('unsub', [prev]);
-        this._send('sub', [this.symbol]);
-        this._status('open');
-      } else if (!this.socket) {
+        const gone = prev.filter((s) => this.symbols.indexOf(s) < 0);
+        const added = this.symbols.filter((s) => prev.indexOf(s) < 0);
+        if (gone.length) this._send('unsub', gone);
+        if (added.length) this._send('sub', added);
+        if (onStatus) this._status('open');
+      } else if (!this.socket && this.symbols.length) {
         this._connect();
       }
-    }
-
-    // Ngừng theo dõi mã hiện tại (giữ kết nối để watch lại nhanh). Dùng khi xem tài sản không có trên SSI.
-    pause() {
-      if (this.symbol && this.socket && this.socket.readyState === 1) this._send('unsub', [this.symbol]);
-      this.symbol = null;
-      this.onQuote = null;
-      this.onStatus = null;
     }
 
     _connect() {
@@ -303,13 +297,13 @@ window.VST = window.VST || {};
       this.socket = ws;
       ws.onopen = () => {
         this.retry = 0;
-        if (this.symbol) this._send('sub', [this.symbol]);
+        if (this.symbols.length) this._send('sub', this.symbols);
         this._status('open');
       };
       ws.onmessage = (ev) => {
         if (typeof ev.data !== 'string' || ev.data.indexOf('|') < 0) return;
         const q = parseSsi(ev.data);
-        if (q && q.symbol === this.symbol && this.onQuote) this.onQuote(q);
+        if (q && this.onQuote && this.symbols.indexOf(q.symbol) >= 0) this.onQuote(q);
       };
       ws.onclose = () => {
         if (this.socket !== ws) return;
@@ -338,6 +332,14 @@ window.VST = window.VST || {};
     _status(s) { if (this.onStatus) this.onStatus(s); }
   }
 
+  // Sổ lệnh của dashboard: mỗi lúc chỉ theo dõi 1 mã — watch(symbol, onQuote, onStatus).
+  class SsiRealtimeFeed extends SsiBoardFeed {
+    watch(symbol, onQuote, onStatus) { super.watch([symbol], onQuote, onStatus); }
+
+    // Ngừng theo dõi mã hiện tại (giữ kết nối để watch lại nhanh). Dùng khi xem tài sản không có trên SSI.
+    pause() { super.watch([], null, null); }
+  }
+
   // Giá trong tin nhắn tính theo đồng → đổi sang nghìn đồng cho khớp với biểu đồ.
   function parseSsi(str) {
     const p = str.split('|');
@@ -350,6 +352,7 @@ window.VST = window.VST || {};
     const ref = price - change;
     return {
       symbol: symbol,
+      exchange: (p[0] || '').toLowerCase(),
       bids: [level(2), level(4), level(6)],
       asks: [level(22), level(24), level(26)],
       price: price,
@@ -367,6 +370,7 @@ window.VST = window.VST || {};
   VST.VndirectSource = VndirectSource;
   VST.BinanceSource = BinanceSource;
   VST.MarketRouter = MarketRouter;
+  VST.SsiBoardFeed = SsiBoardFeed;
   VST.SsiRealtimeFeed = SsiRealtimeFeed;
   VST.parseSsiQuote = parseSsi;
 })();
