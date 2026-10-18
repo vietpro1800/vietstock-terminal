@@ -1,22 +1,15 @@
 <!DOCTYPE html>
-<html lang="vi" class="auth-checking">
+<html lang="vi" class="auth-checking fa-theme">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0e1117">
+  <meta name="theme-color" content="#252a31">
   <title>ThảoChi Stock</title>
-  <link rel="stylesheet" href="css/style.css?v=20261020">
+  <link rel="stylesheet" href="css/style.css?v=20261021">
 </head>
-<body class="dash">
+<body class="dash fa">
   <header class="topbar">
     <h1 class="brand">ThảoChi<span>Stock</span></h1>
-    <form id="symbol-form" class="symbol-form" autocomplete="off">
-      <label for="symbol-input" class="sr-only">Mã chứng khoán</label>
-      <input id="symbol-input" list="symbol-list" maxlength="10" placeholder="Nhập mã, ví dụ HPG"
-             autocapitalize="characters" spellcheck="false" enterkeyhint="go">
-      <datalist id="symbol-list"></datalist>
-      <button type="submit">Xem</button>
-    </form>
     <div class="status">
       <span id="status-dot" class="dot"></span>
       <span id="status-text">Đang tải…</span>
@@ -29,36 +22,52 @@
     <button id="notice-close" type="button" aria-label="Đóng thông báo">×</button>
   </div>
 
-  <main class="layout">
-    <section class="panel chart-panel">
-      <div class="chart-head">
-        <h2><span id="chart-title">—</span><span id="chart-name" class="chart-name"></span></h2>
-        <div id="tf-group" class="seg" role="group" aria-label="Khung thời gian"></div>
+  <main class="fa-layout">
+    <section class="fa-main" aria-label="Biểu đồ kỹ thuật">
+      <div id="recent-tabs" class="fa-recent" aria-label="Mã đã xem gần đây"></div>
+
+      <div class="fa-toolbar">
+        <form id="symbol-form" class="fa-symbol" autocomplete="off" role="search">
+          <label for="symbol-input" class="sr-only">Mã chứng khoán</label>
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8.5 3a5.5 5.5 0 1 1 0 11a5.5 5.5 0 0 1 0-11zM12.5 12.5L17 17"/></svg>
+          <input id="symbol-input" list="symbol-list" maxlength="10" placeholder="Nhập mã"
+                 autocapitalize="characters" spellcheck="false" enterkeyhint="go">
+          <datalist id="symbol-list"></datalist>
+        </form>
+        <div id="tf-group" class="fa-seg" role="group" aria-label="Khung thời gian"></div>
+        <details id="ind-menu" class="fa-ind">
+          <summary><i>ƒx</i> Các chỉ báo</summary>
+          <div id="ind-group" class="fa-ind-list" role="group" aria-label="Chỉ báo"></div>
+        </details>
+        <div id="asset-group" class="fa-seg fa-assets" role="group" aria-label="Thị trường thế giới"></div>
       </div>
-      <div id="asset-group" class="chips asset-chips" role="group" aria-label="Thị trường thế giới"></div>
-      <div id="ind-group" class="chips" role="group" aria-label="Chỉ báo">
-        <label class="chip c-ma20"><input type="checkbox" data-ind="ma20">MA20</label>
-        <label class="chip c-ma50"><input type="checkbox" data-ind="ma50">MA50</label>
-        <label class="chip c-ma200"><input type="checkbox" data-ind="ma200">MA200</label>
-        <label class="chip c-bb"><input type="checkbox" data-ind="bb">Bollinger</label>
-        <label class="chip c-vol"><input type="checkbox" data-ind="vol">Khối lượng</label>
-        <label class="chip c-rsi"><input type="checkbox" data-ind="rsi">RSI</label>
-        <label class="chip c-macd"><input type="checkbox" data-ind="macd">MACD</label>
+
+      <div class="fa-body">
+        <div id="draw-tools" class="fa-tools draw-tools" role="toolbar" aria-label="Công cụ vẽ"></div>
+        <div class="fa-chart">
+          <div class="fa-head">
+            <h2><span id="chart-title">—</span><span id="chart-name" class="fa-name"></span> · <span id="chart-tf"></span></h2>
+            <div id="legend" class="legend fa-legend"></div>
+          </div>
+          <div class="chart-wrap fa-chart-wrap">
+            <div id="chart-main" class="chart-main fa-chart-main"></div>
+            <div id="chart-loading" class="loading" hidden>Đang tải dữ liệu…</div>
+          </div>
+        </div>
       </div>
-      <div id="draw-tools" class="draw-tools" role="toolbar" aria-label="Công cụ vẽ"></div>
-      <div id="legend" class="legend"></div>
-      <div class="chart-wrap">
-        <div id="chart-main" class="chart-main"></div>
-        <div id="chart-loading" class="loading" hidden>Đang tải dữ liệu…</div>
+
+      <div class="fa-bottom">
+        <div id="range-group" class="fa-range" role="group" aria-label="Khoảng thời gian"></div>
+        <span id="clock" class="fa-clock"></span>
       </div>
     </section>
 
-    <div class="side">
-      <section class="panel book-panel" aria-label="Sổ lệnh">
+    <aside class="fa-side">
+      <section class="fa-book" aria-label="Sổ lệnh">
         <div id="orderbook"></div>
       </section>
 
-      <section class="panel side-tabs">
+      <section class="fa-side-tabs">
         <div id="side-tabs" class="tabs" role="tablist" aria-label="Thảo luận và bảng giá">
           <button type="button" role="tab" id="tab-chat" data-tab="chat" aria-controls="pane-chat">
             Thảo luận <span id="chat-badge" class="count-badge" hidden></span>
@@ -87,23 +96,25 @@
           </div>
         </div>
       </section>
-    </div>
+    </aside>
   </main>
 
   <footer class="footer">
-    Dữ liệu: VNDirect (dchart); vàng, tiền số, ngoại hối: Binance (vàng theo PAXG, EUR/USD theo EURUSDT). Biểu đồ: <a href="https://github.com/klinecharts/KLineChart" target="_blank" rel="noopener">KLineChart</a> (Apache-2.0). Tự làm mới mỗi 30 giây. Chỉ mang tính tham khảo, không phải khuyến nghị đầu tư.
+    Dữ liệu: VNDirect (dchart); vàng, tiền số, ngoại hối: Binance (vàng theo PAXG, EUR/USD theo EURUSDT); sổ lệnh/khớp lệnh realtime từ bảng giá SSI (không chính thức).
+    Biểu đồ: <a href="https://github.com/klinecharts/KLineChart" target="_blank" rel="noopener">KLineChart</a> (Apache-2.0). Tự làm mới mỗi 30 giây.
+    Chỉ mang tính tham khảo, không phải khuyến nghị đầu tư.
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/klinecharts@10.0.3/dist/umd/klinecharts.min.js"></script>
-  <script src="js/config.js?v=20261020"></script>
-  <script src="js/auth.js?v=20261020"></script>
-  <script src="js/data.js?v=20261020"></script>
-  <script src="js/indicators.js?v=20261020"></script>
-  <script src="js/chart.js?v=20261020"></script>
-  <script src="js/board.js?v=20261020"></script>
-  <script src="js/orderbook.js?v=20261020"></script>
-  <script src="js/chat.js?v=20261020"></script>
-  <script src="js/app.js?v=20261020"></script>
+  <script src="js/config.js?v=20261021"></script>
+  <script src="js/auth.js?v=20261021"></script>
+  <script src="js/data.js?v=20261021"></script>
+  <script src="js/indicators.js?v=20261021"></script>
+  <script src="js/chart.js?v=20261021"></script>
+  <script src="js/board.js?v=20261021"></script>
+  <script src="js/orderbook.js?v=20261021"></script>
+  <script src="js/chat.js?v=20261021"></script>
+  <script src="js/app.js?v=20261021"></script>
 </body>
 </html>

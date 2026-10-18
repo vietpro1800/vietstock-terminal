@@ -115,7 +115,7 @@ VST.config = {
   },
 
   // Chỉ báo mặc định bật.
-  defaultIndicators: { ma20: true, ma50: true, ma200: false, bb: false, vol: true, rsi: true, macd: false },
+  defaultIndicators: { ma20: true, ma50: true, ma200: true, bb: false, vp: true, vol: true, rsi: true, macd: false },
 };
 
 // Supabase Auth. Publishable key là khóa CÔNG KHAI theo thiết kế (thay cho anon key),

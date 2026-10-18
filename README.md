@@ -9,10 +9,10 @@ Web tĩnh (HTML/CSS/JS thuần), chạy trực tiếp trên GitHub Pages, không
 - Biểu đồ nến (TradingView Lightweight Charts) với 4 khung: **15 phút, 1 giờ, Ngày, Tuần**.
 - Chỉ báo bật/tắt được: **MA20, MA50, MA200, Bollinger (20, 2), RSI (14), MACD (12, 26, 9)**.
 - Bảng giá 20 mã vốn hóa lớn: giá, thay đổi, %, khối lượng.
-- Trang **Biểu đồ** (`chart.html`) kiểu FireAnt: thanh công cụ vẽ dọc (xu hướng, tia, đường thẳng, ngang, mốc giá, dọc,
+- Dashboard theo kiểu **FireAnt**: tab các mã vừa xem, thanh công cụ vẽ dọc (xu hướng, tia, đường thẳng, ngang, mốc giá, dọc,
   kênh song song, kênh giá, Fibonacci), biểu đồ nền trắng với MA20/50/200, Bollinger, **volume profile**, khối lượng, RSI, MACD,
-  nhãn giá trị trên trục, nút **5 năm / 1 năm / 6 tháng / 3 tháng / 1 tháng / 5 ngày / 1 ngày**, tab các mã vừa xem,
-  sổ lệnh + khớp lệnh realtime và KL mua/bán chủ động bên phải.
+  nhãn giá trị trên trục, nút **5 năm / 1 năm / 6 tháng / 3 tháng / 1 tháng / 5 ngày / 1 ngày**; cột phải có sổ lệnh + khớp lệnh
+  realtime, KL mua/bán chủ động, thảo luận theo mã và bảng giá nhỏ.
 - Trang **Bảng giá** (`priceboard.html`) kiểu bảng giá SSI: biểu đồ chỉ số trong ngày (VN-Index, VN30, HNX-Index, HNX30, UPCoM),
   bảng Trần/Sàn/TC, 3 bước giá mua/bán, khớp lệnh, tổng KL, cao/thấp cập nhật realtime, nháy ô khi giá đổi.
   Nhóm: Danh mục của tôi (ghim ☆), VN30, HNX30 và các ngành; chế độ Rút gọn/Đầy đủ.

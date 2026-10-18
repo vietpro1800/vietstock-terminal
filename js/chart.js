@@ -15,7 +15,7 @@ window.VST = window.VST || {};
 
   const css = getComputedStyle(document.documentElement);
   const color = function (name) { return css.getPropertyValue(name).trim(); };
-  // Trang có thể đặt màu riêng cho vùng biểu đồ (--chart-*), ví dụ biểu đồ nền trắng ở chart.html.
+  // Trang có thể đặt màu riêng cho vùng biểu đồ (--chart-*), ví dụ biểu đồ nền trắng của dashboard.
   const chartColor = (name, fallback) => color(name) || color(fallback);
   const C = {
     text: chartColor('--chart-text', '--text'), dim: chartColor('--chart-dim', '--text-dim'),
