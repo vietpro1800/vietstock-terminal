@@ -15,12 +15,17 @@ window.VST = window.VST || {};
 
   const css = getComputedStyle(document.documentElement);
   const color = function (name) { return css.getPropertyValue(name).trim(); };
+  // Trang có thể đặt màu riêng cho vùng biểu đồ (--chart-*), ví dụ biểu đồ nền trắng ở chart.html.
+  const chartColor = (name, fallback) => color(name) || color(fallback);
   const C = {
-    text: color('--text'), dim: color('--text-dim'), grid: color('--grid'), border: color('--border'),
-    active: color('--bg-active'), accent: color('--accent'),
+    text: chartColor('--chart-text', '--text'), dim: chartColor('--chart-dim', '--text-dim'),
+    grid: chartColor('--chart-grid', '--grid'), border: chartColor('--chart-border', '--border'),
+    active: chartColor('--chart-active', '--bg-active'), accent: color('--accent'),
     up: color('--up'), down: color('--down'), ref: color('--ref'),
     ma20: color('--ma20'), ma50: color('--ma50'), ma200: color('--ma200'),
     bb: color('--bb'), rsi: color('--rsi'), macd: color('--macd'), signal: color('--signal'),
+    rsiBand: color('--chart-rsi-band'), // nền vùng RSI 30–70 (bỏ trống = không tô)
+    markText: chartColor('--chart-mark-text', '--text'), // chữ trên nhãn giá trị chỉ báo
   };
 
   // Khung phụ: thứ tự từ trên xuống và chiều cao (px).
@@ -30,13 +35,20 @@ window.VST = window.VST || {};
     macd: { id: 'pane_macd', indicator: 'VST_MACD', order: 3, height: 100 },
   };
 
-  // Công cụ vẽ (tên overlay có sẵn của KLineChart).
+  // Công cụ vẽ (tên overlay có sẵn của KLineChart). full: chỉ hiện ở bộ công cụ đầy đủ (trang Biểu đồ).
+  // icon: nét vẽ SVG 20×20 cho thanh công cụ dọc.
   const TOOLS = [
-    { name: 'segment', label: 'Xu hướng', title: 'Đường xu hướng: chạm 2 điểm' },
-    { name: 'rayLine', label: 'Tia', title: 'Tia: chạm điểm gốc rồi điểm hướng' },
-    { name: 'horizontalStraightLine', label: 'Ngang', title: 'Đường ngang (hỗ trợ / kháng cự): chạm 1 điểm' },
-    { name: 'fibonacciLine', label: 'Fibo', title: 'Fibonacci thoái lui: chạm đỉnh rồi đáy' },
+    { name: 'segment', label: 'Xu hướng', title: 'Đường xu hướng: chạm 2 điểm', icon: 'M4 16L16 4M4 16h0M16 4h0' },
+    { name: 'rayLine', label: 'Tia', title: 'Tia: chạm điểm gốc rồi điểm hướng', icon: 'M4 16L17 3M13 3h4v4' },
+    { name: 'straightLine', label: 'Đường thẳng', title: 'Đường thẳng kéo dài hai phía: chạm 2 điểm', icon: 'M2 18L18 2', full: true },
+    { name: 'horizontalStraightLine', label: 'Ngang', title: 'Đường ngang (hỗ trợ / kháng cự): chạm 1 điểm', icon: 'M2 10h16' },
+    { name: 'priceLine', label: 'Mốc giá', title: 'Mốc giá có nhãn: chạm 1 điểm', icon: 'M2 13h9M11 10h7v6h-7z', full: true },
+    { name: 'verticalStraightLine', label: 'Dọc', title: 'Đường dọc đánh dấu thời điểm: chạm 1 điểm', icon: 'M10 2v16', full: true },
+    { name: 'parallelStraightLine', label: 'Kênh', title: 'Kênh song song: chạm 3 điểm', icon: 'M2 13L13 2M7 18L18 7', full: true },
+    { name: 'priceChannelLine', label: 'Kênh giá', title: 'Kênh giá: chạm 3 điểm', icon: 'M2 14L14 2M6 18L18 6M4 16L16 4', full: true },
+    { name: 'fibonacciLine', label: 'Fibo', title: 'Fibonacci thoái lui: chạm đỉnh rồi đáy', icon: 'M2 4h16M2 8h16M2 12h16M2 16h16' },
   ];
+  const ICON_CLEAR = 'M4 6h12M8 6V4h4v2M6 6l1 11h6l1-11';
 
   // decimals: số chữ số thập phân (mặc định 2; tỷ giá cần 4).
   function fmtPrice(p, decimals) {
@@ -155,6 +167,11 @@ window.VST = window.VST || {};
       },
       draw: function (p) {
         const ctx = p.ctx;
+        if (C.rsiBand) {
+          const y70 = p.yAxis.convertToPixel(70), y30 = p.yAxis.convertToPixel(30);
+          ctx.fillStyle = C.rsiBand;
+          ctx.fillRect(0, y70, p.bounding.width, y30 - y70);
+        }
         ctx.strokeStyle = C.dim;
         ctx.globalAlpha = 0.6;
         ctx.lineWidth = 1;
@@ -167,6 +184,44 @@ window.VST = window.VST || {};
           ctx.stroke();
         });
         return false; // vẫn để thư viện vẽ đường RSI
+      },
+    });
+
+    // Volume profile: khối lượng theo vùng giá của các nến đang nhìn thấy, vẽ thành cột ngang sát mép phải.
+    // Phần tăng (đóng ≥ mở) và giảm xếp chồng. Không có số liệu riêng nên calc trả về rỗng.
+    KC.registerIndicator({
+      name: 'VST_VP', shortName: 'VP', series: 'price', calcParams: [40], figures: [],
+      calc: (list) => list.map(() => ({})),
+      draw: function (p) {
+        const list = p.chart.getDataList();
+        const range = p.chart.getVisibleRange();
+        const from = Math.max(0, range.realFrom), to = Math.min(list.length, range.realTo);
+        if (to - from < 2) return true;
+        let lo = Infinity, hi = -Infinity;
+        for (let i = from; i < to; i++) { lo = Math.min(lo, list[i].low); hi = Math.max(hi, list[i].high); }
+        const n = p.indicator.calcParams[0];
+        const step = (hi - lo) / n;
+        if (!(step > 0)) return true;
+        const up = new Array(n).fill(0), down = new Array(n).fill(0);
+        for (let i = from; i < to; i++) {
+          const b = list[i];
+          const k = Math.min(n - 1, Math.floor(((b.high + b.low + b.close) / 3 - lo) / step));
+          if (b.close >= b.open) up[k] += b.volume || 0; else down[k] += b.volume || 0;
+        }
+        const max = Math.max.apply(null, up.map((v, k) => v + down[k]));
+        if (!(max > 0)) return true;
+        const ctx = p.ctx;
+        const W = p.bounding.width, maxW = W * 0.22;
+        for (let k = 0; k < n; k++) {
+          const y1 = p.yAxis.convertToPixel(lo + (k + 1) * step), y0 = p.yAxis.convertToPixel(lo + k * step);
+          const h = Math.max(1, Math.abs(y0 - y1) - 1);
+          const wu = (up[k] / max) * maxW, wd = (down[k] / max) * maxW;
+          ctx.fillStyle = alpha(C.up, '66');
+          ctx.fillRect(W - wu - wd, Math.min(y0, y1), wu, h);
+          ctx.fillStyle = alpha(C.down, '66');
+          ctx.fillRect(W - wd, Math.min(y0, y1), wd, h);
+        }
+        return true;
       },
     });
 
@@ -190,7 +245,8 @@ window.VST = window.VST || {};
     });
   }
 
-  function chartStyles() {
+  // valueMarks: hiện nhãn giá trị cuối của chỉ báo (MA, BB…) trên trục giá, như TradingView/FireAnt.
+  function chartStyles(valueMarks) {
     const axis = {
       axisLine: { color: C.grid }, tickLine: { color: C.grid },
       tickText: { color: C.dim, size: 11 },
@@ -217,7 +273,7 @@ window.VST = window.VST || {};
       indicator: {
         // Tên chỉ báo đã nằm trong từng nhãn (MA20:, RSI14:, MACD:…) nên tắt dòng tên riêng.
         tooltip: { showRule: 'always', title: { showName: false, showParams: false }, legend: { color: C.dim } },
-        lastValueMark: { show: false },
+        lastValueMark: { show: !!valueMarks, text: { show: !!valueMarks, color: C.markText, size: 11 } },
       },
       xAxis: axis,
       yAxis: axis,
@@ -264,8 +320,10 @@ window.VST = window.VST || {};
 
   class ChartView {
     // els: { main, legend, tools }
-    constructor(els) {
+    // opts (tùy chọn): { toolset: 'full' — đủ bộ công cụ vẽ, dạng icon; valueMarks: true — nhãn giá trị chỉ báo trên trục }
+    constructor(els, opts) {
       this.els = els;
+      this.opts = opts || {};
       this.decimals = 2;
       this.symbol = null;
       this.tf = null;
@@ -278,7 +336,7 @@ window.VST = window.VST || {};
       this.chart = KC.init(els.main, {
         locale: 'vi-VN',
         timezone: TIMEZONE,
-        styles: chartStyles(),
+        styles: chartStyles(this.opts.valueMarks),
         formatter: { formatDate: formatDate, formatBigNumber: (v) => fmtVolume(+v) },
         thousandsSeparator: { sign: '.', format: viNumber },
         decimalFold: { threshold: 99 },
@@ -340,6 +398,18 @@ window.VST = window.VST || {};
       return true;
     }
 
+    // Thu/phóng để thấy đúng các nến trong `days` ngày gần nhất (nút 5 năm … 1 ngày).
+    setVisibleDays(days) {
+      const list = this.chart.getDataList();
+      const size = this.chart.getSize(CANDLE_PANE, 'main');
+      if (!list.length || !size || !size.width) return;
+      const since = list[list.length - 1].timestamp - days * 86400000;
+      let n = 0;
+      for (let i = list.length - 1; i >= 0 && list[i].timestamp > since; i--) n++;
+      this.chart.setBarSpace(Math.max(1, Math.min(40, (size.width - 40) / Math.max(n, 5))));
+      this.chart.scrollToRealTime();
+    }
+
     // Số chữ số thập phân của giá (cổ phiếu VN, vàng, BTC: 2; tỷ giá: 4). Gọi trước setData.
     setPrecision(decimals) {
       if (decimals === this.decimals) return;
@@ -372,6 +442,8 @@ window.VST = window.VST || {};
       } else if (!on.bb) {
         ch.removeIndicator({ name: 'VST_BOLL' });
       }
+      if (on.vp && !has('VST_VP')) ch.createIndicator({ name: 'VST_VP', paneId: CANDLE_PANE }, true);
+      else if (!on.vp) ch.removeIndicator({ name: 'VST_VP' });
 
       const subStyles = {
         vol: null,
@@ -425,10 +497,15 @@ window.VST = window.VST || {};
     _buildTools() {
       const el = this.els.tools;
       if (!el) return;
-      el.innerHTML = TOOLS.map((t) =>
+      const full = this.opts.toolset === 'full';
+      const icon = (d) => '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="' + d + '"/></svg>';
+      // Bộ đầy đủ: nút chỉ có icon, tên công cụ nằm ở title và aria-label.
+      const body = (t) => full ? icon(t.icon) + '<span class="sr-only">' + t.label + '</span>' : t.label;
+      el.innerHTML = TOOLS.filter((t) => full || !t.full).map((t) =>
         '<button type="button" class="tool" data-tool="' + t.name + '" title="' + t.title + '" aria-pressed="false">' +
-        t.label + '</button>').join('') +
-        '<button type="button" class="tool tool-clear" data-tool="clear" title="Xóa hình vẽ đang chọn, hoặc tất cả hình vẽ của mã này">Xóa</button>';
+        body(t) + '</button>').join('') +
+        '<button type="button" class="tool tool-clear" data-tool="clear" title="Xóa hình vẽ đang chọn, hoặc tất cả hình vẽ của mã này">' +
+        (full ? icon(ICON_CLEAR) + '<span class="sr-only tool-clear-text">Xóa</span>' : 'Xóa') + '</button>';
       el.addEventListener('click', (e) => {
         const b = e.target.closest('button[data-tool]');
         if (!b) return;
@@ -446,7 +523,13 @@ window.VST = window.VST || {};
         if (b.dataset.tool !== 'clear') b.setAttribute('aria-pressed', on);
       });
       const clear = el.querySelector('[data-tool="clear"]');
-      clear.textContent = this._selected ? 'Xóa hình đã chọn' : 'Xóa';
+      const text = this._selected ? 'Xóa hình đã chọn' : 'Xóa';
+      if (this.opts.toolset === 'full') {
+        clear.querySelector('.tool-clear-text').textContent = text;
+        clear.classList.toggle('armed', !!this._selected);
+      } else {
+        clear.textContent = text;
+      }
     }
 
     _startDrawing(name) {

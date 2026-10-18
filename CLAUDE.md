@@ -27,6 +27,11 @@ sau này mở rộng nhiều người dùng có đăng nhập.
   - `js/indicators.js` — hàm tính chỉ báo thuần (không đụng DOM).
   - `js/chart.js` — biểu đồ kỹ thuật dashboard (KLineChart `klinecharts@10.0.3`): nến, KL, MA, BOLL, RSI, MACD
     (chỉ báo tính bằng `VST.indicators`), công cụ vẽ (lưu `localStorage` theo mã), hàm định dạng dùng chung `VST.fmt*`.
+    Tùy chọn `new VST.ChartView(els, { toolset: 'full', valueMarks: true })`: đủ bộ công cụ vẽ dạng icon, nhãn giá trị
+    chỉ báo trên trục; `setVisibleDays(n)` thu/phóng theo số ngày; chỉ báo `vp` = volume profile. Trang có thể đặt màu
+    vùng biểu đồ riêng qua biến `--chart-*` trên `<html>` (chart.js đọc khi nạp).
+    `js/chart-page.js` — logic trang `chart.html` (Biểu đồ kiểu FireAnt: công cụ vẽ dọc, biểu đồ nền trắng, sổ lệnh bên phải,
+    nút 5 năm … 1 ngày; màu `--fa-*`, giao diện gắn trên `<html class="fa-theme">`).
     `js/backtest-chart.js` — biểu đồ trang backtest (Lightweight Charts), nạp sau `chart.js`.
   - `js/board.js` — bảng giá nhỏ trong tab của dashboard.
   - `js/priceboard.js` — bảng giá kiểu SSI iBoard (`VST.PriceTable`: Trần/Sàn/TC, 3 bước giá mua/bán, khớp lệnh,
@@ -58,7 +63,7 @@ sau này mở rộng nhiều người dùng có đăng nhập.
 
 ## Đăng nhập & phân quyền (Supabase Auth)
 
-- Mọi trang dashboard (hiện là `index.html`, `priceboard.html`, `scan.html`, `rrg.html`, `backtest.html`, `admin.html`) phải: đặt `class="auth-checking"` trên `<html>`,
+- Mọi trang dashboard (hiện là `index.html`, `chart.html`, `priceboard.html`, `scan.html`, `rrg.html`, `backtest.html`, `admin.html`) phải: đặt `class="auth-checking"` trên `<html>`,
   nạp supabase-js + `config.js` + `auth.js`, và chỉ chạy code trang bên trong `VST.auth.guard().then(...)`
   (`guard({ admin: true })` cho trang quản trị). Chưa đăng nhập / chưa `active` → tự chuyển về `login.html`.
 - Bảng `profiles`: `role` ∈ admin/user, `status` ∈ pending/active/locked. Người mới luôn là `pending`.
