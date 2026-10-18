@@ -41,6 +41,36 @@
   --ssi-tab: #1c77a4;
   --ssi-accent: #1aa67c;
 
+  /* Trang Biểu đồ (chart.html): bảng màu lấy mẫu từ FireAnt — giao diện tối, khung biểu đồ nền trắng. */
+  --fa-nav: #252a31;
+  --fa-bar: #131722;
+  --fa-line: #2a2e39;
+  --fa-row-a: #2f343c;
+  --fa-row-b: #282d34;
+  --fa-text: #d1d4dc;
+  --fa-dim: #787b86;
+  --fa-tab: #2d72d2;
+  --fa-bid-bg: #223f2c;
+  --fa-chart-bg: #ffffff;
+  --fa-chart-text: #131722;
+  --fa-chart-grid: #f0f3fa;
+  --fa-chart-border: #e0e3eb;
+  --fa-chart-cross: #d1d4dc;
+  --fa-rsi-band: #f2eef9;
+  --fa-candle-up: #22ab94;
+  --fa-candle-down: #f7525f;
+  --fa-candle-ref: #e6a700;
+  --fa-up: #00aa00;
+  --fa-down: #ee5442;
+  --fa-ref: #ffb900;
+  --fa-ma20: #43a047;
+  --fa-ma50: #ffb900;
+  --fa-ma200: #2196f3;
+  --fa-bb: #ff6d00;
+  --fa-rsi: #7e57c2;
+  --fa-macd: #2196f3;
+  --fa-signal: #ff6d00;
+
   --ma20: #f59e0b;
   --ma50: #38bdf8;
   --ma200: #e879f9;
@@ -971,4 +1001,162 @@ body.pbpage .footer { padding: 6px var(--gutter); background: var(--ssi-deep); c
   body.pbpage > * { flex: none; }
   body.pbpage .pb-wrap { flex: 1; min-height: 0; max-height: none; }
   body.pbpage .footer { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
+
+/* ---------- Trang Biểu đồ (chart.html), kiểu FireAnt ---------- */
+/* Đặt trên <html> để chart.js đọc đúng màu khi khởi tạo (các biến --chart-* chỉ dùng cho vùng biểu đồ). */
+html.fa-theme {
+  --bg: var(--fa-bar); --bg-panel: var(--fa-nav); --bg-hover: var(--fa-row-a); --bg-active: var(--fa-row-a);
+  --border: var(--fa-line); --grid: var(--fa-line); --text: var(--fa-text); --text-dim: var(--fa-dim); --accent: var(--fa-tab);
+  --up: var(--fa-candle-up); --down: var(--fa-candle-down); --ref: var(--fa-candle-ref);
+  --ma20: var(--fa-ma20); --ma50: var(--fa-ma50); --ma200: var(--fa-ma200); --bb: var(--fa-bb);
+  --rsi: var(--fa-rsi); --macd: var(--fa-macd); --signal: var(--fa-signal);
+  --chart-text: var(--fa-chart-text); --chart-dim: var(--fa-dim); --chart-grid: var(--fa-chart-grid);
+  --chart-border: var(--fa-chart-border); --chart-active: var(--fa-chart-cross); --chart-rsi-band: var(--fa-rsi-band);
+  --chart-mark-text: var(--fa-chart-bg);
+}
+body.fa { background: var(--fa-bar); color: var(--fa-text); }
+body.fa .topbar { background: var(--fa-nav); backdrop-filter: none; padding-top: 6px; padding-bottom: 6px; }
+body.fa .ub-link, body.fa .ub-btn { min-height: 32px; border-radius: 4px; }
+body.fa .notice { margin: 6px var(--gutter) 0; }
+
+.fa-layout { display: grid; gap: 6px; padding: 6px 0 0; }
+.fa-main { display: flex; flex-direction: column; min-width: 0; background: var(--fa-bar); }
+
+/* Tab các mã đã xem gần đây. */
+.fa-recent { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; background: var(--fa-nav); }
+.fa-recent::-webkit-scrollbar { display: none; }
+.fa-recent:empty { display: none; }
+.fa-tab { flex: none; display: inline-flex; align-items: center; border-bottom: 2px solid transparent; }
+.fa-tab.active { background: var(--fa-bar); border-bottom-color: var(--fa-tab); }
+.fa-tab button { min-height: 36px; border: 0; background: none; color: var(--fa-dim); font-weight: 600; font-size: 13px; cursor: pointer; }
+.fa-tab button[data-symbol] { padding: 0 4px 0 10px; }
+.fa-tab.active button { color: var(--fa-text); }
+.fa-tab small { font-weight: 600; }
+.fa-tab-x { width: 30px; font-size: 16px !important; }
+.fa-tab-x:hover { color: var(--fa-candle-down) !important; }
+
+.fa-toolbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  padding: 4px 8px; border-bottom: 1px solid var(--fa-line);
+}
+.fa-symbol { display: flex; align-items: center; gap: 4px; flex: 1 1 120px; max-width: 200px; }
+.fa-symbol svg { width: 18px; height: 18px; flex: none; fill: none; stroke: var(--fa-text); stroke-width: 1.6; }
+.fa-symbol input {
+  width: 100%; min-width: 0; height: 36px; padding: 0 6px; border: 0; border-radius: 4px;
+  background: none; color: var(--fa-text); font-size: 16px; font-weight: 700; text-transform: uppercase;
+}
+.fa-symbol input::placeholder { color: var(--fa-text); }
+.fa-symbol input:focus { outline: none; background: var(--fa-row-b); }
+.fa-seg { display: flex; gap: 2px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.fa-seg::-webkit-scrollbar { display: none; }
+.fa-seg button, .fa-range button {
+  min-height: 36px; padding: 0 8px; border: 0; border-radius: 4px;
+  background: none; color: var(--fa-text); font-size: 13px; cursor: pointer; white-space: nowrap;
+}
+.fa-seg button:hover, .fa-range button:hover { background: var(--fa-row-a); }
+.fa-seg button.active, .fa-range button.active { color: var(--fa-tab); font-weight: 700; }
+
+.fa-ind { position: relative; }
+.fa-ind summary {
+  display: flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 10px; border-radius: 4px;
+  list-style: none; cursor: pointer; font-size: 13px; white-space: nowrap;
+}
+.fa-ind summary::-webkit-details-marker { display: none; }
+.fa-ind summary:hover, .fa-ind[open] summary { background: var(--fa-row-a); }
+.fa-ind summary i { font-style: italic; font-weight: 700; font-family: Georgia, serif; }
+.fa-ind-list {
+  position: absolute; z-index: 20; top: calc(100% + 4px); right: 0; min-width: 210px;
+  display: grid; padding: 4px; background: var(--fa-nav); border: 1px solid var(--fa-line); border-radius: 6px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+}
+.fa-ind-item { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 10px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+.fa-ind-item:hover { background: var(--fa-row-a); }
+.fa-ind-item input { margin: 0; width: 16px; height: 16px; accent-color: var(--fa-tab); }
+.fa-ind-item.c-ma20 input { accent-color: var(--fa-ma20); }
+.fa-ind-item.c-ma50 input { accent-color: var(--fa-ma50); }
+.fa-ind-item.c-ma200 input { accent-color: var(--fa-ma200); }
+.fa-ind-item.c-bb input { accent-color: var(--fa-bb); }
+.fa-ind-item.c-rsi input { accent-color: var(--fa-rsi); }
+
+.fa-body { display: flex; flex-direction: column; min-width: 0; }
+/* Công cụ vẽ: hàng ngang (điện thoại), cột dọc bên trái (màn rộng). */
+.fa-tools { margin: 0; padding: 4px 8px; gap: 2px; background: var(--fa-bar); }
+.fa-tools .tool {
+  position: relative; /* giữ nhãn ẩn (sr-only) bên trong nút, không làm trang cuộn ngang */
+  display: grid; place-items: center; width: 40px; min-height: 40px; padding: 0;
+  border: 0; border-radius: 4px; color: var(--fa-text);
+}
+.fa-tools .tool svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.fa-tools .tool:hover { background: var(--fa-row-a); color: #fff; }
+.fa-tools .tool.active { background: var(--fa-row-a); color: var(--fa-tab); }
+.fa-tools .tool-clear { margin-left: auto; }
+.fa-tools .tool-clear.armed { color: var(--fa-candle-down); }
+
+.fa-chart { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--fa-chart-bg); }
+.fa-head {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; padding: 6px 10px 2px;
+  color: var(--fa-chart-text); font-size: 13px;
+}
+.fa-head > b { font-weight: 600; }
+.fa-legend { margin: 0; min-height: 0; color: var(--fa-dim); }
+.fa-legend b, .fa-legend .lg-time { color: var(--fa-chart-text); }
+.fa-chart-wrap { flex: 1; }
+.fa-chart-main { height: calc(340px + var(--subs-h, 0px)); }
+.fa-chart .loading { background: rgba(255, 255, 255, 0.6); color: var(--fa-chart-text); }
+
+.fa-bottom {
+  display: flex; align-items: center; gap: 8px; padding: 2px 8px;
+  border-top: 1px solid var(--fa-line); background: var(--fa-bar);
+}
+.fa-range { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+.fa-range::-webkit-scrollbar { display: none; }
+.fa-clock { margin-left: auto; flex: none; font-size: 12px; color: var(--fa-text); font-variant-numeric: tabular-nums; }
+
+/* Cột phải: sổ lệnh + khớp lệnh, dòng xen kẽ hai sắc xám như FireAnt. Màu giá dùng xanh/đỏ của bảng khớp lệnh. */
+.fa-side {
+  --up: var(--fa-up); --down: var(--fa-down); --ref: var(--fa-ref);
+  min-width: 0; padding: 8px; background: var(--fa-row-a);
+}
+.fa-side .ob-sym { font-size: 15px; }
+.fa-side .ob-book th, .fa-side .ob-trades th { background: var(--fa-row-a); color: var(--fa-text); font-weight: 700; font-size: 12px; border-bottom: 0; }
+.fa-side .ob-book td, .fa-side .ob-trades td { border-bottom: 0; }
+.fa-side .ob-book tbody tr:nth-child(odd) td, .fa-side .ob-trades tbody tr:nth-child(odd) td { background: var(--fa-row-b); }
+.fa-side .ob-bar { opacity: 0.35; top: 2px; bottom: 2px; border-radius: 0; }
+.fa-side .ob-bar-bid { background: var(--fa-bid-bg); opacity: 1; }
+.fa-side .ob-sub { color: var(--fa-text); }
+.fa-side .ob-sum div { background: var(--fa-row-b); border-radius: 0; }
+.fa-side .ob-sum dt { color: var(--fa-text); }
+
+body.fa .footer { padding: 6px var(--gutter) 14px; }
+
+@media (min-width: 768px) {
+  .fa-body { flex-direction: row; }
+  .fa-tools {
+    flex-direction: column; align-items: center; overflow-x: visible; overflow-y: auto;
+    width: 48px; flex: none; padding: 6px 4px; border-right: 1px solid var(--fa-line);
+  }
+  .fa-tools .tool-clear { margin: auto 0 0; }
+}
+
+/* Màn rộng: biểu đồ bên trái, sổ lệnh 340px bên phải; nếu đủ cao thì gói trong 1 màn hình. */
+@media (min-width: 1024px) {
+  .fa-layout { grid-template-columns: minmax(0, 1fr) 340px; gap: 0; padding-top: 0; }
+  .fa-main { border-right: 1px solid var(--fa-line); }
+}
+@media (min-width: 1024px) and (min-height: 560px) {
+  body.fa { display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; padding-bottom: 0; }
+  body.fa > * { flex: none; }
+  body.fa .fa-layout { flex: 1; min-height: 0; grid-template-rows: minmax(0, 1fr); }
+  body.fa .fa-main { min-height: 0; }
+  body.fa .fa-body { flex: 1; min-height: 0; }
+  body.fa .fa-chart-main { height: 100%; min-height: 0; }
+  body.fa .fa-chart-wrap { min-height: 0; }
+  body.fa .fa-side { min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+  body.fa #orderbook { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  body.fa .ob-head, body.fa .ob-book, body.fa .ob-sub, body.fa .ob-sum { flex: none; }
+  body.fa .ob-trades-scroll { flex: 1 1 auto; min-height: 0; max-height: none; }
+  body.fa .ob-book td, body.fa .ob-trades td { height: 30px; }
+  body.fa .ob-note { display: none; }
+  body.fa .footer { padding: 2px var(--gutter) 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }
