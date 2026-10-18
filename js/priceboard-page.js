@@ -205,6 +205,8 @@ VST.auth.guard().then(function (ctx) {
           '<span class="pb-ix-vol dim"></span>' +
         '</div>' +
       '</article>').join('');
+    $('pb-ix-rows').innerHTML = cfg.indices.map((ix, i) =>
+      '<tr data-i="' + i + '"><td>' + esc(ix.name) + '</td><td class="v">—</td><td class="c"></td><td class="p"></td><td class="k"></td></tr>').join('');
   }
 
   async function loadIndices() {
@@ -241,6 +243,13 @@ VST.auth.guard().then(function (ctx) {
     const vol = day.bars.reduce((s, b) => s + b.volume, 0);
     card.querySelector('.pb-ix-vol').textContent = vol ? 'KL ' + fmtVol(vol) + ' CP · ' + day.label : day.label;
     box.innerHTML = sparkSvg(i, day);
+
+    const row = $('pb-ix-rows').querySelector('[data-i="' + i + '"]');
+    const set = (sel, text) => { const td = row.querySelector(sel); td.textContent = text; td.className = sel.slice(1) + ' ' + cls; };
+    set('.v', fmt2(last));
+    set('.c', sign + fmt2(chg));
+    set('.p', sign + fmt2(day.ref ? chg / day.ref * 100 : 0) + '%');
+    row.querySelector('.k').textContent = vol ? fmtVol(vol) : '';
   }
 
   // Phiên gần nhất trong dữ liệu trong ngày; giá tham chiếu = giá đóng cửa phiên trước.

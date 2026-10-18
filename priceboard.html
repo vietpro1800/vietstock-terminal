@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0e1117">
+  <meta name="theme-color" content="#1c1a29">
   <title>Bảng giá · ThảoChi Stock</title>
-  <link rel="stylesheet" href="css/style.css?v=20261018">
+  <link rel="stylesheet" href="css/style.css?v=20261019">
 </head>
 <body class="pbpage">
   <header class="topbar">
@@ -23,7 +23,15 @@
     <button id="notice-close" type="button" aria-label="Đóng thông báo">×</button>
   </div>
 
-  <section id="pb-indices" class="pb-indices" aria-label="Chỉ số thị trường"></section>
+  <section class="pb-top" aria-label="Chỉ số thị trường">
+    <div id="pb-indices" class="pb-indices"></div>
+    <div class="pb-ix-sum">
+      <table class="pb-ix-table">
+        <thead><tr><th>Chỉ số</th><th>Điểm</th><th>+/-</th><th>%</th><th>KL (CP)</th></tr></thead>
+        <tbody id="pb-ix-rows"></tbody>
+      </table>
+    </div>
+  </section>
 
   <div class="pb-toolbar">
     <form id="pb-search" class="pb-search" autocomplete="off" role="search">
@@ -56,10 +64,10 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
-  <script src="js/config.js?v=20261018"></script>
-  <script src="js/auth.js?v=20261018"></script>
-  <script src="js/data.js?v=20261018"></script>
-  <script src="js/priceboard.js?v=20261018"></script>
-  <script src="js/priceboard-page.js?v=20261018"></script>
+  <script src="js/config.js?v=20261019"></script>
+  <script src="js/auth.js?v=20261019"></script>
+  <script src="js/data.js?v=20261019"></script>
+  <script src="js/priceboard.js?v=20261019"></script>
+  <script src="js/priceboard-page.js?v=20261019"></script>
 </body>
 </html>

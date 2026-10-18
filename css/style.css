@@ -16,8 +16,30 @@
   --ref: #eab308;
   --ceil: #d946ef;   /* giá trần: tím */
   --floor: #22d3ee;  /* giá sàn: xanh lam */
-  --pb-head: #10141b;
-  --pb-flash: rgba(148, 163, 184, 0.35);
+  --pb-flash: rgba(255, 255, 255, 0.28);
+
+  /* Trang bảng giá: bảng màu lấy mẫu từ bảng giá SSI iBoard (giao diện tối). */
+  --ssi-bg: #1c1a29;
+  --ssi-deep: #020210;
+  --ssi-bar: #292737;
+  --ssi-input-border: #3f4160;
+  --ssi-row-odd: #171225;
+  --ssi-row-even: #05040e;
+  --ssi-col: #2a263c;
+  --ssi-ix-row: #282637;
+  --ssi-line: #353641;
+  --ssi-hover: #3d3950;
+  --ssi-chart-grid: #29292a;
+  --ssi-text: #dfe1e3;
+  --ssi-head-text: #b8b8b8;
+  --ssi-dim: #8f8f8f;
+  --ssi-up: #0bdf39;
+  --ssi-down: #ff0017;
+  --ssi-ref: #fdfc12;
+  --ssi-ceil: #f23aff;
+  --ssi-floor: #00c7ff;
+  --ssi-tab: #1c77a4;
+  --ssi-accent: #1aa67c;
 
   --ma20: #f59e0b;
   --ma50: #38bdf8;
@@ -806,116 +828,138 @@ select.input { appearance: none; padding-right: 32px;
   .scan-form { position: sticky; top: 72px; max-height: calc(100vh - 84px); overflow-y: auto; }
 }
 
-/* ---------- Trang bảng giá (priceboard.html), kiểu bảng giá SSI ---------- */
-/* Chỉ số: hàng thẻ cuộn ngang bên trong trên điện thoại, chia đều từ 900px. */
+/* ---------- Trang bảng giá (priceboard.html), màu giống bảng giá SSI iBoard ---------- */
+/* Trên trang này các biến màu chung được gán lại theo bảng màu SSI (--ssi-* trong :root). */
+body.pbpage {
+  --bg: var(--ssi-bg); --bg-panel: var(--ssi-bg); --bg-hover: var(--ssi-hover); --bg-active: var(--ssi-hover);
+  --border: var(--ssi-line); --grid: var(--ssi-line);
+  --text: var(--ssi-text); --text-dim: var(--ssi-head-text); --accent: var(--ssi-tab);
+  --up: var(--ssi-up); --down: var(--ssi-down); --ref: var(--ssi-ref);
+  --ceil: var(--ssi-ceil); --floor: var(--ssi-floor);
+  background: var(--ssi-bg); color: var(--ssi-text);
+  font-family: Roboto, Arial, "Helvetica Neue", sans-serif;
+}
+body.pbpage .topbar { background: var(--ssi-bg); backdrop-filter: none; padding-top: 6px; padding-bottom: 6px; }
+body.pbpage .ub-link, body.pbpage .ub-btn { min-height: 32px; border-radius: 4px; background: var(--ssi-bar); border-color: var(--ssi-input-border); }
+body.pbpage .ub-link:hover, body.pbpage .ub-btn:hover { background: var(--ssi-hover); }
+
+/* Đầu trang: thẻ chỉ số (nền biểu đồ đen sâu) + bảng tóm tắt chỉ số. */
+.pb-top { display: grid; gap: 6px; padding: 6px var(--gutter) 0; }
 .pb-indices {
-  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(230px, 78%); gap: 8px;
-  padding: 8px var(--gutter) 0; overflow-x: auto; scroll-snap-type: x mandatory;
-  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  display: grid; grid-auto-flow: column; grid-auto-columns: minmax(230px, 78%); gap: 6px;
+  overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch;
 }
 .pb-indices::-webkit-scrollbar { display: none; }
-.pb-ix {
-  scroll-snap-align: start; min-width: 0;
-  background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px;
-  font-variant-numeric: tabular-nums;
+.pb-ix { scroll-snap-align: start; min-width: 0; font-variant-numeric: tabular-nums; }
+.pb-ix-chart {
+  height: 96px; display: grid; place-items: center; font-size: 12px; color: var(--ssi-dim);
+  background: var(--ssi-deep); border: 1px solid var(--ssi-line);
 }
-.pb-ix-chart { height: 72px; display: grid; place-items: center; font-size: 12px; }
 .pb-ix-chart svg { width: 100%; height: 100%; display: block; }
-.pb-ix-line { fill: none; stroke-width: 1.4; vector-effect: non-scaling-stroke; }
-.pb-ix-line.up { stroke: var(--up); }
-.pb-ix-line.down { stroke: var(--down); }
-.pb-ix-ref { stroke: var(--ref); stroke-width: 1; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
-.pb-ix-grid line { stroke: var(--grid); stroke-width: 1; vector-effect: non-scaling-stroke; }
-.pb-ix-bars rect { fill: var(--text-dim); opacity: 0.45; }
-.pb-ix-info { display: grid; grid-template-columns: 1fr auto; gap: 0 8px; margin-top: 4px; font-size: 12px; }
-.pb-ix-name { font-size: 13px; }
-.pb-ix-value { text-align: right; font-weight: 700; font-size: 13px; }
-.pb-ix-chg { grid-column: 1 / -1; font-weight: 600; }
-.pb-ix-vol { grid-column: 1 / -1; font-size: 11px; }
+.pb-ix-line { fill: none; stroke-width: 1.3; vector-effect: non-scaling-stroke; }
+.pb-ix-line.up { stroke: var(--ssi-up); }
+.pb-ix-line.down { stroke: var(--ssi-down); }
+.pb-ix-ref { stroke: var(--ssi-ref); stroke-width: 1; stroke-dasharray: 2 2; opacity: 0.8; vector-effect: non-scaling-stroke; }
+.pb-ix-grid line { stroke: var(--ssi-chart-grid); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.pb-ix-bars rect { fill: var(--ssi-dim); opacity: 0.5; }
+.pb-ix-info { display: grid; grid-template-columns: 1fr auto; gap: 0 8px; padding: 2px 2px 0; font-size: 11px; color: var(--ssi-text); }
+.pb-ix-name { font-size: 12px; font-weight: 600; }
+.pb-ix-value { text-align: right; font-weight: 600; font-size: 12px; }
+.pb-ix-chg { grid-column: 1 / -1; }
+.pb-ix-vol { grid-column: 1 / -1; color: var(--ssi-head-text); }
 
+.pb-ix-sum { display: none; }
+.pb-ix-table { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pb-ix-table th { height: 24px; padding: 0 6px; text-align: right; font-weight: 600; color: var(--ssi-head-text); background: var(--ssi-bg); }
+.pb-ix-table td { height: 24px; padding: 0 6px; text-align: right; }
+.pb-ix-table th:first-child, .pb-ix-table td:first-child { text-align: left; }
+.pb-ix-table td:first-child { font-weight: 600; color: var(--ssi-text); }
+.pb-ix-table tbody tr:nth-child(odd) td { background: var(--ssi-ix-row); }
+
+/* Thanh công cụ: một dải nền riêng như SSI. */
 .pb-toolbar {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
-  padding: 8px var(--gutter);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 4px;
+  margin-top: 6px; padding: 4px var(--gutter); background: var(--ssi-bar);
 }
 .pb-search { flex: 1 1 100%; }
 .pb-search input {
-  width: 100%; height: 40px; padding: 0 12px;
-  background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius);
-  text-transform: uppercase; font-size: 16px;
+  width: 100%; height: 36px; padding: 0 10px;
+  background: var(--ssi-bg); border: 1px solid var(--ssi-input-border); border-radius: 4px;
+  text-transform: uppercase; font-size: 16px; color: var(--ssi-text);
 }
-.pb-search input::placeholder { text-transform: none; }
-.pb-search input:focus { outline: none; border-color: var(--accent); }
+.pb-search input::placeholder { text-transform: none; color: var(--ssi-dim); }
+.pb-search input:focus { outline: none; border-color: var(--ssi-tab); }
 .pb-groups { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; max-width: 100%; }
 .pb-groups::-webkit-scrollbar { display: none; }
 .pb-groups button, .pb-sector {
   flex: none; min-height: 40px; padding: 0 12px;
   background: none; border: 0; border-bottom: 2px solid transparent;
-  color: var(--text-dim); font-weight: 600; font-size: 13px; cursor: pointer; white-space: nowrap;
+  color: #c1c1c1; font-weight: 500; font-size: 13px; cursor: pointer; white-space: nowrap;
 }
-.pb-groups button:hover, .pb-sector:hover { color: var(--text); }
-.pb-groups button.active, .pb-sector.active { color: var(--text); border-bottom-color: var(--accent); }
-.pb-sector { max-width: 190px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); }
-.pb-sector.active { border-color: var(--accent); }
-.pb-sector option { background: var(--bg-panel); color: var(--text); }
-.pb-view button { min-height: 36px; }
-.pb-rt { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-dim); }
+.pb-groups button:hover, .pb-sector:hover { color: #fff; }
+.pb-groups button.active { color: #fff; font-weight: 700; border-bottom-color: var(--ssi-tab); }
+.pb-sector { max-width: 190px; min-height: 34px; background: var(--ssi-bg); border: 1px solid var(--ssi-input-border); border-radius: 4px; }
+.pb-sector.active { color: #fff; border-color: var(--ssi-tab); }
+.pb-sector option { background: var(--ssi-bg); color: var(--ssi-text); }
+.pb-view { background: var(--ssi-bg); border-color: var(--ssi-input-border); border-radius: 4px; }
+.pb-view button { min-height: 32px; border-radius: 3px; color: #c1c1c1; }
+.pb-view button.active { background: var(--ssi-accent); color: #fff; }
+.pb-rt { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: #c1c1c1; }
 
 /* Bảng cuộn cả hai chiều bên trong khung (trang không cuộn ngang); tiêu đề và cột CK dính lại. */
-.pb-wrap {
-  margin: 0 var(--gutter); max-height: 75vh; overflow: auto;
-  border: 1px solid var(--border); border-radius: 6px; background: var(--bg-panel);
-  overscroll-behavior: contain;
-}
+.pb-wrap { margin: 0; max-height: 75vh; overflow: auto; background: var(--ssi-row-even); overscroll-behavior: contain; }
 .pb-table {
   width: 100%; border-collapse: separate; border-spacing: 0;
-  font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap;
+  font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ssi-text);
 }
 .pb-table th {
   position: sticky; top: 0; z-index: 2; height: 26px; padding: 0 6px;
-  background: var(--pb-head); color: var(--text-dim); font-weight: 600; font-size: 12px; text-align: center;
-  border-bottom: 1px solid var(--border); border-right: 1px solid var(--grid);
+  background: var(--ssi-bg); color: var(--ssi-head-text); font-weight: 600; font-size: 12px; text-align: center;
+  border-bottom: 1px solid var(--ssi-line); border-right: 1px solid var(--ssi-line);
 }
 .pb-table thead tr + tr th { top: 26px; }
 .pb-table th[rowspan] { height: 52px; }
-.pb-table .pb-g { color: var(--text); }
+.pb-table .pb-g { color: var(--ssi-head-text); }
 .pb-table td {
-  height: 30px; padding: 0 6px; text-align: right;
-  border-bottom: 1px solid var(--grid); border-right: 1px solid var(--grid);
+  height: 28px; padding: 0 6px; text-align: right; background: var(--ssi-row-even);
+  border-bottom: 1px solid var(--ssi-line); border-right: 1px solid var(--ssi-line);
 }
-/* Cột nhóm (Trần/Sàn/TC, Bên mua, Khớp lệnh, Tổng KL…) nổi nền khác để dễ dò. */
-.pb-table td.pb-c-ceil, .pb-table td.pb-c-floor, .pb-table td.pb-c-ref,
-.pb-table td.pb-c-price, .pb-table td.pb-c-vol, .pb-table td.pb-c-chg, .pb-table td.pb-c-pct,
-.pb-table td.pb-c-total, .pb-table td.pb-c-high, .pb-table td.pb-c-low { background: var(--bg-hover); }
-.pb-table .pb-gs { border-left: 1px solid var(--border); }
-.pb-table td.pb-c-price, .pb-table td.pb-c-sym { font-weight: 700; }
-.pb-table th.pb-c-sym, .pb-table td.pb-c-sym {
-  position: sticky; left: 0; z-index: 1; text-align: left; background: var(--bg-panel);
-  border-right: 1px solid var(--border);
-}
+.pb-table tbody tr:nth-child(odd) td { background: var(--ssi-row-odd); }
+/* Cột Trần/Sàn/TC, Khớp lệnh, Tổng KL, Cao/Thấp: nền tím than như SSI. */
+.pb-table tbody tr td.pb-c-ceil, .pb-table tbody tr td.pb-c-floor, .pb-table tbody tr td.pb-c-ref,
+.pb-table tbody tr td.pb-c-price, .pb-table tbody tr td.pb-c-vol, .pb-table tbody tr td.pb-c-chg, .pb-table tbody tr td.pb-c-pct,
+.pb-table tbody tr td.pb-c-total, .pb-table tbody tr td.pb-c-high, .pb-table tbody tr td.pb-c-low { background: var(--ssi-col); }
+.pb-table td.pb-c-sym { font-weight: 600; }
+.pb-table th.pb-c-sym, .pb-table td.pb-c-sym { position: sticky; left: 0; z-index: 1; text-align: left; }
 .pb-table th.pb-c-sym { z-index: 3; }
 .pb-table tbody tr[data-symbol] { cursor: pointer; }
-.pb-table tbody tr[data-symbol]:hover td { background: var(--bg-active); }
+.pb-table tbody tr[data-symbol]:hover td { background: var(--ssi-hover); }
 .pb-table tbody tr.pb-found td { animation: pb-flash 1.6s ease-out 2; }
 .pb-table td.pb-flash { animation: pb-flash 0.9s ease-out; }
 @keyframes pb-flash { from { background: var(--pb-flash); } }
 .pb-sym { display: inline-block; min-width: 3.2em; }
 .pb-pin {
-  width: 30px; height: 30px; margin: 0 2px 0 -6px; padding: 0;
-  border: 0; background: none; color: var(--text-dim); font-size: 15px; line-height: 1; cursor: pointer;
+  width: 28px; height: 28px; margin: 0 2px 0 -6px; padding: 0;
+  border: 0; background: none; color: var(--ssi-dim); font-size: 14px; line-height: 1; cursor: pointer;
 }
-.pb-pin.on { color: var(--ref); }
-.pb-pin:hover { color: var(--text); }
-.pb-empty { padding: 24px 12px; text-align: center !important; color: var(--text-dim); white-space: normal; }
+.pb-pin.on { color: var(--ssi-ref); }
+.pb-pin:hover { color: #fff; }
+.pb-empty { padding: 24px 12px; text-align: center !important; color: var(--ssi-head-text); white-space: normal; }
 
-body.pbpage .footer { padding-top: 8px; }
+body.pbpage .notice { margin: 6px var(--gutter) 0; }
+body.pbpage .footer { padding: 6px var(--gutter); background: var(--ssi-deep); color: #9d9da0; }
 
 @media (min-width: 600px) {
-  .pb-search { flex: 0 1 200px; }
+  .pb-search { flex: 0 1 220px; }
   .pb-rt { margin-left: auto; }
 }
 
-@media (min-width: 900px) {
-  .pb-indices { grid-auto-flow: row; grid-template-columns: repeat(5, minmax(0, 1fr)); overflow: visible; }
+/* Màn rộng: 4 thẻ biểu đồ bên trái, bảng tóm tắt tất cả chỉ số bên phải (như SSI). */
+@media (min-width: 1100px) {
+  .pb-top { grid-template-columns: minmax(0, 1fr) minmax(340px, 30%); }
+  .pb-indices { grid-auto-flow: row; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow: visible; }
+  .pb-indices .pb-ix:nth-child(n+5) { display: none; }
+  .pb-ix-sum { display: block; min-width: 0; overflow: hidden; }
 }
 
 /* Màn rộng và đủ cao: cả trang gói trong 1 màn hình, bảng giá co giãn và cuộn bên trong. */
@@ -926,6 +970,5 @@ body.pbpage .footer { padding-top: 8px; }
   }
   body.pbpage > * { flex: none; }
   body.pbpage .pb-wrap { flex: 1; min-height: 0; max-height: none; }
-  body.pbpage .footer { padding: 4px var(--gutter) 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .pb-table td { height: 28px; }
+  body.pbpage .footer { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }
