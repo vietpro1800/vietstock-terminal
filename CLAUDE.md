@@ -11,8 +11,10 @@ sau này mở rộng nhiều người dùng có đăng nhập.
   Màu giá theo thói quen thị trường VN: tăng = xanh lá, giảm = đỏ, đứng giá = vàng.
 - **Ưu tiên điện thoại (mobile-first)**: CSS viết cho màn hình hẹp trước, mở rộng bằng
   `@media (min-width: ...)`. Không để trang bị cuộn ngang; vùng bấm tối thiểu ~40px.
-  Dashboard (`index.html`, `<body class="dash">`): từ 768px chia 2 cột — biểu đồ 3/4 trái, sổ lệnh + thảo luận/bảng giá
+  Dashboard (`index.html`, `<html class="fa-theme">`, `<body class="dash fa">`) theo kiểu FireAnt (màu `--fa-*`): tab mã vừa xem,
+  công cụ vẽ dọc, biểu đồ nền trắng, nút 5 năm … 1 ngày. Từ 768px chia 2 cột — biểu đồ 3/4 trái, sổ lệnh + thảo luận/bảng giá
   1/4 phải; nếu cao ≥ 560px thì gói trong 1 màn hình (không cuộn trang), các khung danh sách tự co giãn và cuộn bên trong.
+  `chart.html` chỉ còn chuyển hướng về `index.html` (link cũ).
 - **HTML/CSS/JS thuần, không build**: không npm, không bundler, không framework.
   Thư viện ngoài chỉ nạp qua CDN, **ghim phiên bản cụ thể** (ví dụ `lightweight-charts@4.2.3`).
   Mở `index.html` qua một web server tĩnh bất kỳ là chạy được.
@@ -30,8 +32,6 @@ sau này mở rộng nhiều người dùng có đăng nhập.
     Tùy chọn `new VST.ChartView(els, { toolset: 'full', valueMarks: true })`: đủ bộ công cụ vẽ dạng icon, nhãn giá trị
     chỉ báo trên trục; `setVisibleDays(n)` thu/phóng theo số ngày; chỉ báo `vp` = volume profile. Trang có thể đặt màu
     vùng biểu đồ riêng qua biến `--chart-*` trên `<html>` (chart.js đọc khi nạp).
-    `js/chart-page.js` — logic trang `chart.html` (Biểu đồ kiểu FireAnt: công cụ vẽ dọc, biểu đồ nền trắng, sổ lệnh bên phải,
-    nút 5 năm … 1 ngày; màu `--fa-*`, giao diện gắn trên `<html class="fa-theme">`).
     `js/backtest-chart.js` — biểu đồ trang backtest (Lightweight Charts), nạp sau `chart.js`.
   - `js/board.js` — bảng giá nhỏ trong tab của dashboard.
   - `js/priceboard.js` — bảng giá kiểu SSI iBoard (`VST.PriceTable`: Trần/Sàn/TC, 3 bước giá mua/bán, khớp lệnh,
@@ -63,7 +63,7 @@ sau này mở rộng nhiều người dùng có đăng nhập.
 
 ## Đăng nhập & phân quyền (Supabase Auth)
 
-- Mọi trang dashboard (hiện là `index.html`, `chart.html`, `priceboard.html`, `scan.html`, `rrg.html`, `backtest.html`, `admin.html`) phải: đặt `class="auth-checking"` trên `<html>`,
+- Mọi trang dashboard (hiện là `index.html`, `priceboard.html`, `scan.html`, `rrg.html`, `backtest.html`, `admin.html`) phải: đặt `class="auth-checking"` trên `<html>`,
   nạp supabase-js + `config.js` + `auth.js`, và chỉ chạy code trang bên trong `VST.auth.guard().then(...)`
   (`guard({ admin: true })` cho trang quản trị). Chưa đăng nhập / chưa `active` → tự chuyển về `login.html`.
 - Bảng `profiles`: `role` ∈ admin/user, `status` ∈ pending/active/locked. Người mới luôn là `pending`.

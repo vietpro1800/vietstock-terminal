@@ -1,86 +1,14 @@
 <!DOCTYPE html>
-<html lang="vi" class="auth-checking fa-theme">
+<html lang="vi">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#252a31">
-  <title>Biểu đồ · ThảoChi Stock</title>
-  <link rel="stylesheet" href="css/style.css?v=20261020">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ThảoChi Stock</title>
+  <!-- Trang Biểu đồ đã gộp vào Dashboard: chuyển link cũ (kể cả ?symbol=...) về index.html. -->
+  <meta http-equiv="refresh" content="0; url=index.html">
+  <script>location.replace('index.html' + location.search);</script>
 </head>
-<body class="fa">
-  <header class="topbar">
-    <h1 class="brand"><a href="index.html">ThảoChi<span>Stock</span></a></h1>
-    <span class="page-tag">Biểu đồ</span>
-    <div class="status">
-      <span id="status-dot" class="dot"></span>
-      <span id="status-text">Đang tải…</span>
-    </div>
-    <div id="user-bar" class="user-bar"></div>
-  </header>
-
-  <div id="notice" class="notice" role="alert" hidden>
-    <span id="notice-text"></span>
-    <button id="notice-close" type="button" aria-label="Đóng thông báo">×</button>
-  </div>
-
-  <main class="fa-layout">
-    <section class="fa-main" aria-label="Biểu đồ kỹ thuật">
-      <div id="fa-recent" class="fa-recent" aria-label="Mã đã xem gần đây"></div>
-
-      <div class="fa-toolbar">
-        <form id="fa-symbol-form" class="fa-symbol" autocomplete="off" role="search">
-          <label for="fa-symbol-input" class="sr-only">Mã chứng khoán</label>
-          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8.5 3a5.5 5.5 0 1 1 0 11a5.5 5.5 0 0 1 0-11zM12.5 12.5L17 17"/></svg>
-          <input id="fa-symbol-input" list="fa-symbol-list" maxlength="10" placeholder="Nhập mã"
-                 autocapitalize="characters" spellcheck="false" enterkeyhint="go">
-          <datalist id="fa-symbol-list"></datalist>
-        </form>
-        <div id="fa-tf" class="fa-seg" role="group" aria-label="Khung thời gian"></div>
-        <details id="fa-ind" class="fa-ind">
-          <summary><i>ƒx</i> Các chỉ báo</summary>
-          <div id="fa-ind-list" class="fa-ind-list" role="group" aria-label="Chỉ báo"></div>
-        </details>
-      </div>
-
-      <div class="fa-body">
-        <div id="fa-tools" class="fa-tools draw-tools" role="toolbar" aria-label="Công cụ vẽ"></div>
-        <div class="fa-chart">
-          <div class="fa-head">
-            <b><span id="fa-title-sym">—</span> · <span id="fa-title-tf"></span></b>
-            <div id="fa-legend" class="legend fa-legend"></div>
-          </div>
-          <div class="chart-wrap fa-chart-wrap">
-            <div id="chart-main" class="chart-main fa-chart-main"></div>
-            <div id="chart-loading" class="loading" hidden>Đang tải dữ liệu…</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="fa-bottom">
-        <div id="fa-range" class="fa-range" role="group" aria-label="Khoảng thời gian"></div>
-        <span id="fa-clock" class="fa-clock"></span>
-      </div>
-    </section>
-
-    <aside class="fa-side" aria-label="Sổ lệnh">
-      <div id="orderbook"></div>
-    </aside>
-  </main>
-
-  <footer class="footer">
-    Dữ liệu: VNDirect (dchart); vàng, tiền số, ngoại hối: Binance. Sổ lệnh/khớp lệnh realtime từ bảng giá SSI (không chính thức).
-    Biểu đồ: <a href="https://github.com/klinecharts/KLineChart" target="_blank" rel="noopener">KLineChart</a> (Apache-2.0).
-    Chỉ mang tính tham khảo, không phải khuyến nghị đầu tư.
-  </footer>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/klinecharts@10.0.3/dist/umd/klinecharts.min.js"></script>
-  <script src="js/config.js?v=20261020"></script>
-  <script src="js/auth.js?v=20261020"></script>
-  <script src="js/data.js?v=20261020"></script>
-  <script src="js/indicators.js?v=20261020"></script>
-  <script src="js/chart.js?v=20261020"></script>
-  <script src="js/orderbook.js?v=20261020"></script>
-  <script src="js/chart-page.js?v=20261020"></script>
+<body>
+  <p>Trang Biểu đồ đã gộp vào <a href="index.html">Dashboard</a>.</p>
 </body>
 </html>

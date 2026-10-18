@@ -1,9 +1,29 @@
-// Khởi tạo ứng dụng, gắn sự kiện giao diện và tự làm mới.
+// Dashboard (index.html), bố cục kiểu FireAnt: tab mã vừa xem, công cụ vẽ dọc, biểu đồ kỹ thuật ở giữa,
+// nút chọn khoảng thời gian (5 năm … 1 ngày) phía dưới; cột phải có sổ lệnh realtime + thảo luận/bảng giá.
+// Khởi tạo, gắn sự kiện giao diện và tự làm mới.
 // Chỉ chạy sau khi xác nhận đã đăng nhập và tài khoản đang hoạt động.
 VST.auth.guard().then(function (ctx) {
   const cfg = VST.config;
+  const esc = VST.escapeHtml;
   const $ = (id) => document.getElementById(id);
   const STORE_KEY = 'vst.prefs.v1';
+  const MAX_RECENT = 6;
+  const SYMBOL_RE = /^[A-Z0-9]{2,10}$/;
+
+  // Khoảng thời gian hiển thị: khung nến cần dùng và số ngày nhìn thấy.
+  const RANGES = [
+    { key: '5y', label: '5 năm', tf: 'W', days: 365 * 5 },
+    { key: '1y', label: '1 năm', tf: 'D', days: 365 },
+    { key: '6m', label: '6 tháng', tf: 'D', days: 182 },
+    { key: '3m', label: '3 tháng', tf: 'D', days: 91 },
+    { key: '1m', label: '1 tháng', tf: 'D', days: 30 },
+    { key: '5d', label: '5 ngày', tf: '60', days: 5 },
+    { key: '1d', label: '1 ngày', tf: '15', days: 1 },
+  ];
+  const IND_LABELS = [
+    ['ma20', 'MA20'], ['ma50', 'MA50'], ['ma200', 'MA200'], ['bb', 'Bollinger (20, 2)'],
+    ['vp', 'Volume profile'], ['vol', 'Khối lượng'], ['rsi', 'RSI (14)'], ['macd', 'MACD (12, 26, 9)'],
+  ];
 
   // Đổi nguồn dữ liệu tại đây. Cổ phiếu VN: VNDirect; vàng, tiền số, ngoại hối: Binance.
   const source = new VST.MarketRouter(
@@ -19,12 +39,14 @@ VST.auth.guard().then(function (ctx) {
   const canonical = (s) => (globalAssets[s] ? globalAssets[s].symbol : s);
 
   const prefs = loadPrefs();
-  // Cho phép mở thẳng một mã: index.html?symbol=HPG (ví dụ từ trang RRG).
+  // Cho phép mở thẳng một mã: index.html?symbol=HPG (ví dụ từ trang RRG, Bảng giá).
   const urlSymbol = (new URLSearchParams(location.search).get('symbol') || '').trim().toUpperCase();
   const state = {
-    symbol: canonical(/^[A-Z0-9]{2,10}$/.test(urlSymbol) ? urlSymbol : (prefs.symbol || cfg.defaultSymbol)),
+    symbol: canonical(SYMBOL_RE.test(urlSymbol) ? urlSymbol : (prefs.symbol || cfg.defaultSymbol)),
     tfKey: cfg.timeframes[prefs.tfKey] ? prefs.tfKey : cfg.defaultTimeframe,
+    range: RANGES.some((r) => r.key === prefs.range) ? prefs.range : null,
     indicators: Object.assign({}, cfg.defaultIndicators, prefs.indicators),
+    recent: Array.isArray(prefs.recent) ? prefs.recent.filter((s) => SYMBOL_RE.test(s)).slice(0, MAX_RECENT) : [],
     sideTab: prefs.sideTab === 'board' ? 'board' : 'chat',
     loadToken: 0,
     refreshing: false,
@@ -33,7 +55,8 @@ VST.auth.guard().then(function (ctx) {
 
   let chart = null;
   if (window.klinecharts) {
-    chart = new VST.ChartView({ main: $('chart-main'), legend: $('legend'), tools: $('draw-tools') });
+    chart = new VST.ChartView({ main: $('chart-main'), legend: $('legend'), tools: $('draw-tools') },
+      { toolset: 'full', valueMarks: true });
   } else {
     showNotice('Không tải được thư viện biểu đồ. Kiểm tra kết nối Internet rồi tải lại trang.');
   }
@@ -55,6 +78,8 @@ VST.auth.guard().then(function (ctx) {
   buildControls();
   selectSymbol(state.symbol);
   setInterval(tick, cfg.refreshMs);
+  setInterval(renderClock, 1000);
+  renderClock();
   document.addEventListener('visibilitychange', function () {
     if (!document.hidden && Date.now() - state.lastRefresh >= cfg.refreshMs) refreshAll();
   });
@@ -64,23 +89,33 @@ VST.auth.guard().then(function (ctx) {
 
   function buildControls() {
     $('symbol-list').innerHTML = cfg.boardSymbols.map((s) => '<option value="' + s + '">').join('') +
-      cfg.globalAssets.map((a) => '<option value="' + a.symbol + '" label="' + VST.escapeHtml(a.name) + '">').join('');
+      cfg.globalAssets.map((a) => '<option value="' + a.symbol + '" label="' + esc(a.name) + '">').join('');
+    $('symbol-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const v = canonical($('symbol-input').value.trim().toUpperCase().replace(/[\s/]/g, ''));
+      if (!v) return;
+      $('symbol-input').blur();
+      selectSymbol(v);
+    });
 
-    const assetGroup = $('asset-group');
-    assetGroup.innerHTML = '<span class="chips-label">Thế giới:</span>' + cfg.globalAssets.map((a) =>
-      '<button type="button" class="chip" data-symbol="' + a.symbol + '" title="' + VST.escapeHtml(a.name) + '">' +
-      VST.escapeHtml(a.label) + '</button>').join('');
-    assetGroup.addEventListener('click', function (e) {
+    $('recent-tabs').addEventListener('click', function (e) {
+      const close = e.target.closest('button[data-close]');
+      if (close) {
+        state.recent = state.recent.filter((s) => s !== close.dataset.close);
+        savePrefs();
+        renderRecent();
+        return;
+      }
       const b = e.target.closest('button[data-symbol]');
       if (b && b.dataset.symbol !== state.symbol) selectSymbol(b.dataset.symbol);
     });
 
-    $('symbol-form').addEventListener('submit', function (e) {
-      e.preventDefault();
-      const v = canonical($('symbol-input').value.trim().toUpperCase().replace(/[\s\/]/g, ''));
-      if (!v) return;
-      $('symbol-input').blur();
-      selectSymbol(v);
+    const assetGroup = $('asset-group');
+    assetGroup.innerHTML = cfg.globalAssets.map((a) =>
+      '<button type="button" data-symbol="' + a.symbol + '" title="' + esc(a.name) + '">' + esc(a.label) + '</button>').join('');
+    assetGroup.addEventListener('click', function (e) {
+      const b = e.target.closest('button[data-symbol]');
+      if (b && b.dataset.symbol !== state.symbol) selectSymbol(b.dataset.symbol);
     });
 
     const tfGroup = $('tf-group');
@@ -90,19 +125,45 @@ VST.auth.guard().then(function (ctx) {
       const btn = e.target.closest('button[data-tf]');
       if (!btn || btn.dataset.tf === state.tfKey) return;
       state.tfKey = btn.dataset.tf;
+      state.range = null;
       savePrefs();
       renderTf();
       loadChart(false);
     });
+
+    $('range-group').innerHTML = RANGES.map((r) =>
+      '<button type="button" data-range="' + r.key + '">' + r.label + '</button>').join('');
+    $('range-group').addEventListener('click', function (e) {
+      const b = e.target.closest('button[data-range]');
+      if (!b) return;
+      const r = RANGES.find((x) => x.key === b.dataset.range);
+      state.range = r.key;
+      savePrefs();
+      if (r.tf !== state.tfKey) {
+        state.tfKey = r.tf;
+        renderTf();
+        loadChart(false);
+      } else {
+        renderTf();
+        if (chart) chart.setVisibleDays(r.days);
+      }
+    });
     renderTf();
 
-    document.querySelectorAll('#ind-group input[data-ind]').forEach(function (cb) {
-      cb.checked = !!state.indicators[cb.dataset.ind];
-      cb.addEventListener('change', function () {
-        state.indicators[cb.dataset.ind] = cb.checked;
-        savePrefs();
-        if (chart) chart.setIndicators(state.indicators);
-      });
+    $('ind-group').innerHTML = IND_LABELS.map((x) =>
+      '<label class="fa-ind-item c-' + x[0] + '"><input type="checkbox" data-ind="' + x[0] + '"' +
+      (state.indicators[x[0]] ? ' checked' : '') + '><span>' + x[1] + '</span></label>').join('');
+    $('ind-group').addEventListener('change', function (e) {
+      const cb = e.target.closest('input[data-ind]');
+      if (!cb) return;
+      state.indicators[cb.dataset.ind] = cb.checked;
+      savePrefs();
+      if (chart) chart.setIndicators(state.indicators);
+    });
+    // Bấm ra ngoài thì đóng danh sách chỉ báo.
+    document.addEventListener('click', function (e) {
+      const d = $('ind-menu');
+      if (d.open && !d.contains(e.target)) d.open = false;
     });
     if (chart) chart.setIndicators(state.indicators);
 
@@ -130,16 +191,33 @@ VST.auth.guard().then(function (ctx) {
   }
 
   function renderTf() {
-    $('tf-group').querySelectorAll('button').forEach(function (b) {
-      b.classList.toggle('active', b.dataset.tf === state.tfKey);
-      b.setAttribute('aria-pressed', b.dataset.tf === state.tfKey);
+    const mark = (sel, on) => document.querySelectorAll(sel).forEach(function (b) {
+      b.classList.toggle('active', on(b));
+      b.setAttribute('aria-pressed', on(b));
     });
+    mark('#tf-group button', (b) => b.dataset.tf === state.tfKey);
+    mark('#range-group button', (b) => b.dataset.range === state.range);
+    $('chart-tf').textContent = cfg.timeframes[state.tfKey].label;
+    renderRecent();
+  }
+
+  function renderRecent() {
+    const tf = cfg.timeframes[state.tfKey];
+    $('recent-tabs').innerHTML = state.recent.map((s) => {
+      const on = s === state.symbol;
+      return '<span class="fa-tab' + (on ? ' active' : '') + '">' +
+        '<button type="button" data-symbol="' + s + '" aria-pressed="' + on + '">' + s +
+          (on ? ' <small>(' + esc(tf.label) + ')</small>' : '') + '</button>' +
+        '<button type="button" class="fa-tab-x" data-close="' + s + '" aria-label="Đóng tab ' + s + '">×</button></span>';
+    }).join('');
   }
 
   function selectSymbol(symbol) {
     const asset = globalAssets[symbol] || null;
     state.symbol = symbol;
-    $('symbol-input').value = symbol;
+    state.recent = [symbol].concat(state.recent.filter((s) => s !== symbol)).slice(0, MAX_RECENT);
+    $('symbol-input').value = '';
+    $('symbol-input').placeholder = symbol;
     $('chart-title').textContent = symbol;
     $('chart-name').textContent = asset ? asset.name : '';
     document.title = symbol + ' · ThảoChi Stock';
@@ -159,6 +237,7 @@ VST.auth.guard().then(function (ctx) {
     }
     chat.setSymbol(symbol);
     savePrefs();
+    renderRecent();
     if (state.lastRefresh === 0) refreshAll();
     else loadChart(false);
     if (window.innerWidth < 768) window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -177,6 +256,8 @@ VST.auth.guard().then(function (ctx) {
       const bars = await source.getHistory(symbol, tf);
       if (token !== state.loadToken) return; // đã có yêu cầu mới hơn
       chart.setData(symbol, bars, tf, keepView);
+      const r = RANGES.find((x) => x.key === state.range);
+      if (!keepView && r && r.tf === state.tfKey) chart.setVisibleDays(r.days);
       // Nến ngày cho sổ lệnh hiện giá tham khảo khi chưa có dữ liệu realtime.
       if (tf.resolution === 'D' && !tf.aggregate) book.setFallback(symbol, bars);
       return true;
@@ -229,6 +310,12 @@ VST.auth.guard().then(function (ctx) {
 
   // ---------- Thông báo ----------
 
+  function renderClock() {
+    const d = new Date(Date.now() + 7 * 3600 * 1000);
+    const p = (n) => String(n).padStart(2, '0');
+    $('clock').textContent = p(d.getUTCHours()) + ':' + p(d.getUTCMinutes()) + ':' + p(d.getUTCSeconds()) + ' (UTC+7)';
+  }
+
   function messageOf(err) {
     return err && err.name === 'DataError' ? err.message : 'Đã xảy ra lỗi không mong muốn. Vui lòng thử lại.';
   }
@@ -254,7 +341,8 @@ VST.auth.guard().then(function (ctx) {
   function savePrefs() {
     try {
       localStorage.setItem(STORE_KEY, JSON.stringify({
-        symbol: state.symbol, tfKey: state.tfKey, indicators: state.indicators, sideTab: state.sideTab,
+        symbol: state.symbol, tfKey: state.tfKey, range: state.range, indicators: state.indicators,
+        recent: state.recent, sideTab: state.sideTab,
       }));
     } catch (e) { /* bỏ qua: chế độ ẩn danh hoặc bị chặn lưu trữ */ }
   }
