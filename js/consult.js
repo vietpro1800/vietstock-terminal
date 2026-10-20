@@ -183,7 +183,7 @@ VST.consult = (function () {
   // total = Σ trọng số × điểm thẻ (Quét 0,15; Kỹ thuật 0,35; HT/KC 0,10; Biến động 0,15; Rủi ro 0,25).
   // Kết luận theo luật, xét lần lượt (các thẻ tốt KHÔNG bù được cho kỹ thuật/rủi ro xấu):
   //   1) BÁN: (Kỹ thuật < sell.tech 0,35 VÀ giá < MA50) HOẶC Rủi ro < sell.risk 0,3.
-  //   2) MUA: Kỹ thuật ≥ gate.tech 0,6 VÀ Rủi ro ≥ gate.risk 0,5 VÀ total ≥ verdict.buy 0,55.
+  //   2) MUA: Kỹ thuật ≥ gate.tech 0,6 VÀ Rủi ro ≥ gate.risk 0,3 VÀ total ≥ verdict.buy 0,55.
   //   3) THEO DÕI: còn lại.
   function summarize(cards, cfg) {
     const w = cfg.weights;
