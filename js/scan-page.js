@@ -97,7 +97,7 @@ VST.auth.guard().then(function (ctx) {
     $('scan-list').addEventListener('click', function (e) {
       if (e.target.closest('a')) return;
       const tr = e.target.closest('tr[data-symbol]');
-      if (tr) location.href = chartUrl(tr.dataset.symbol);
+      if (tr) VST.nav.open(chartUrl(tr.dataset.symbol));
     });
 
     $('scan-reset').addEventListener('click', function () { state.on = {}; syncCriteria(); changed(); });
@@ -351,7 +351,7 @@ VST.auth.guard().then(function (ctx) {
 
   // ---------- Tiện ích ----------
 
-  function chartUrl(sym) { return SYMBOL_RE.test(sym) ? 'index.html?symbol=' + encodeURIComponent(sym) : 'index.html'; }
+  function chartUrl(sym) { return SYMBOL_RE.test(sym) ? 'dashboard.html?symbol=' + encodeURIComponent(sym) : 'dashboard.html'; }
 
   function fmtNum(v, d) { return v.toLocaleString('vi-VN', { minimumFractionDigits: d, maximumFractionDigits: d }); }
   function fmtPct(v) { return (v > 0 ? '+' : '') + fmtNum(v, 2) + '%'; }

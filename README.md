@@ -136,7 +136,10 @@ python3 -m http.server 8000
 ## Cấu trúc thư mục
 
 ```
-index.html          Trang chính (dashboard, cần đăng nhập)
+index.html          Khung ứng dụng: thanh trên cùng cố định, các trang chức năng mở trong khung (cần đăng nhập)
+dashboard.html      Dashboard biểu đồ kỹ thuật kiểu FireAnt (cần đăng nhập)
+priceboard.html     Bảng giá kiểu SSI iBoard (cần đăng nhập)
+heatmap.html        Bản đồ nhiệt thị trường theo ngành (cần đăng nhập)
 login.html          Đăng nhập / đăng ký / quên mật khẩu / chờ duyệt
 reset-password.html Đặt mật khẩu mới từ link trong email
 admin.html          Quản trị tài khoản (chỉ admin)
@@ -159,7 +162,11 @@ js/scan-page.js     Logic trang lọc cổ phiếu
 js/rrg.js           Tính RRG: chỉ số ngành, RS-Ratio, RS-Momentum (hàm thuần)
 js/rrg-chart.js     Vẽ biểu đồ RRG (SVG)
 js/rrg-page.js      Logic trang RRG
-tests/              Kiểm thử: `node tests/backtest.test.js`, `node tests/rrg.test.js`, `node tests/scan.test.js` hoặc mở tests/index.html
+js/universe.js      ~1500 cổ phiếu HOSE/HNX/UPCoM theo ngành ICB (sinh bằng tools/build_universe.py)
+js/shell.js         Khung ứng dụng (index.html): điều hướng, giữ trang đã mở
+js/heatmap.js       Bản đồ nhiệt: bố cục treemap, % thay đổi, mức màu (hàm thuần)
+js/heatmap-page.js  Logic trang bản đồ nhiệt
+tests/              Kiểm thử: `node tests/<tên>.test.js` (backtest, rrg, scan, priceboard, heatmap) hoặc mở tests/index.html
 js/board.js         Bảng giá
 js/orderbook.js     Sổ lệnh 3 bước giá + khớp lệnh realtime
 js/chat.js          Thảo luận theo mã (Supabase realtime)
@@ -168,9 +175,22 @@ supabase/schema.sql Bảng profiles, stock_comments, trigger, RLS — chạy tro
 CLAUDE.md           Quy ước phát triển
 ```
 
+## Khung ứng dụng & điều hướng
+
+`index.html` là khung: thanh trên cùng (Dashboard, Bảng giá, Bản đồ nhiệt, Lọc mã, RRG, Backtest, Quản trị) luôn giữ nguyên,
+mỗi trang chức năng chạy trong một iframe riêng. Trang đã mở được giữ nguyên trạng thái khi chuyển sang trang khác,
+nên quay lại không phải tải lại dữ liệu. Địa chỉ dạng `index.html#rrg`; mở thẳng `scan.html` hay link cũ
+`index.html?symbol=HPG` đều tự chuyển về khung đúng trang.
+
+## Bản đồ nhiệt
+
+Trang `heatmap.html`: mỗi ô là một mã, gom theo ngành ICB; diện tích ô = GTGD bình quân 5 phiên, màu = % thay đổi
+(1 phiên so với tham chiếu, hoặc 1 tuần / 1 tháng / 3 tháng); tím = trần, xanh lam = sàn. Phạm vi: ~200 mã nổi bật,
+từng sàn hoặc toàn thị trường. Giá khớp realtime từ bảng giá SSI cho ~400 mã GTGD lớn nhất. Nhấn vào ô để mở biểu đồ.
+
 ## Lọc cổ phiếu
 
-Trang `scan.html` lọc các mã trong danh sách ngành (`VST.config.rrg.sectors`, ~130 mã) theo nến ngày.
+Trang `scan.html` lọc toàn bộ ~1500 mã HOSE/HNX/UPCoM (`js/universe.js`) theo nến ngày, phạm vi theo sàn hoặc ngành.
 Dữ liệu tải một lần (giữ 10 phút trong phiên trình duyệt), đổi tiêu chí là lọc lại ngay.
 
 10 tiêu chí, bật/tắt và chỉnh tham số tùy ý: thanh khoản (GTGD bình quân 20 phiên), vùng giá, giá trên MA20/50/200,

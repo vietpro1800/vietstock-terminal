@@ -23,6 +23,57 @@ window.VST = window.VST || {};
     return new URL(name, window.location.href).href.split('#')[0].split('?')[0];
   }
 
+  // ---------- Khung ứng dụng (index.html, js/shell.js) ----------
+  // Các trang chức năng (<html data-page="...">) chạy trong iframe của khung để thanh trên cùng giữ nguyên
+  // khi chuyển trang. Mở thẳng một trang chức năng → chuyển về khung, mở đúng trang đó.
+  const PAGE = document.documentElement.dataset.page || '';
+  const shell = (function () {
+    try {
+      return window.top !== window && window.top.VST && window.top.VST.shell ? window.top.VST.shell : null;
+    } catch (e) {
+      return null; // khác nguồn gốc
+    }
+  })();
+  const embedded = !!shell;
+  const toShell = !!PAGE && !embedded;
+  if (embedded) document.documentElement.classList.add('embedded');
+  if (toShell) {
+    window.location.replace(pageUrl('index.html') + '#' + PAGE + window.location.search);
+  }
+
+  // Chuyển trang ở cấp cửa sổ trên cùng (trong iframe thì đổi cả khung, ví dụ khi phải đăng nhập lại).
+  function redirect(url) {
+    (embedded ? window.top : window).location.replace(url);
+  }
+
+  // Mở một trang trong ứng dụng (url dạng 'dashboard.html?symbol=HPG'). Trong khung: chuyển tab của khung,
+  // không tải lại cả web. Trả về true nếu khung đã xử lý.
+  function route(url) {
+    if (!embedded) return false;
+    let u;
+    try { u = new URL(url, window.location.href); } catch (e) { return false; }
+    // Chỉ các trang .html cùng thư mục với ứng dụng.
+    if (new URL('.', u).href !== new URL('.', window.location.href).href) return false;
+    const file = u.pathname.split('/').pop() || 'index.html';
+    if (!/\.html$/.test(file)) return false;
+    const name = file.replace(/\.html$/, '');
+    return shell.open(name, u.search);
+  }
+
+  function navigate(url) {
+    if (!route(url)) window.location.href = url;
+  }
+
+  // Trong khung: link nội bộ (nhấn chuột trái thường) đi qua khung thay vì tải trang trong iframe.
+  if (embedded) {
+    document.addEventListener('click', function (e) {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const a = e.target.closest && e.target.closest('a[href]');
+      if (!a || (a.target && a.target !== '_self')) return;
+      if (route(a.href)) e.preventDefault();
+    });
+  }
+
   async function getProfile(userId) {
     const res = await client.from('profiles').select('id, email, role, status, created_at').eq('id', userId).maybeSingle();
     if (res.error) throw res.error;
@@ -33,6 +84,7 @@ window.VST = window.VST || {};
   // opts.admin = true: bắt buộc quyền admin.
   async function guard(opts) {
     opts = opts || {};
+    if (toShell) return never(); // đang chuyển về khung
     if (!client) {
       showGateError('Không tải được thư viện đăng nhập. Kiểm tra kết nối Internet rồi tải lại trang.');
       return never();
@@ -48,7 +100,7 @@ window.VST = window.VST || {};
     document.documentElement.classList.remove('auth-checking');
 
     client.auth.onAuthStateChange(function (event) {
-      if (event === 'SIGNED_OUT') window.location.replace(pageUrl('login.html'));
+      if (event === 'SIGNED_OUT') redirect(pageUrl('login.html'));
     });
     // Kiểm tra lại định kỳ: tài khoản bị khóa/bỏ quyền trong lúc đang mở trang sẽ bị đẩy ra.
     const recheck = function () { check(opts).catch(function () { /* lỗi mạng tạm thời: bỏ qua */ }); };
@@ -60,15 +112,15 @@ window.VST = window.VST || {};
   async function check(opts) {
     const s = await client.auth.getSession();
     const session = s.data && s.data.session;
-    if (!session) { window.location.replace(pageUrl('login.html')); return null; }
+    if (!session) { redirect(pageUrl('login.html')); return null; }
     const profile = await getProfile(session.user.id);
     if (!profile || profile.status !== 'active') {
       // Trang đăng nhập sẽ hiện thông báo "chờ duyệt" / "đã khóa".
-      window.location.replace(pageUrl('login.html'));
+      redirect(pageUrl('login.html'));
       return null;
     }
     if (opts.admin && profile.role !== 'admin') {
-      window.location.replace(pageUrl('index.html'));
+      redirect(pageUrl('index.html'));
       return null;
     }
     return { user: session.user, profile: profile };
@@ -78,19 +130,26 @@ window.VST = window.VST || {};
 
   async function signOut() {
     try { await client.auth.signOut({ scope: 'local' }); } catch (e) { /* vẫn chuyển trang */ }
-    window.location.replace(pageUrl('login.html'));
+    redirect(pageUrl('login.html'));
   }
 
-  // Thanh người dùng trên topbar: link sang các trang khác + Đăng xuất.
-  // current: 'dashboard' | 'priceboard' | 'scan' | 'rrg' | 'backtest' | 'admin'.
+  // Các trang chức năng, theo thứ tự trên thanh điều hướng. admin: chỉ hiện với quản trị viên.
+  const PAGES = [
+    { id: 'dashboard', label: 'Dashboard' },
+    { id: 'priceboard', label: 'Bảng giá' },
+    { id: 'heatmap', label: 'Bản đồ nhiệt' },
+    { id: 'scan', label: 'Lọc mã' },
+    { id: 'rrg', label: 'RRG' },
+    { id: 'backtest', label: 'Backtest' },
+    { id: 'admin', label: 'Quản trị', admin: true },
+  ];
+
+  // Thanh người dùng trên topbar khi trang chạy riêng (trong khung thì topbar của trang bị ẩn).
+  // current: id trong PAGES.
   function mountUserBar(el, profile, current) {
-    const links = [];
-    if (current !== 'dashboard') links.push('<a class="ub-link" href="index.html">Dashboard</a>');
-    if (current !== 'priceboard') links.push('<a class="ub-link" href="priceboard.html">Bảng giá</a>');
-    if (current !== 'scan') links.push('<a class="ub-link" href="scan.html">Lọc mã</a>');
-    if (current !== 'rrg') links.push('<a class="ub-link" href="rrg.html">RRG</a>');
-    if (current !== 'backtest') links.push('<a class="ub-link" href="backtest.html">Backtest</a>');
-    if (current !== 'admin' && profile.role === 'admin') links.push('<a class="ub-link" href="admin.html">Quản trị</a>');
+    if (embedded) return;
+    const links = PAGES.filter((p) => p.id !== current && (!p.admin || profile.role === 'admin'))
+      .map((p) => '<a class="ub-link" href="' + p.id + '.html">' + p.label + '</a>');
     el.innerHTML =
       '<span class="ub-email" title="' + escapeHtml(profile.email) + '">' + escapeHtml(profile.email) + '</span>' +
       links.join('') +
@@ -184,5 +243,8 @@ window.VST = window.VST || {};
     mountUserBar: mountUserBar,
     enhancePasswordFields: enhancePasswordFields,
     errorMessage: errorMessage,
+    PAGES: PAGES,
   };
+  // Điều hướng trong ứng dụng: VST.nav.open('dashboard.html?symbol=HPG').
+  VST.nav = { embedded: embedded, open: navigate };
 })();

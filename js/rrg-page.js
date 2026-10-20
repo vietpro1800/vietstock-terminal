@@ -282,7 +282,7 @@ VST.auth.guard().then(function (ctx) {
         ? '<b>' + esc(it.name) + '</b> <span class="dim small" title="GTGD trung bình 20 phiên">' + fmtNum(it.value) + ' tỷ</span>'
         : '<b>' + esc(it.name) + '</b> <span class="dim small">' + it.count + (it.count < it.total ? '/' + it.total : '') + ' mã</span>';
       const link = s && SYMBOL_RE.test(it.id)
-        ? '<a class="rrg-open" href="index.html?symbol=' + encodeURIComponent(it.id) + '" title="Xem biểu đồ ' + esc(it.id) + '">Biểu đồ</a>'
+        ? '<a class="rrg-open" href="dashboard.html?symbol=' + encodeURIComponent(it.id) + '" title="Xem biểu đồ ' + esc(it.id) + '">Biểu đồ</a>'
         : (!s ? '<span class="rrg-open dim" aria-hidden="true">›</span>' : '');
       if (!m) {
         return '<tr data-id="' + esc(it.id) + '"><td></td><td>' + name + '</td><td colspan="4" class="dim">' +

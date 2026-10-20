@@ -1,4 +1,4 @@
-// Dashboard (index.html), bố cục kiểu FireAnt: tab mã vừa xem, công cụ vẽ dọc, biểu đồ kỹ thuật ở giữa,
+// Dashboard (dashboard.html, chạy trong khung index.html), bố cục kiểu FireAnt: tab mã vừa xem, công cụ vẽ dọc, biểu đồ kỹ thuật ở giữa,
 // nút chọn khoảng thời gian (5 năm … 1 ngày) phía dưới; cột phải có sổ lệnh realtime + thảo luận/bảng giá.
 // Khởi tạo, gắn sự kiện giao diện và tự làm mới.
 // Chỉ chạy sau khi xác nhận đã đăng nhập và tài khoản đang hoạt động.
@@ -39,7 +39,7 @@ VST.auth.guard().then(function (ctx) {
   const canonical = (s) => (globalAssets[s] ? globalAssets[s].symbol : s);
 
   const prefs = loadPrefs();
-  // Cho phép mở thẳng một mã: index.html?symbol=HPG (ví dụ từ trang RRG, Bảng giá).
+  // Cho phép mở thẳng một mã: dashboard.html?symbol=HPG (ví dụ từ trang RRG, Bảng giá).
   const urlSymbol = (new URLSearchParams(location.search).get('symbol') || '').trim().toUpperCase();
   const state = {
     symbol: canonical(SYMBOL_RE.test(urlSymbol) ? urlSymbol : (prefs.symbol || cfg.defaultSymbol)),
@@ -77,6 +77,13 @@ VST.auth.guard().then(function (ctx) {
 
   buildControls();
   selectSymbol(state.symbol);
+  // Khung ứng dụng (js/shell.js) gọi để đổi mã khi đã mở sẵn dashboard, không tải lại trang.
+  VST.dashboard = {
+    selectSymbol: function (s) {
+      s = canonical(String(s || '').toUpperCase());
+      if (SYMBOL_RE.test(s)) selectSymbol(s);
+    },
+  };
   setInterval(tick, cfg.refreshMs);
   setInterval(renderClock, 1000);
   renderClock();

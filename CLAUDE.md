@@ -11,10 +11,15 @@ sau này mở rộng nhiều người dùng có đăng nhập.
   Màu giá theo thói quen thị trường VN: tăng = xanh lá, giảm = đỏ, đứng giá = vàng.
 - **Ưu tiên điện thoại (mobile-first)**: CSS viết cho màn hình hẹp trước, mở rộng bằng
   `@media (min-width: ...)`. Không để trang bị cuộn ngang; vùng bấm tối thiểu ~40px.
-  Dashboard (`index.html`, `<html class="fa-theme">`, `<body class="dash fa">`) theo kiểu FireAnt (màu `--fa-*`): tab mã vừa xem,
+  Dashboard (`dashboard.html`, `<html class="fa-theme">`, `<body class="dash fa">`) theo kiểu FireAnt (màu `--fa-*`): tab mã vừa xem,
   công cụ vẽ dọc, biểu đồ nền trắng, nút 5 năm … 1 ngày. Từ 768px chia 2 cột — biểu đồ 3/4 trái, sổ lệnh + thảo luận/bảng giá
   1/4 phải; nếu cao ≥ 560px thì gói trong 1 màn hình (không cuộn trang), các khung danh sách tự co giãn và cuộn bên trong.
   `chart.html` chỉ còn chuyển hướng về `index.html` (link cũ).
+- **Khung ứng dụng (`index.html` + `js/shell.js`)**: thanh trên cùng cố định, mỗi trang chức năng chạy trong iframe riêng
+  (giữ nguyên khi chuyển trang, không tải lại). Trang chức năng đặt `data-page="<id>"` trên `<html>`; mở thẳng sẽ tự chuyển
+  về `index.html#<id>`. Trong khung, `<html>` có class `embedded` và `.topbar` của trang bị ẩn (khung hiện tiêu đề và
+  `#status-dot`/`#status-text` của trang). Thêm trang mới: thêm vào `PAGES` trong `js/auth.js`. Chuyển trang trong code
+  dùng `VST.nav.open('dashboard.html?symbol=HPG')` (link `<a href>` nội bộ được chặn và đi qua khung tự động).
 - **HTML/CSS/JS thuần, không build**: không npm, không bundler, không framework.
   Thư viện ngoài chỉ nạp qua CDN, **ghim phiên bản cụ thể** (ví dụ `lightweight-charts@4.2.3`).
   Mở `index.html` qua một web server tĩnh bất kỳ là chạy được.
@@ -41,14 +46,18 @@ sau này mở rộng nhiều người dùng có đăng nhập.
     Realtime nhiều mã qua `VST.SsiBoardFeed` trong `data.js`. Kiểm thử: `node tests/priceboard.test.js` (phải đạt hết nếu sửa `priceboard.js`).
   - `js/orderbook.js` — khung sổ lệnh/khớp lệnh (chỉ hiển thị; dữ liệu từ `VST.SsiRealtimeFeed` trong `data.js`).
   - `js/chat.js` — thảo luận theo mã (bảng `stock_comments` trong Supabase, realtime).
-  - `js/app.js` — khởi tạo, gắn sự kiện, tự làm mới.
+  - `js/app.js` — dashboard: khởi tạo, gắn sự kiện, tự làm mới; `VST.dashboard.selectSymbol()` cho khung đổi mã.
+  - `js/shell.js` — khung ứng dụng (`index.html`): thanh điều hướng, tạo/giữ iframe từng trang, đồng bộ `#hash`.
+  - `js/heatmap.js` — bản đồ nhiệt thuần (`layout` treemap squarified 2 cấp, `change`, `bucket`, `avgValue`).
+    `js/heatmap-page.js` — logic `heatmap.html` (cấu hình `VST.config.heatmap`, màu `--hm-*`, giá realtime qua `VST.SsiBoardFeed`).
+    Kiểm thử: `node tests/heatmap.test.js` (phải đạt hết nếu sửa `heatmap.js`).
   - `js/backtest.js` — công cụ backtest thuần (không DOM, không mạng), chạy được cả trong Node.
     `js/backtest-page.js` — logic trang `backtest.html`. Kiểm thử: `node tests/backtest.test.js`
     (phải đạt hết trước khi commit nếu sửa `backtest.js` hoặc `indicators.js`).
   - `js/universe.js` — danh sách ~1500 cổ phiếu toàn 3 sàn (HOSE/HNX/UPCoM) theo ngành ICB (`VST.universe`: `sectors`,
     `info[mã]` = sàn/ngành, `all`). **File sinh tự động** bằng `python3 tools/build_universe.py` (nguồn: dữ liệu
     `symbols.json` của vnstock-js) — không sửa tay; chạy lại script để cập nhật mã mới niêm yết/hủy niêm yết.
-    Chỉ nạp ở `rrg.html` và `scan.html` (sau `config.js`).
+    Chỉ nạp ở `rrg.html`, `scan.html`, `heatmap.html` (sau `config.js`).
   - `js/rrg.js` — tính RRG thuần (chỉ số ngành, RS-Ratio, RS-Momentum). `js/rrg-chart.js` — vẽ RRG bằng SVG.
     `js/rrg-page.js` — logic trang `rrg.html`. Ngành và mã lấy từ `VST.universe.sectors`; lọc thanh khoản
     (GTGD TB20) và số mã bật sẵn khi xem một ngành ở `VST.config.rrg`.
@@ -60,7 +69,7 @@ sau này mở rộng nhiều người dùng có đăng nhập.
   - `js/login.js`, `js/reset.js`, `js/admin.js` — logic riêng của `login.html`,
     `reset-password.html`, `admin.html`.
   - `supabase/schema.sql` — bảng, trigger, RLS. Phải chạy lại được nhiều lần (idempotent).
-  - Các file JS dùng chung namespace `window.VST`, nạp theo thứ tự trong `index.html`.
+  - Các file JS dùng chung namespace `window.VST`, nạp theo thứ tự trong từng file HTML.
 - **Không bao giờ đưa khóa bí mật vào code**: không API key, token, mật khẩu, chuỗi kết nối
   trong bất kỳ file nào được commit. Web tĩnh thì mọi thứ trong code đều công khai.
   Ngoại lệ duy nhất: Supabase **publishable key** (`sb_publishable_...`) trong `js/config.js` — khóa công khai
@@ -69,7 +78,8 @@ sau này mở rộng nhiều người dùng có đăng nhập.
 
 ## Đăng nhập & phân quyền (Supabase Auth)
 
-- Mọi trang dashboard (hiện là `index.html`, `priceboard.html`, `scan.html`, `rrg.html`, `backtest.html`, `admin.html`) phải: đặt `class="auth-checking"` trên `<html>`,
+- Mọi trang dashboard (hiện là `index.html` (khung), `dashboard.html`, `priceboard.html`, `heatmap.html`, `scan.html`, `rrg.html`,
+  `backtest.html`, `admin.html`) phải: đặt `class="auth-checking"` trên `<html>`,
   nạp supabase-js + `config.js` + `auth.js`, và chỉ chạy code trang bên trong `VST.auth.guard().then(...)`
   (`guard({ admin: true })` cho trang quản trị). Chưa đăng nhập / chưa `active` → tự chuyển về `login.html`.
 - Bảng `profiles`: `role` ∈ admin/user, `status` ∈ pending/active/locked. Người mới luôn là `pending`.
