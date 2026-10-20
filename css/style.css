@@ -1442,3 +1442,62 @@ span.sg-sell { color: var(--down); border: 1px solid var(--down); }
 @media (min-width: 1500px) {
   .rd-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+/* ---------- Trang Phân tích mã (analysis.html): hội chẩn 6 vai trò ---------- */
+.an { display: grid; gap: var(--gutter); padding: var(--gutter); max-width: 1100px; margin: 0 auto; }
+.an-form { display: grid; gap: 10px; }
+.an-search { display: flex; gap: 8px; }
+.an-search .input { flex: 1 1 auto; min-width: 0; min-height: 44px; font-size: 16px; font-weight: 700; }
+.an-search .btn { flex: none; min-height: 44px; }
+.an-recent { display: flex; flex-wrap: wrap; gap: 6px; }
+.an-recent:empty { display: none; }
+.an-chip {
+  min-height: 40px; min-width: 56px; padding: 0 12px; border: 1px solid var(--border); border-radius: 999px;
+  background: var(--bg); color: var(--text); font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.an-chip:hover { border-color: var(--text-dim); }
+.an-chip.active { border-color: var(--accent); color: var(--accent); }
+
+.an-result { display: grid; gap: 12px; }
+.an-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.an-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; flex: 1 1 auto; min-width: 0; }
+.an-title h2 { font-size: 22px; }
+.an-price { font-size: 14px; }
+.an-price b { font-size: 18px; }
+.an-title .dim { font-size: 12px; }
+.an-verdict {
+  padding: 4px 12px; border-radius: 999px; border: 1px solid currentColor;
+  font-size: 14px; font-weight: 700; letter-spacing: 0.02em;
+}
+.an-verdict[hidden], .an-head .btn[hidden] { display: none; }
+.an-verdict.buy, .an-verdict-line.buy { color: var(--up); }
+.an-verdict.watch, .an-verdict-line.watch { color: var(--ref); }
+.an-verdict.avoid, .an-verdict-line.avoid { color: var(--down); }
+
+/* Lưới thẻ: 2 cột trên điện thoại, 3 cột trên máy tính. */
+.an-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.an-grid > p { grid-column: 1 / -1; margin: 0; }
+.an-card {
+  display: grid; gap: 8px; align-content: start; min-width: 0;
+  padding: 10px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg);
+}
+.an-card header { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
+.an-card h3 { margin: 0; font-size: 12px; font-weight: 700; color: var(--text-dim); letter-spacing: 0.03em; overflow-wrap: anywhere; }
+.an-score { font-size: 20px; font-variant-numeric: tabular-nums; }
+.an-bar { height: 6px; border-radius: 3px; background: var(--grid); overflow: hidden; }
+.an-bar i { display: block; height: 100%; border-radius: 3px; }
+.an-bar i.lv-low { background: var(--down); }
+.an-bar i.lv-mid { background: var(--ref); }
+.an-bar i.lv-high { background: var(--up); }
+.an-score.lv-low { color: var(--down); }
+.an-score.lv-mid { color: var(--ref); }
+.an-score.lv-high { color: var(--up); }
+.an-note { margin: 0; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
+.an-summary { border-color: var(--accent); background: var(--bg-active); }
+.an-verdict-line { margin: 0; font-size: 18px; font-weight: 800; }
+
+@media (min-width: 768px) {
+  .an-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .an-card { padding: 12px 14px; }
+  .an-card h3 { font-size: 13px; }
+}

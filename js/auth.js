@@ -136,6 +136,7 @@ window.VST = window.VST || {};
   // Các trang chức năng, theo thứ tự trên thanh điều hướng. admin: chỉ hiện với quản trị viên.
   const PAGES = [
     { id: 'dashboard', label: 'Đồ thị kỹ thuật' },
+    { id: 'analysis', label: 'Phân tích mã' },
     { id: 'priceboard', label: 'Bảng giá' },
     { id: 'heatmap', label: 'Bản đồ nhiệt' },
     { id: 'scan', label: 'Lọc mã' },

@@ -107,6 +107,11 @@ VST.auth.guard().then(function (ctx) {
       selectSymbol(v);
     });
 
+    // Mở trang Phân tích mã (hội chẩn 6 vai trò) cho mã đang xem.
+    $('analysis-btn').addEventListener('click', function () {
+      VST.nav.open('analysis.html?symbol=' + encodeURIComponent(state.symbol));
+    });
+
     $('recent-tabs').addEventListener('click', function (e) {
       const close = e.target.closest('button[data-close]');
       if (close) {
