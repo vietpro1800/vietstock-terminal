@@ -1,5 +1,5 @@
 // Trang Phân tích mã (analysis.html): hội chẩn 6 vai trò cho một mã, điểm tính bằng VST.consult (js/consult.js)
-// từ nến ngày VNDirect. Chỉ chạy sau khi xác nhận đã đăng nhập và tài khoản đang hoạt động.
+// từ nến ngày VNDirect; hiệu ứng "hội chẩn" bằng VST.ConsultFx (js/consult-fx.js). Chỉ chạy sau khi xác nhận đã đăng nhập và tài khoản đang hoạt động.
 VST.auth.guard().then(function (ctx) {
   const cfg = VST.config.consult;
   const consult = VST.consult;
@@ -19,7 +19,11 @@ VST.auth.guard().then(function (ctx) {
     symbol: null,
     recent: Array.isArray(prefs.recent) ? prefs.recent.filter((s) => SYMBOL_RE.test(s)).slice(0, MAX_RECENT) : [],
     loadToken: 0,
+    fx: prefs.fx !== false, // người dùng bật hiệu ứng (mặc định bật)
   };
+  // Máy bật "giảm chuyển động" thì tự tắt hiệu ứng.
+  const reducedMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+  const fx = new VST.ConsultFx($('an-stage'), $('an-fx'));
 
   VST.auth.mountUserBar($('user-bar'), ctx.profile, 'analysis');
   $('an-list').innerHTML = VST.config.boardSymbols.map((s) => '<option value="' + s + '">').join('');
@@ -38,6 +42,20 @@ VST.auth.guard().then(function (ctx) {
   $('an-chart').addEventListener('click', function () {
     if (state.symbol) VST.nav.open('dashboard.html?symbol=' + encodeURIComponent(state.symbol));
   });
+  $('an-fx-toggle').addEventListener('click', function () {
+    state.fx = !state.fx;
+    savePrefs();
+    renderFxToggle();
+    if (!fxEnabled()) { fx.finish(); fx.stop(); }
+  });
+  if (reducedMotion) {
+    const onChange = function () { renderFxToggle(); if (!fxEnabled()) { fx.finish(); fx.stop(); } };
+    if (reducedMotion.addEventListener) reducedMotion.addEventListener('change', onChange);
+    else if (reducedMotion.addListener) reducedMotion.addListener(onChange);
+  }
+  // Tab bị ẩn giữa chừng: hiện kết quả ngay, dừng vòng lặp vẽ.
+  document.addEventListener('visibilitychange', function () { if (document.hidden) fx.finish(); });
+  renderFxToggle();
   renderRecent();
 
   const urlSymbol = (new URLSearchParams(location.search).get('symbol') || '').trim().toUpperCase();
@@ -55,6 +73,7 @@ VST.auth.guard().then(function (ctx) {
     $('an-date').textContent = '';
     $('an-verdict').hidden = true;
     $('an-chart').hidden = false;
+    fx.stop();
     $('an-grid').innerHTML = '<p class="dim">Đang tải dữ liệu…</p>';
     setStatus('loading', 'Đang phân tích ' + symbol + '…');
     try {
@@ -88,12 +107,13 @@ VST.auth.guard().then(function (ctx) {
     const v = $('an-verdict');
     v.textContent = r.verdict;
     v.className = 'an-verdict ' + VERDICT_CLASS[r.verdict];
-    v.hidden = false;
+    const animate = fxEnabled();
+    v.hidden = animate;
 
     $('an-grid').innerHTML = r.cards.map(function (c) {
       const lv = consult.level(c.score, cfg);
       const summary = c.id === 'summary';
-      return '<article class="an-card' + (summary ? ' an-summary' : '') + '">' +
+      return '<article class="an-card' + (summary ? ' an-summary' : '') + (animate ? ' an-pending' : '') + '">' +
         '<header><h3>' + esc(c.label).replace('/', '/<wbr>') + '</h3><b class="an-score lv-' + lv + '">' + fmtNum(c.score, 2) + '</b></header>' +
         '<div class="an-bar" role="meter" aria-valuemin="0" aria-valuemax="1" aria-valuenow="' + c.score + '" aria-label="Điểm ' +
           esc(c.label) + '"><i class="lv-' + lv + '" style="width:' + Math.round(c.score * 100) + '%"></i></div>' +
@@ -101,6 +121,38 @@ VST.auth.guard().then(function (ctx) {
         '<p class="an-note">' + esc(c.note) + '</p>' +
         '</article>';
     }).join('');
+    if (animate) playFx(r);
+  }
+
+  // Hội chẩn: 5 thẻ vai trò lần lượt sáng và hiện điểm, đường nối về TỔNG HỢP, cuối cùng hiện kết luận.
+  function playFx(r) {
+    const els = Array.prototype.slice.call($('an-grid').querySelectorAll('.an-card'));
+    const summary = els.pop();
+    const levels = r.cards.slice(0, els.length).map((c) => consult.level(c.score, cfg));
+    fx.play(els, summary, levels, {
+      reveal: function (i) {
+        els[i].classList.remove('an-pending');
+        els[i].classList.add('an-lit');
+      },
+      pulse: function () {
+        summary.classList.remove('an-pending');
+        summary.classList.add('an-pulse', 'an-wait');
+      },
+      verdict: function () {
+        summary.classList.remove('an-pending', 'an-wait');
+        $('an-verdict').hidden = false;
+      },
+    });
+  }
+
+  function fxEnabled() { return state.fx && !(reducedMotion && reducedMotion.matches); }
+
+  function renderFxToggle() {
+    const b = $('an-fx-toggle');
+    const reduced = !!(reducedMotion && reducedMotion.matches);
+    b.disabled = reduced;
+    b.setAttribute('aria-pressed', fxEnabled() ? 'true' : 'false');
+    b.textContent = reduced ? 'Hiệu ứng: Tắt (máy đang giảm chuyển động)' : 'Hiệu ứng: ' + (state.fx ? 'Bật' : 'Tắt');
   }
 
   function remember(symbol) {
@@ -139,7 +191,7 @@ VST.auth.guard().then(function (ctx) {
   }
   function savePrefs() {
     try {
-      localStorage.setItem(STORE_KEY, JSON.stringify({ recent: state.recent }));
+      localStorage.setItem(STORE_KEY, JSON.stringify({ recent: state.recent, fx: state.fx }));
     } catch (e) { /* bỏ qua: chế độ ẩn danh hoặc bị chặn lưu trữ */ }
   }
 });

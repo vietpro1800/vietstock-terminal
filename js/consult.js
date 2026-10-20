@@ -189,7 +189,7 @@ VST.consult = (function () {
     const w = cfg.weights;
     let total = 0, wsum = 0;
     Object.keys(w).forEach(function (k) { total += w[k] * cards[k].score; wsum += w[k]; });
-    total = wsum > 0 ? total / wsum : 0;
+    total = round2(wsum > 0 ? total / wsum : 0); // làm tròn trước để nhận xét khớp điểm hiển thị
     const tech = cards.tech.score, risk = cards.risk.score;
     const belowMa = !(cards.tech.detail.price > cards.tech.detail.ma50);
 

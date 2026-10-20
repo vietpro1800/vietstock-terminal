@@ -1501,3 +1501,32 @@ span.sg-sell { color: var(--down); border: 1px solid var(--down); }
   .an-card { padding: 12px 14px; }
   .an-card h3 { font-size: 13px; }
 }
+
+/* Hiệu ứng "hội chẩn" (js/consult-fx.js): canvas phủ trong suốt lên lưới thẻ, không bắt sự kiện chạm. */
+.an-opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.an-fx-toggle { font-weight: 500; color: var(--text-dim); }
+.an-fx-toggle[aria-pressed="true"] { color: var(--text); border-color: var(--accent); }
+.an-fx-toggle:disabled { opacity: 0.6; cursor: default; }
+.an-stage { position: relative; }
+.an-fx { position: absolute; left: 0; top: 0; z-index: 1; pointer-events: none; }
+.an-card { transition: opacity 0.3s ease-out, border-color 0.3s ease-out; }
+.an-score, .an-verdict-line { transition: opacity 0.3s ease-out; }
+.an-bar i { transform-origin: left center; transition: transform 0.5s ease-out; }
+.an-card.an-pending { opacity: 0.5; }
+.an-pending .an-score, .an-pending .an-verdict-line, .an-wait .an-verdict-line { opacity: 0; }
+.an-pending .an-bar i { transform: scaleX(0); }
+.an-card.an-lit { animation: an-lit 0.9s ease-out; }
+.an-summary.an-pulse { animation: an-pulse 0.6s ease-out; }
+@keyframes an-lit {
+  from { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent), 0 0 18px var(--accent); }
+  to { box-shadow: 0 0 0 0 transparent; }
+}
+@keyframes an-pulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 transparent; }
+  40% { transform: scale(1.03); box-shadow: 0 0 0 3px var(--accent), 0 0 24px var(--accent); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .an-card, .an-score, .an-verdict-line, .an-bar i { transition: none; }
+  .an-card.an-lit, .an-summary.an-pulse { animation: none; }
+}
