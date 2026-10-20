@@ -173,7 +173,66 @@
         };
       },
     },
+
+    supertrend: {
+      name: 'Supertrend',
+      desc: 'Mua khi Supertrend chuyển sang xu hướng tăng (giá đóng cửa vượt lên trên đường Supertrend), bán khi chuyển sang xu hướng giảm.',
+      params: [
+        { key: 'period', label: 'Chu kỳ ATR', def: 10, min: 2, max: 100, step: 1 },
+        { key: 'mult', label: 'Hệ số ATR', def: 3, min: 0.5, max: 10, step: 0.1 },
+      ],
+      lookback: function (p) { return p.period * 3; },
+      signals: function (bars, p) {
+        const st = ind.supertrend(pick(bars, 'high'), pick(bars, 'low'), pick(bars, 'close'), p.period, p.mult);
+        const d = st.dir;
+        return {
+          entry: d.map(function (v, i) { return i > 0 && d[i - 1] === -1 && v === 1; }),
+          exit: d.map(function (v, i) { return i > 0 && d[i - 1] === 1 && v === -1; }),
+        };
+      },
+    },
+
+    macdCross: {
+      name: 'MACD',
+      desc: 'Mua khi đường MACD cắt lên đường signal, bán khi cắt xuống. Có thể chỉ mua khi MACD còn dưới 0 (bắt nhịp hồi sớm).',
+      params: [
+        { key: 'fast', label: 'MACD nhanh', def: 12, min: 2, max: 50, step: 1 },
+        { key: 'slow', label: 'MACD chậm', def: 26, min: 3, max: 100, step: 1 },
+        { key: 'signal', label: 'Đường signal', def: 9, min: 2, max: 50, step: 1 },
+        { key: 'zone', label: 'Điều kiện mua', def: 'any', options: [['any', 'Mọi vị trí'], ['below', 'Chỉ khi MACD dưới 0']] },
+      ],
+      lookback: function (p) { return p.slow + p.signal; },
+      validate: function (p) { if (p.fast >= p.slow) return 'MACD nhanh phải nhỏ hơn MACD chậm.'; },
+      signals: function (bars, p) {
+        const m = ind.macd(pick(bars, 'close'), p.fast, p.slow, p.signal);
+        return {
+          entry: m.macd.map(function (v, i) { return crossUp(m.macd, m.signal, i) && (p.zone !== 'below' || v < 0); }),
+          exit: m.macd.map(function (_, i) { return crossDown(m.macd, m.signal, i); }),
+        };
+      },
+    },
+
+    dmi: {
+      name: 'DMI / ADX',
+      desc: 'Mua khi +DI cắt lên −DI và ADX từ ngưỡng trở lên (xu hướng đủ mạnh), bán khi −DI cắt lên +DI. Ngưỡng ADX = 0 là không lọc.',
+      params: [
+        { key: 'period', label: 'Chu kỳ DMI', def: 14, min: 2, max: 50, step: 1 },
+        { key: 'adxMin', label: 'ADX tối thiểu', def: 20, min: 0, max: 60, step: 1 },
+      ],
+      lookback: function (p) { return p.period * 3; },
+      signals: function (bars, p) {
+        const d = ind.dmi(pick(bars, 'high'), pick(bars, 'low'), pick(bars, 'close'), p.period);
+        return {
+          entry: d.plus.map(function (_, i) {
+            return crossUp(d.plus, d.minus, i) && (!(p.adxMin > 0) || (d.adx[i] != null && d.adx[i] >= p.adxMin));
+          }),
+          exit: d.plus.map(function (_, i) { return crossDown(d.plus, d.minus, i); }),
+        };
+      },
+    },
   };
+
+  function pick(bars, key) { return bars.map(function (b) { return b[key]; }); }
 
   function defaultParams(id) {
     const out = {};

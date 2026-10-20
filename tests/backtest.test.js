@@ -174,6 +174,75 @@
     eq(r.pending.side, 'buy');
   });
 
+  // ---------- Chỉ báo & chiến lược Supertrend, MACD, DMI/ADX ----------
+
+  // Giá giảm đều 30 phiên rồi tăng đều 30 phiên (cao/thấp ±1%).
+  function vBars() {
+    const c = [];
+    for (let i = 0; i < 30; i++) c.push(50 - i);
+    for (let i = 0; i < 30; i++) c.push(21 + i);
+    return c.map(function (x, i) {
+      return { time: 1700000000 + i * 86400, open: x, close: x, high: x * 1.01, low: x * 0.99, volume: 1000 };
+    });
+  }
+  const ind = window.VST.indicators;
+  const col = function (bars, k) { return bars.map(function (b) { return b[k]; }); };
+
+  test('ATR: biên độ cố định', function () {
+    const h = [11, 11, 11, 11, 11], l = [9, 9, 9, 9, 9], c = [10, 10, 10, 10, 10];
+    const a = ind.atr(h, l, c, 3);
+    eq(a[2], null);
+    near(a[3], 2, 1e-12);
+    near(a[4], 2, 1e-12);
+  });
+
+  test('Supertrend: giảm rồi tăng thì đổi hướng một lần', function () {
+    const b = vBars();
+    const st = ind.supertrend(col(b, 'high'), col(b, 'low'), col(b, 'close'), 5, 2);
+    eq(st.dir[25], -1, 'đang giảm');
+    eq(st.dir[59], 1, 'đang tăng');
+    let flips = 0;
+    for (let i = 26; i < 60; i++) if (st.dir[i] !== st.dir[i - 1]) flips++;
+    eq(flips, 1, 'số lần đổi hướng');
+    if (!(st.line[59] < b[59].close)) throw new Error('xu hướng tăng: đường nằm dưới giá');
+  });
+
+  test('DMI/ADX: xu hướng tăng thì +DI > −DI, ADX cao', function () {
+    const b = vBars();
+    const d = ind.dmi(col(b, 'high'), col(b, 'low'), col(b, 'close'), 5);
+    if (!(d.minus[25] > d.plus[25])) throw new Error('đoạn giảm: −DI phải lớn hơn');
+    if (!(d.plus[59] > d.minus[59])) throw new Error('đoạn tăng: +DI phải lớn hơn');
+    if (!(d.adx[59] > 25)) throw new Error('ADX phải cao, nhận ' + d.adx[59]);
+  });
+
+  test('Chiến lược Supertrend, MACD, DMI báo mua sau khi giá đảo chiều tăng', function () {
+    const b = vBars();
+    [['supertrend', { period: 5, mult: 2 }], ['macdCross', { fast: 3, slow: 6, signal: 3 }], ['dmi', { period: 5, adxMin: 0 }]].forEach(function (x) {
+      const st = bt.STRATEGIES[x[0]];
+      const p = Object.assign(bt.defaultParams(x[0]), x[1]);
+      const sig = st.signals(b, p);
+      const buy = sig.entry.indexOf(true);
+      if (!(buy >= 30 && buy < 45)) throw new Error(st.name + ': phiên mua đầu tiên ' + buy);
+      const r = bt.run(b, { capital: 10e6, strategy: x[0], params: x[1] });
+      if (!(r.equity[r.equity.length - 1].value > 10e6)) throw new Error(st.name + ': phải có lãi');
+    });
+  });
+
+  test('MACD: chỉ mua khi MACD dưới 0', function () {
+    const b = vBars();
+    const p = Object.assign(bt.defaultParams('macdCross'), { fast: 3, slow: 6, signal: 3, zone: 'below' });
+    const sig = bt.STRATEGIES.macdCross.signals(b, p);
+    const m = ind.macd(col(b, 'close'), 3, 6, 3);
+    sig.entry.forEach(function (v, i) { if (v && !(m.macd[i] < 0)) throw new Error('mua khi MACD ≥ 0 ở phiên ' + i); });
+  });
+
+  test('DMI: ngưỡng ADX lọc bớt tín hiệu', function () {
+    const b = vBars();
+    const all = bt.STRATEGIES.dmi.signals(b, { period: 5, adxMin: 0 }).entry.filter(Boolean).length;
+    const strict = bt.STRATEGIES.dmi.signals(b, { period: 5, adxMin: 60 }).entry.filter(Boolean).length;
+    if (!(strict <= all)) throw new Error('lọc ADX không được tăng số tín hiệu');
+  });
+
   // ---------- Chỉ số ----------
 
   test('Sụt giảm tối đa', function () {
