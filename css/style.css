@@ -10,6 +10,12 @@
   --text-dim: #8b95a7;
   --accent: #3b82f6;
 
+  /* Hiệu ứng con nhện "hội chẩn" trang Phân tích mã (js/consult-fx.js). */
+  --fx-leg: #38d6f0;
+  --fx-joint: #b8f3ff;
+  --fx-foot: #ff4d8d;
+  --fx-body: #2d72d2;
+
   /* Màu giá theo quy ước thị trường VN (dùng mã hex 6 ký tự: chart.js ghép thêm độ trong suốt). */
   --up: #22c55e;
   --down: #ef4444;
