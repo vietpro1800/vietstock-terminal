@@ -26,8 +26,9 @@ VST.Spider = (function () {
   const EDGE_PAD = 6;                    // điểm bám cách mép canvas tối thiểu
   // Góc 8 chân khi đáp xòe (độ, trục y hướng xuống): 4 chân trái, 4 chân phải.
   const LAND_ANGLES = [-150, -118, 118, 150, -30, -62, 62, 30];
-  // Khi bám góc khung: chân chạy dọc hai mép — [góc, khoảng cách].
-  const PERCH_LEGS = [[180, 16], [180, 32], [-90, 16], [-90, 32], [0, 16], [0, 32], [90, 16], [90, 32]];
+  // Độ xòe chân tối thiểu (px, trước khi nhân cỡ nhện) khi đứng yên: luôn xòe rộng như ảnh mẫu, kể cả khi bám mép
+  // khung nhỏ (nút, hàng bảng giá) — chân có thể vươn ra ngoài khung.
+  const REST_RX = 95, REST_RY = 68;
 
   const reduced = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
 
@@ -43,7 +44,7 @@ VST.Spider = (function () {
       this.win = canvas.ownerDocument.defaultView;
       this.on = false;
       this.seq = null;     // chuỗi bước nhảy đang chạy
-      this.rest = null;    // { el, kind: 'perch'|'spread', corner, jitter } — chỗ nhện đang đứng
+      this.rest = null;    // { el, kind: 'perch'|'spread', corner|edge+u, jitter } — chỗ nhện đang đứng
       this.restPose = null;
       this.raf = 0;
       this.timer = 0;
@@ -105,7 +106,7 @@ VST.Spider = (function () {
       });
       items.push({ target: spreadTarget(summary), start: t, dur: CONSULT.jump, onLand: () => hooks.pulse && hooks.pulse() });
       const tVerdict = t + CONSULT.jump + CONSULT.verdict;
-      items.push({ target: { el: summary, kind: 'perch', corner: 0 }, start: tVerdict, dur: CONSULT.perch,
+      items.push({ target: { el: summary, kind: 'perch', corner: 0, jitter: jitter() }, start: tVerdict, dur: CONSULT.perch,
         onStart: () => hooks.verdict && hooks.verdict() });
       this._run(items, () => {
         if (hooks.done) hooks.done();
@@ -158,7 +159,9 @@ VST.Spider = (function () {
         const v = this._visible(this._rect(el));
         if (Math.random() < SPREAD_CHANCE && v.w >= SPREAD_W && v.h >= SPREAD_H) { target = spreadTarget(el); break; }
         const edges = this._visibleEdges(el);
-        if (edges.length) target = { el: el, kind: 'perch', edge: edges[Math.floor(Math.random() * edges.length)], u: Math.random() };
+        if (edges.length) {
+          target = { el: el, kind: 'perch', edge: edges[Math.floor(Math.random() * edges.length)], u: Math.random(), jitter: jitter() };
+        }
       }
       if (!target) { this._scheduleWander(1); return; }
       const from = this.restPose ? this.restPose.body : { x: this.w / 2, y: 0 };
@@ -352,7 +355,7 @@ VST.Spider = (function () {
     _pose(target) {
       const rc = this._rect(target.el);
       if (target.kind === 'perch') {
-        // Bám trên mép khung, thân lệch ra ngoài một chút (nằm trong khe giữa các khung), chân dọc theo mép.
+        // Bám trên mép khung, thân lệch ra ngoài một chút (nằm trong khe giữa các khung), 8 chân xòe rộng ra xung quanh.
         // corner (0 trên-trái … 3 dưới-phải): bám đúng góc; edge + u (0–1): điểm trên phần mép đang hiện.
         let body;
         if (target.corner != null) {
@@ -364,15 +367,21 @@ VST.Spider = (function () {
         }
         body = this._clamp(body);
         const s = this._size().scale;
-        return { body: body, feet: PERCH_LEGS.map((l) => this._clamp(polar(body, l[0], l[1] * s, l[1] * s))) };
+        return { body: body, feet: this._spread(body, REST_RX * s, REST_RY * s, target.jitter) };
       }
       // Đáp xòe chân giữa phần khung đang thấy.
       const vis = this._visible(rc);
       const box = vis.w > 0 && vis.h > 0 ? vis : rc;
       const body = { x: box.x + box.w / 2, y: box.y + box.h / 2 };
-      const rx = Math.min(box.w * 0.48, 150), ry = Math.min(box.h * 0.46, 95);
-      const j = target.jitter;
-      return { body: body, feet: LAND_ANGLES.map((a, i) => this._clamp(polar(body, a + j[i] * 8, rx * (1 + j[i] * 0.06), ry))) };
+      const s = this._size().scale;
+      const rx = Math.max(Math.min(box.w * 0.48, 150), REST_RX * s), ry = Math.max(Math.min(box.h * 0.46, 95), REST_RY * s);
+      return { body: body, feet: this._spread(body, rx, ry, target.jitter) };
+    }
+
+    // 8 bàn chân xòe quanh thân theo hình elip rx × ry (lệch ngẫu nhiên nhẹ theo j để mỗi lần trông khác nhau).
+    _spread(body, rx, ry, j) {
+      j = j || ZERO8;
+      return LAND_ANGLES.map((a, i) => this._clamp(polar(body, a + j[i] * 8, rx * (1 + j[i] * 0.06), ry)));
     }
 
     _spider(body, feet, size) {
@@ -490,6 +499,7 @@ VST.Spider = (function () {
     if (hooks.verdict) hooks.verdict();
     if (hooks.done) hooks.done();
   }
+  const ZERO8 = [0, 0, 0, 0, 0, 0, 0, 0];
   function spreadTarget(el) { return { el: el, kind: 'spread', jitter: jitter() }; }
   function bodyAt(a, b, item, t) {
     const p = Math.min(1, Math.max(0, (t - item.start) / item.dur));
