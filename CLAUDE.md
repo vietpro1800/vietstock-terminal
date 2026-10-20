@@ -31,7 +31,9 @@ sau này mở rộng nhiều người dùng có đăng nhập.
   - `js/config.js` — hằng số cấu hình (danh sách mã, chu kỳ làm mới, khung thời gian).
   - `js/data.js` — lớp lấy dữ liệu. **Mọi lệnh gọi mạng chỉ nằm ở đây.** Đổi nguồn dữ liệu
     = viết lớp mới cùng giao diện (`getHistory`, `getHistoryBatch`) rồi đổi một dòng trong `app.js`.
-  - `js/indicators.js` — hàm tính chỉ báo thuần (không đụng DOM).
+  - `js/indicators.js` — hàm tính chỉ báo thuần (không đụng DOM): SMA, EMA, Bollinger, RSI, MACD, ATR, Supertrend,
+    DMI/ADX (Wilder). Chiến lược giao dịch nằm ở `VST.backtest.STRATEGIES` (`js/backtest.js`) và dùng chung cho
+    trang Backtest, Cảnh báo, Danh mục giả lập — thêm chiến lược mới ở đó là cả 3 trang tự có.
   - `js/chart.js` — biểu đồ kỹ thuật dashboard (KLineChart `klinecharts@10.0.3`): nến, KL, MA, BOLL, RSI, MACD
     (chỉ báo tính bằng `VST.indicators`), công cụ vẽ (lưu `localStorage` theo mã), hàm định dạng dùng chung `VST.fmt*`.
     Tùy chọn `new VST.ChartView(els, { toolset: 'full', valueMarks: true })`: đủ bộ công cụ vẽ dạng icon, nhãn giá trị

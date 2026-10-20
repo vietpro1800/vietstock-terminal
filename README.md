@@ -191,7 +191,7 @@ nên quay lại không phải tải lại dữ liệu. Địa chỉ dạng `inde
 
 ## Cảnh báo Mua/Bán
 
-Trang `signals.html`: chọn chiến lược (MA cắt nhau, Bắt đáy, Breakout, RSI — chỉnh được tham số), phạm vi mã (mã nổi bật,
+Trang `signals.html`: chọn chiến lược (MA cắt nhau, Bắt đáy, Breakout, RSI, Supertrend, MACD, DMI/ADX — chỉnh được tham số), phạm vi mã (mã nổi bật,
 VN30, HNX30, danh mục của tôi trên Bảng giá, cả sàn) và cửa sổ 5/10/20/60 phiên. Bảng liệt kê từng tín hiệu: mã, Mua/Bán,
 chiến lược, ngày báo, giá đóng cửa ngày báo, giá hiện tại (realtime), **% lãi/lỗ** nếu làm theo (Bán: giá giảm là có lợi)
 và **T+ số phiên** kể từ ngày báo; sắp xếp theo cột bất kỳ. Trong giờ giao dịch trang tự quét lại 5 phút/lần, tín hiệu
