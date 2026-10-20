@@ -189,13 +189,15 @@
   // Quy tắc: tín hiệu theo giá đóng cửa phiên i → khớp ở giá mở cửa phiên i+1.
   // Cắt lỗ/chốt lời xét theo giá đóng cửa, bán ở giá mở cửa phiên sau.
   // Lệnh bán (mọi lý do) chỉ khớp khi cổ phiếu đã về (T+2); nếu chưa thì hoãn đến phiên được bán đầu tiên.
+  // Kết quả có `pending`: lệnh phát sinh ở phiên cuối, sẽ khớp ở giá mở cửa phiên tới
+  //   { side: 'buy' } | { side: 'sell', reason } | { side: 'sell', reason, waiting: true } (chờ T+2) | null.
   function run(bars, opts) {
     const costs = costsOf(opts.costs);
     const capital = +opts.capital;
     if (!(capital > 0)) throw new BacktestError('Vốn ban đầu phải lớn hơn 0.');
     if (!bars || bars.length < 2) throw new BacktestError('Không đủ dữ liệu để chạy backtest.');
     const start = Math.max(0, opts.startIndex || 0);
-    if (start >= bars.length - 1) throw new BacktestError('Khoảng thời gian đã chọn không có đủ phiên giao dịch.');
+    if (start > bars.length - 1) throw new BacktestError('Khoảng thời gian đã chọn không có đủ phiên giao dịch.');
 
     let sig = opts.signals;
     if (!sig) {
@@ -246,8 +248,7 @@
       // 2) Định giá cuối phiên.
       equity.push({ time: bar.time, value: cash + (pos ? pos.shares * bar.close * PRICE_UNIT : 0) });
 
-      // 3) Xét tín hiệu theo giá đóng cửa (không đặt lệnh ở phiên cuối cùng).
-      if (i === bars.length - 1) break;
+      // 3) Xét tín hiệu theo giá đóng cửa. Lệnh đặt ở phiên cuối không khớp trong mô phỏng: trả về là `pending`.
       if (pos) {
         if (!exitReason) {
           if (sl && bar.close <= pos.price * (1 - sl)) exitReason = 'stop';
@@ -273,7 +274,11 @@
       });
     }
 
-    return { equity: equity, trades: trades, cash: cash, capital: capital };
+    let next = null;
+    if (pending === 'buy') next = { side: 'buy' };
+    else if (pending) next = { side: 'sell', reason: pending.reason };
+    else if (pos && exitReason) next = { side: 'sell', reason: exitReason, waiting: true };
+    return { equity: equity, trades: trades, cash: cash, capital: capital, pending: next };
   }
 
   // Mua và giữ: mua tối đa ở giá mở cửa phiên đầu tiên, giữ đến cuối (cùng phí, lô).

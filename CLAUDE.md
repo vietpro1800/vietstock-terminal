@@ -54,13 +54,17 @@ sau này mở rộng nhiều người dùng có đăng nhập.
   - `js/heatmap.js` — bản đồ nhiệt thuần (`layout` treemap squarified 2 cấp, `change`, `bucket`, `avgValue`).
     `js/heatmap-page.js` — logic `heatmap.html` (cấu hình `VST.config.heatmap`, màu `--hm-*`, giá realtime qua `VST.SsiBoardFeed`).
     Kiểm thử: `node tests/heatmap.test.js` (phải đạt hết nếu sửa `heatmap.js`).
+  - `js/paper.js` — danh mục giả lập thuần (`normalize` cấu hình, `simulate` chia vốn đều và chạy `VST.backtest.run`
+    cho từng mã, `summarize` lãi/lỗ đã chốt/tạm tính, có giá realtime). `js/paper-page.js` — logic `paper.html`;
+    chỉ lưu cấu hình ở bảng `paper_portfolios` (Supabase, RLS theo chủ sở hữu), giao dịch tính lại từ dữ liệu giá.
+    Kiểm thử: `node tests/paper.test.js` (phải đạt hết nếu sửa `paper.js` hoặc `backtest.js`).
   - `js/backtest.js` — công cụ backtest thuần (không DOM, không mạng), chạy được cả trong Node.
     `js/backtest-page.js` — logic trang `backtest.html`. Kiểm thử: `node tests/backtest.test.js`
     (phải đạt hết trước khi commit nếu sửa `backtest.js` hoặc `indicators.js`).
   - `js/universe.js` — danh sách ~1500 cổ phiếu toàn 3 sàn (HOSE/HNX/UPCoM) theo ngành ICB (`VST.universe`: `sectors`,
     `info[mã]` = sàn/ngành, `all`). **File sinh tự động** bằng `python3 tools/build_universe.py` (nguồn: dữ liệu
     `symbols.json` của vnstock-js) — không sửa tay; chạy lại script để cập nhật mã mới niêm yết/hủy niêm yết.
-    Chỉ nạp ở `rrg.html`, `scan.html`, `heatmap.html` (sau `config.js`).
+    Chỉ nạp ở `rrg.html`, `scan.html`, `heatmap.html`, `paper.html` (sau `config.js`).
   - `js/rrg.js` — tính RRG thuần (chỉ số ngành, RS-Ratio, RS-Momentum). `js/rrg-chart.js` — vẽ RRG bằng SVG.
     `js/rrg-page.js` — logic trang `rrg.html`. Ngành và mã lấy từ `VST.universe.sectors`; lọc thanh khoản
     (GTGD TB20) và số mã bật sẵn khi xem một ngành ở `VST.config.rrg`.
@@ -82,7 +86,7 @@ sau này mở rộng nhiều người dùng có đăng nhập.
 ## Đăng nhập & phân quyền (Supabase Auth)
 
 - Mọi trang dashboard (hiện là `index.html` (khung), `dashboard.html`, `priceboard.html`, `heatmap.html`, `scan.html`, `rrg.html`,
-  `backtest.html`, `admin.html`) phải: đặt `class="auth-checking"` trên `<html>`,
+  `backtest.html`, `paper.html`, `admin.html`) phải: đặt `class="auth-checking"` trên `<html>`,
   nạp supabase-js + `config.js` + `auth.js`, và chỉ chạy code trang bên trong `VST.auth.guard().then(...)`
   (`guard({ admin: true })` cho trang quản trị). Chưa đăng nhập / chưa `active` → tự chuyển về `login.html`.
 - Bảng `profiles`: `role` ∈ admin/user, `status` ∈ pending/active/locked. Người mới luôn là `pending`.

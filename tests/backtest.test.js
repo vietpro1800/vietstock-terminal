@@ -147,6 +147,33 @@
     eq(r.trades[0].open, true);
   });
 
+  test('Lệnh chờ phiên tới: tín hiệu mua ở phiên cuối', function () {
+    const bars = mkBars([[10, 10], [10, 10], [11, 11]]);
+    const r = bt.run(bars, { capital: 10e6, signals: { entry: flags(3, [2]), exit: flags(3, []) } });
+    eq(r.trades.length, 0);
+    eq(r.pending && r.pending.side, 'buy');
+  });
+
+  test('Lệnh chờ phiên tới: bán, hoặc chờ T+2', function () {
+    const bars = mkBars([[10, 10], [10, 10], [11, 11], [12, 12]]);
+    let r = bt.run(bars, { capital: 10e6, signals: { entry: flags(4, [0]), exit: flags(4, [3]) } });
+    eq(r.pending.side, 'sell');
+    eq(r.pending.reason, 'signal');
+    eq(!!r.pending.waiting, false);
+    // Mua ở phiên 1, tín hiệu bán ở phiên 1 → phiên 2 chưa bán được (T+2), lệnh còn chờ.
+    r = bt.run(bars.slice(0, 2), { capital: 10e6, signals: { entry: flags(2, [0]), exit: flags(2, [1]) } });
+    eq(r.pending.side, 'sell');
+    eq(r.pending.waiting, true);
+  });
+
+  test('Bắt đầu ở phiên cuối: chưa giao dịch, vẫn có lệnh chờ', function () {
+    const bars = mkBars([[10, 10], [10, 10], [11, 11]]);
+    const r = bt.run(bars, { capital: 10e6, startIndex: 2, signals: { entry: flags(3, [2]), exit: flags(3, []) } });
+    eq(r.equity.length, 1);
+    eq(r.equity[0].value, 10e6);
+    eq(r.pending.side, 'buy');
+  });
+
   // ---------- Chỉ số ----------
 
   test('Sụt giảm tối đa', function () {
