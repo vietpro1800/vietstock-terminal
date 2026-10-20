@@ -265,7 +265,7 @@ VST.config = {
     // 2) MUA khi KỸ THUẬT ≥ gate.tech VÀ RỦI RO ≥ gate.risk VÀ điểm tổng hợp ≥ verdict.buy.
     // 3) Còn lại THEO DÕI.
     sell: { tech: 0.35, risk: 0.3 },
-    gate: { risk: 0.5, tech: 0.6 },
+    gate: { risk: 0.3, tech: 0.6 },
     verdict: { buy: 0.55 },
     // Trọng số điểm tổng hợp (tổng = 1).
     weights: { scan: 0.15, tech: 0.35, sr: 0.10, vol: 0.15, risk: 0.25 },
