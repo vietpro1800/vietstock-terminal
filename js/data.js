@@ -380,11 +380,81 @@ window.VST = window.VST || {};
     };
   }
 
+  // ---------- Tin tức thị trường ----------
+  // Tin tổng hợp mỗi ngày từ các báo tài chính (Vietstock, VnExpress, Markettimes, ĐTCK…) do dự án mã nguồn mở
+  // news-crawler (dùng trong vnstock-js) thu thập; mỗi ngày một file JSON trên GitHub (cho phép CORS, không cần khóa).
+  // getDays(offset, count): tin của `count` ngày, bắt đầu từ `offset` ngày trước hôm nay (giờ VN), mới nhất trước.
+  //   Mỗi tin: { id, title, summary, link, source, time (Unix giây) }. Ngày chưa có file thì bỏ qua.
+  class NewsSource {
+    constructor(opts) {
+      this.baseUrl = (opts && opts.baseUrl) || 'https://raw.githubusercontent.com/ttqteo/news-crawler/master/docs/news/';
+      this.days = new Map(); // khóa ngày → Promise<tin[]>
+    }
+
+    async getDays(offset, count) {
+      const keys = [];
+      const now = Date.now() + 7 * 3600000; // giờ VN
+      for (let i = offset; i < offset + count; i++) {
+        const d = new Date(now - i * 86400000);
+        const p = (n) => String(n).padStart(2, '0');
+        keys.push(p(d.getUTCMonth() + 1) + '-' + p(d.getUTCDate()) + '-' + d.getUTCFullYear());
+      }
+      const results = await Promise.allSettled(keys.map((k) => this._day(k)));
+      const ok = results.filter((r) => r.status === 'fulfilled');
+      if (!ok.length) throw toDataError(results[0].reason);
+      const seen = new Set();
+      const items = [];
+      ok.forEach(function (r) {
+        r.value.forEach(function (it) {
+          if (seen.has(it.id)) return;
+          seen.add(it.id);
+          items.push(it);
+        });
+      });
+      items.sort(function (a, b) { return b.time - a.time; });
+      return items;
+    }
+
+    _day(key) {
+      if (!this.days.has(key)) {
+        const p = fetchJson(this.baseUrl + key + '.json').then(slimNews, function (e) {
+          if (e.kind === 'http' && e.status === 404) return []; // ngày chưa có tin
+          throw e;
+        });
+        // Lỗi mạng: không giữ trong bộ nhớ đệm để lần sau thử lại.
+        p.catch(() => this.days.delete(key));
+        this.days.set(key, p);
+      }
+      return this.days.get(key);
+    }
+  }
+
+  // Chỉ giữ trường cần dùng; link phải là http(s).
+  function slimNews(json) {
+    const out = [];
+    Object.keys(json || {}).forEach(function (k) {
+      const it = json[k] || {};
+      const link = String(it.link || '');
+      const time = Date.parse(it.published || '');
+      if (!it.title || !/^https?:\/\//i.test(link) || !isFinite(time)) return;
+      out.push({
+        id: String(it.item_id || link),
+        title: String(it.title).trim(),
+        summary: String(it.summary || '').trim().slice(0, 400),
+        link: link,
+        source: String(it.source || ''),
+        time: Math.floor(time / 1000),
+      });
+    });
+    return out;
+  }
+
   VST.DataError = DataError;
   VST.VndirectSource = VndirectSource;
   VST.BinanceSource = BinanceSource;
   VST.MarketRouter = MarketRouter;
   VST.SsiBoardFeed = SsiBoardFeed;
   VST.SsiRealtimeFeed = SsiRealtimeFeed;
+  VST.NewsSource = NewsSource;
   VST.parseSsiQuote = parseSsi;
 })();

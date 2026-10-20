@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#252a31">
-  <title>ThảoChi Stock</title>
-  <link rel="stylesheet" href="css/style.css?v=20261023">
+  <title>Đồ thị kỹ thuật · ThảoChi Stock</title>
+  <link rel="stylesheet" href="css/style.css?v=20261024">
 </head>
 <body class="dash fa">
   <header class="topbar">
@@ -72,11 +72,16 @@
           <button type="button" role="tab" id="tab-chat" data-tab="chat" aria-controls="pane-chat">
             Thảo luận <span id="chat-badge" class="count-badge" hidden></span>
           </button>
+          <button type="button" role="tab" id="tab-news" data-tab="news" aria-controls="pane-news">Tin tức</button>
           <button type="button" role="tab" id="tab-board" data-tab="board" aria-controls="pane-board">Bảng giá</button>
         </div>
 
         <div id="pane-chat" role="tabpanel" aria-labelledby="tab-chat">
           <div id="chat" class="chat"></div>
+        </div>
+
+        <div id="pane-news" role="tabpanel" aria-labelledby="tab-news" hidden>
+          <div id="news" class="news"></div>
         </div>
 
         <div id="pane-board" role="tabpanel" aria-labelledby="tab-board" hidden>
@@ -101,20 +106,22 @@
 
   <footer class="footer">
     Dữ liệu: VNDirect (dchart); vàng, tiền số, ngoại hối: Binance (vàng theo PAXG, EUR/USD theo EURUSDT); sổ lệnh/khớp lệnh realtime từ bảng giá SSI (không chính thức).
+    Tin tức: tổng hợp từ các báo tài chính qua dự án mã nguồn mở news-crawler, lọc theo mã.
     Biểu đồ: <a href="https://github.com/klinecharts/KLineChart" target="_blank" rel="noopener">KLineChart</a> (Apache-2.0). Tự làm mới mỗi 30 giây.
     Chỉ mang tính tham khảo, không phải khuyến nghị đầu tư.
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/klinecharts@10.0.3/dist/umd/klinecharts.min.js"></script>
-  <script src="js/config.js?v=20261023"></script>
-  <script src="js/auth.js?v=20261023"></script>
-  <script src="js/data.js?v=20261023"></script>
-  <script src="js/indicators.js?v=20261023"></script>
-  <script src="js/chart.js?v=20261023"></script>
-  <script src="js/board.js?v=20261023"></script>
-  <script src="js/orderbook.js?v=20261023"></script>
-  <script src="js/chat.js?v=20261023"></script>
-  <script src="js/app.js?v=20261023"></script>
+  <script src="js/config.js?v=20261024"></script>
+  <script src="js/auth.js?v=20261024"></script>
+  <script src="js/data.js?v=20261024"></script>
+  <script src="js/indicators.js?v=20261024"></script>
+  <script src="js/chart.js?v=20261024"></script>
+  <script src="js/board.js?v=20261024"></script>
+  <script src="js/orderbook.js?v=20261024"></script>
+  <script src="js/chat.js?v=20261024"></script>
+  <script src="js/news.js?v=20261024"></script>
+  <script src="js/app.js?v=20261024"></script>
 </body>
 </html>
