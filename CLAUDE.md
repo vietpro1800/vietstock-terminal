@@ -70,8 +70,8 @@ sau này mở rộng nhiều người dùng có đăng nhập.
     feed RSS, chuyên mục, proxy CORS ở `VST.config.reader`. Dữ liệu: `VST.FeedSource` (qua proxy, thử lần lượt) và
     `VST.NewsSource` (news-crawler) trong `data.js`. Kiểm thử: `node tests/reader.test.js` (phải đạt hết nếu sửa `reader.js`).
   - `js/consult.js` — phân tích mã kiểu hội chẩn thuần (`VST.consult.analyze(bars, cfg)` → 6 thẻ điểm 0–1: QUÉT, KỸ THUẬT,
-    HỖ TRỢ/KHÁNG CỰ, BIẾN ĐỘNG, RỦI RO, TỔNG HỢP MUA/THEO DÕI/TRÁNH; công thức ghi trong comment để dùng lại cho backtest).
-    Ngưỡng lọc (gate), trọng số, mốc chấm điểm ở `VST.config.consult`. `js/analysis-page.js` — logic `analysis.html`
+    HỖ TRỢ/KHÁNG CỰ, BIẾN ĐỘNG, RỦI RO, TỔNG HỢP MUA/THEO DÕI/BÁN theo luật, không bù trừ điểm; công thức ghi trong comment để dùng lại cho backtest).
+    Ngưỡng bán (sell), ngưỡng lọc mua (gate), trọng số, giờ khớp lệnh để ước tính KL cả phiên, mốc chấm điểm ở `VST.config.consult`. `js/analysis-page.js` — logic `analysis.html`
     (mở từ nút "Phân tích" trên dashboard). Kiểm thử: `node tests/consult.test.js` (phải đạt hết nếu sửa `consult.js` hoặc `indicators.js`).
   - `js/backtest.js` — công cụ backtest thuần (không DOM, không mạng), chạy được cả trong Node.
     `js/backtest-page.js` — logic trang `backtest.html`. Kiểm thử: `node tests/backtest.test.js`

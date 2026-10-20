@@ -73,18 +73,22 @@
     if (card(r, 'tech').score < CFG.gate.tech) throw new Error('kỹ thuật phải qua ngưỡng');
   });
 
-  test('Xu hướng giảm: trượt ngưỡng KỸ THUẬT nên không MUA', function () {
+  test('Xu hướng giảm, kỹ thuật yếu, giá dưới MA50 → BÁN dù các thẻ khác cao', function () {
     const r = consult.analyze(downtrend(), CFG);
-    eq(r.verdict === 'MUA', false);
+    eq(r.verdict, 'BÁN');
+    if (card(r, 'sr').score < 0.6 || card(r, 'vol').score < 0.6) throw new Error('mẫu này phải có HT/KC và Biến động cao');
     eq(card(r, 'tech').detail.trend, 0);
     if (card(r, 'tech').score > 0.3) throw new Error('kỹ thuật phải thấp: ' + card(r, 'tech').score);
     if (card(r, 'summary').detail.gateFailed.indexOf('tech') < 0) throw new Error('phải trượt ngưỡng kỹ thuật');
     if (card(r, 'risk').detail.drawdown < 30) throw new Error('mức giảm từ đỉnh phải lớn');
   });
 
-  test('Giảm mạnh, biến động lớn, thanh khoản thấp → TRÁNH', function () {
+  test('Giảm mạnh, biến động lớn, thanh khoản thấp → BÁN vì rủi ro cao', function () {
     const r = consult.analyze(crash(), CFG);
-    eq(r.verdict, 'TRÁNH');
+    eq(r.verdict, 'BÁN');
+    const reasons = card(r, 'summary').detail.sellReasons;
+    eq(reasons.length, 1);
+    eq(reasons[0].indexOf('rủi ro') === 0, true, reasons[0]);
     eq(card(r, 'vol').score, 0);
     eq(card(r, 'summary').detail.gateFailed.slice().sort().join(), 'risk,tech');
   });
@@ -100,6 +104,19 @@
     const r = consult.analyze(uptrend(), withCfg({ gate: { risk: 1.01, tech: 0.6 } })); // ngưỡng rủi ro không thể đạt
     eq(r.verdict === 'MUA', false);
     eq(card(r, 'summary').detail.gateFailed.join(), 'risk');
+  });
+
+  test('Rủi ro < ngưỡng bán → BÁN dù kỹ thuật tốt', function () {
+    const r = consult.analyze(uptrend(), withCfg({ sell: { tech: 0.35, risk: 1.01 } }));
+    eq(r.verdict, 'BÁN');
+    eq(card(r, 'summary').detail.sellReasons.length, 1);
+  });
+
+  test('MUA khi điểm tổng ≥ 0,55; nâng ngưỡng điểm tổng lên 0,99 → THEO DÕI', function () {
+    eq(consult.analyze(uptrend(), CFG).verdict, 'MUA');
+    const r = consult.analyze(uptrend(), withCfg({ verdict: { buy: 0.99 } }));
+    eq(r.verdict, 'THEO DÕI');
+    eq(card(r, 'summary').detail.gateFailed.length, 0);
   });
 
   test('Tổng hợp = trung bình có trọng số các thẻ', function () {
@@ -134,6 +151,42 @@
     c = card(consult.analyze(mkBars(flat.concat([22]), null, 0.1), CFG), 'sr');
     eq(c.detail.breakout, true);
     eq(c.score, CFG.sr.breakout);
+  });
+
+  test('HỖ TRỢ/KHÁNG CỰ: tăng đều sát đỉnh nhưng trên MA50 → không thấp hơn 0,5', function () {
+    const closes = range(80, (i) => 20 + i * 0.1 + (i % 3 === 2 ? -0.2 : 0)).concat([27.6]);
+    const c = card(consult.analyze(mkBars(closes, null, 0.5), CFG), 'sr');
+    eq(c.detail.uptrend, true);
+    eq(c.detail.breakout, false, 'phiên cuối không vượt đỉnh');
+    if (c.detail.position < 0.7) throw new Error('mẫu phải sát kháng cự: ' + c.detail.position);
+    eq(c.score, CFG.sr.uptrendFloor);
+  });
+
+  test('HỖ TRỢ/KHÁNG CỰ: bứt phá cách đây 2 phiên, giá vẫn giữ trên đỉnh cũ → 0,75', function () {
+    const flat = range(77, (i) => 20 + (i % 2 ? 1 : 0)); // đỉnh cũ 21,1
+    let c = card(consult.analyze(mkBars(flat.concat([22.5, 22, 21.5]), null, 0.1), CFG), 'sr');
+    eq(c.detail.breakout, true);
+    near(c.detail.breakoutLevel, 21.1, 1e-9);
+    eq(c.score, CFG.sr.breakout);
+    c = card(consult.analyze(mkBars(flat.concat([22.5, 22, 20.5]), null, 0.1), CFG), 'sr');
+    eq(c.detail.breakout, false, 'giá rơi lại dưới đỉnh cũ thì không tính bứt phá');
+  });
+
+  test('Ước tính KL cả phiên theo giờ khớp lệnh (giờ VN)', function () {
+    const day = T0 + 79 * 86400; // 0:00 giờ VN của phiên cuối trong mẫu 80 nến
+    const at = (h, m) => day + h * 3600 + m * 60;
+    const c = CFG.scan;
+    near(consult.sessionFraction(day, at(10, 15), c), 75 / 255, 1e-9);
+    near(consult.sessionFraction(day, at(12, 0), c), 150 / 255, 1e-9);
+    eq(consult.sessionFraction(day, at(9, 5), c), c.minFraction, 'mới mở cửa → tối thiểu');
+    eq(consult.sessionFraction(day, at(15, 0), c), 1);
+    eq(consult.sessionFraction(day, at(10, 0) + 86400, c), 1, 'nến cuối của ngày trước');
+    eq(consult.sessionFraction(day, undefined, c), 1);
+    const bars = mkBars(range(80, (i) => 20 + (i % 2 ? 0.5 : 0)));
+    const full = card(consult.analyze(bars, CFG), 'scan').detail.volRatio;
+    const mid = card(consult.analyze(bars, CFG, { now: at(12, 0) }), 'scan');
+    near(mid.detail.volRatio, full * 255 / 150, 1e-9);
+    if (mid.note.indexOf('ước tính cả phiên') < 0) throw new Error('nhận xét phải ghi ước tính');
   });
 
   test('BIẾN ĐỘNG: giá phẳng + GTGD 50 tỷ → 1; GTGD 1 tỷ → 0,5', function () {

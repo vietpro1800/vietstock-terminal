@@ -260,13 +260,21 @@ VST.config = {
   // Trang Phân tích mã (analysis.html): hội chẩn 6 vai trò, tính trong js/consult.js. Mọi điểm 0–1.
   // lin [a, b]: giá trị = a cho 0 điểm, = b cho 1 điểm, ở giữa tuyến tính (a > b thì đảo chiều).
   consult: {
-    // Ngưỡng lọc: chỉ kết luận MUA khi các thẻ này đạt tối thiểu.
+    // Kết luận xét theo thứ tự (không bù trừ điểm giữa các thẻ):
+    // 1) BÁN khi (KỸ THUẬT < sell.tech VÀ giá dưới MA50) HOẶC RỦI RO < sell.risk.
+    // 2) MUA khi KỸ THUẬT ≥ gate.tech VÀ RỦI RO ≥ gate.risk VÀ điểm tổng hợp ≥ verdict.buy.
+    // 3) Còn lại THEO DÕI.
+    sell: { tech: 0.35, risk: 0.3 },
     gate: { risk: 0.5, tech: 0.6 },
-    // Ngưỡng điểm tổng hợp: ≥ buy → MUA (nếu qua ngưỡng lọc); ≥ watch → THEO DÕI; còn lại TRÁNH.
-    verdict: { buy: 0.6, watch: 0.45 },
+    verdict: { buy: 0.55 },
     // Trọng số điểm tổng hợp (tổng = 1).
-    weights: { scan: 0.15, tech: 0.30, sr: 0.15, vol: 0.15, risk: 0.25 },
-    scan: { volRatio: [0.5, 2], flowWeight: 0.5, period: 20 },
+    weights: { scan: 0.15, tech: 0.35, sr: 0.10, vol: 0.15, risk: 0.25 },
+    // sessions: giờ khớp lệnh liên tục (giờ VN, phút từ 0:00) để ước tính KL cả phiên khi phiên hôm nay chưa xong;
+    // minFraction: chưa tới tỷ lệ phiên này thì coi như đã qua minFraction (tránh nhân KL quá lớn lúc mới mở cửa).
+    scan: {
+      volRatio: [0.5, 2], flowWeight: 0.5, period: 20,
+      sessions: [[9 * 60, 11 * 60 + 30], [13 * 60, 14 * 60 + 45]], minFraction: 0.1,
+    },
     tech: {
       weights: { trend: 0.5, rsi: 0.2, macd: 0.3 },
       maFast: 20, maSlow: 50, rsiPeriod: 14,
@@ -275,7 +283,9 @@ VST.config = {
       // Điểm MACD theo histogram (MACD − tín hiệu) phiên cuối và hướng so với phiên trước.
       macd: { upRising: 1, up: 0.7, downRising: 0.4, down: 0 },
     },
-    sr: { period: 20, breakout: 0.75 },
+    // breakoutBars: bứt phá đỉnh 20 phiên trong N phiên gần nhất (giá vẫn giữ trên đỉnh cũ) → điểm breakout;
+    // uptrendFloor: giá trên MA50 thì điểm tối thiểu này (mã khỏe hay sát đỉnh, không phạt).
+    sr: { period: 20, breakout: 0.75, breakoutBars: 3, uptrendFloor: 0.5, ma: 50 },
     vol: { period: 20, sigma: [1.5, 5], valueBn: [1, 50], weightSigma: 0.5 },
     risk: { atrPeriod: 14, atrMult: 2, stopDist: [3, 10], drawdown: [10, 40], weightStop: 0.6, highBars: 250 },
     // Thanh điểm: < low → đỏ, < high → vàng, còn lại xanh.

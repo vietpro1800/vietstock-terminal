@@ -8,7 +8,7 @@ VST.auth.guard().then(function (ctx) {
   const STORE_KEY = 'vst.analysis.v1';
   const MAX_RECENT = 8;
   const SYMBOL_RE = /^[A-Z0-9]{2,10}$/;
-  const VERDICT_CLASS = { 'MUA': 'buy', 'THEO DÕI': 'watch', 'TRÁNH': 'avoid' };
+  const VERDICT_CLASS = { 'MUA': 'buy', 'THEO DÕI': 'watch', 'BÁN': 'sell' };
 
   // Đổi nguồn dữ liệu tại đây (cùng lớp với dashboard).
   const source = new VST.VndirectSource({ batchSize: VST.config.batchSize });
@@ -60,7 +60,7 @@ VST.auth.guard().then(function (ctx) {
     try {
       const bars = await source.getHistory(symbol, LOAD_TF);
       if (token !== state.loadToken) return;
-      const r = consult.analyze(bars, cfg);
+      const r = consult.analyze(bars, cfg, { now: Math.floor(Date.now() / 1000) });
       if (!r) {
         $('an-grid').innerHTML = '<p class="dim">Mã ' + esc(symbol) + ' chưa đủ ' + consult.MIN_BARS +
           ' phiên giao dịch để phân tích.</p>';
