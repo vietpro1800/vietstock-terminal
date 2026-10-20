@@ -143,6 +143,7 @@ window.VST = window.VST || {};
     { id: 'backtest', label: 'Backtest' },
     { id: 'signals', label: 'Cảnh báo' },
     { id: 'paper', label: 'Danh mục giả lập' },
+    { id: 'reader', label: 'Đọc báo' },
     { id: 'admin', label: 'Quản trị', admin: true },
   ];
 

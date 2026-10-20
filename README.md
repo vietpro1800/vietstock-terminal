@@ -148,6 +148,7 @@ rrg.html            RRG: sức mạnh tương đối các ngành và các mã tr
 backtest.html       Backtest chiến lược (cần đăng nhập)
 signals.html        Cảnh báo Mua/Bán theo chiến lược, theo dõi % lãi/lỗ và T+ (cần đăng nhập)
 paper.html          Danh mục giả lập: mua/bán theo chiến lược, theo dõi lãi/lỗ (cần đăng nhập)
+reader.html         Đọc báo: tin tổng hợp VnEconomy, CafeF, Vietstock, Investing, Reuters, Bloomberg theo chuyên mục (cần đăng nhập)
 css/style.css       Giao diện (biến màu ở :root)
 js/config.js        Cấu hình: danh sách mã, chu kỳ làm mới, khung thời gian, Supabase URL + publishable key
 js/auth.js          Supabase client, kiểm tra đăng nhập/quyền, thông báo lỗi tiếng Việt
@@ -163,6 +164,8 @@ js/signals.js       Cảnh báo: tìm tín hiệu Mua/Bán, tính % lãi/lỗ v�
 js/signals-page.js  Logic trang cảnh báo
 js/paper.js         Danh mục giả lập: chia vốn, chạy chiến lược từng mã, tổng hợp lãi/lỗ (hàm thuần)
 js/paper-page.js    Logic trang danh mục giả lập
+js/reader.js        Đọc báo: đọc RSS/Atom, gộp tin trùng, lọc theo chuyên mục/báo/từ khóa (hàm thuần)
+js/reader-page.js   Logic trang đọc báo
 js/scan.js          Bộ lọc cổ phiếu: tính chỉ số mỗi mã, các tiêu chí, bộ lọc mẫu (hàm thuần)
 js/scan-page.js     Logic trang lọc cổ phiếu
 js/rrg.js           Tính RRG: chỉ số ngành, RS-Ratio, RS-Momentum (hàm thuần)
@@ -172,7 +175,7 @@ js/universe.js      ~1500 cổ phiếu HOSE/HNX/UPCoM theo ngành ICB (sinh bằ
 js/shell.js         Khung ứng dụng (index.html): điều hướng, giữ trang đã mở
 js/heatmap.js       Bản đồ nhiệt: bố cục treemap, % thay đổi, mức màu (hàm thuần)
 js/heatmap-page.js  Logic trang bản đồ nhiệt
-tests/              Kiểm thử: `node tests/<tên>.test.js` (backtest, rrg, scan, priceboard, heatmap, news, paper, signals) hoặc mở tests/index.html
+tests/              Kiểm thử: `node tests/<tên>.test.js` (backtest, rrg, scan, priceboard, heatmap, news, paper, signals, reader) hoặc mở tests/index.html
 js/board.js         Bảng giá
 js/orderbook.js     Sổ lệnh 3 bước giá + khớp lệnh realtime
 js/chat.js          Thảo luận theo mã (Supabase realtime)
@@ -196,6 +199,15 @@ VN30, HNX30, danh mục của tôi trên Bảng giá, cả sàn) và cửa sổ 
 chiến lược, ngày báo, giá đóng cửa ngày báo, giá hiện tại (realtime), **% lãi/lỗ** nếu làm theo (Bán: giá giảm là có lợi)
 và **T+ số phiên** kể từ ngày báo; sắp xếp theo cột bất kỳ. Trong giờ giao dịch trang tự quét lại 5 phút/lần, tín hiệu
 mới được đánh dấu "Mới" và có thể hiện thông báo trình duyệt (chỉ khi web đang mở). Thiết lập lưu trên trình duyệt.
+
+## Đọc báo
+
+Trang `reader.html`: tin mới nhất từ VnEconomy, CafeF, Vietstock, Investing, Reuters (qua Google Tin tức), Bloomberg
+và các báo trong kho [news-crawler](https://github.com/ttqteo/news-crawler) (Markettimes, Người Quan Sát, ĐTCK, VnExpress),
+chia chuyên mục Chứng khoán / Doanh nghiệp / Vĩ mô – Đầu tư / Tài chính – Ngân hàng / Bất động sản / Thế giới.
+Bật/tắt từng báo, tìm theo từ khóa (không cần gõ dấu), tin trùng giữa các mục/báo được gộp; bấm tin để đọc bài gốc.
+Danh sách feed RSS ở `VST.config.reader`. Báo không cho đọc RSS trực tiếp từ trình duyệt (CORS) nên đi qua proxy công khai
+(rss2json, allorigins, codetabs — thử lần lượt); nếu proxy lỗi, tin từ news-crawler vẫn hiện.
 
 ## Danh mục giả lập
 

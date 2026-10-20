@@ -191,6 +191,72 @@ VST.config = {
     cacheMinutes: 10, // giữ kết quả tính trong phiên trình duyệt, tránh tải lại khi quay lại trang
   },
 
+  // Trang đọc báo (news.html, js/reader.js). Báo không cho đọc RSS trực tiếp từ trình duyệt (CORS),
+  // nên đi qua proxy công khai — thử lần lượt, proxy nào chạy được thì dùng trước cho các nguồn sau.
+  // Nguồn "crawler" (Vietstock, Markettimes, Người Quan Sát, ĐTCK, VnExpress) lấy từ kho news-crawler trên GitHub,
+  // không qua proxy nên luôn có tin kể cả khi proxy lỗi.
+  reader: {
+    refreshMs: 300000,  // tự tải lại 5 phút/lần khi trang đang mở
+    cacheMinutes: 4,    // giữ kết quả mỗi nguồn, đổi mục không tải lại
+    batchSize: 4,
+    pageSize: 40,       // số tin mỗi lần "Xem thêm"
+    crawlerDays: 2,
+    proxies: [
+      { id: 'rss2json', type: 'rss2json', url: 'https://api.rss2json.com/v1/api.json?rss_url=' },
+      { id: 'allorigins', type: 'xml', url: 'https://api.allorigins.win/raw?url=' },
+      { id: 'codetabs', type: 'xml', url: 'https://api.codetabs.com/v1/proxy/?quest=' },
+    ],
+    categories: [
+      { id: 'all', label: 'Tất cả' },
+      { id: 'market', label: 'Chứng khoán' },
+      { id: 'business', label: 'Doanh nghiệp' },
+      { id: 'macro', label: 'Vĩ mô – Đầu tư' },
+      { id: 'finance', label: 'Tài chính – Ngân hàng' },
+      { id: 'realestate', label: 'Bất động sản' },
+      { id: 'world', label: 'Thế giới' },
+    ],
+    // Mỗi báo: các feed RSS theo mục. stripTitle: bỏ đuôi tiêu đề (Google Tin tức thêm " - Reuters").
+    // noSummary: mô tả của feed không dùng được (Google Tin tức chỉ có link).
+    sources: [
+      { id: 'vneconomy', name: 'VnEconomy', home: 'https://vneconomy.vn', feeds: [
+        { cat: 'market', url: 'https://vneconomy.vn/chung-khoan.rss' },
+        { cat: 'finance', url: 'https://vneconomy.vn/tai-chinh.rss' },
+        { cat: 'macro', url: 'https://vneconomy.vn/dau-tu.rss' },
+        { cat: 'business', url: 'https://vneconomy.vn/nhip-cau-doanh-nghiep.rss' },
+        { cat: 'realestate', url: 'https://vneconomy.vn/dia-oc.rss' },
+        { cat: 'world', url: 'https://vneconomy.vn/the-gioi.rss' },
+      ] },
+      { id: 'cafef', name: 'CafeF', home: 'https://cafef.vn', feeds: [
+        { cat: 'market', url: 'https://cafef.vn/thi-truong-chung-khoan.rss' },
+        { cat: 'business', url: 'https://cafef.vn/doanh-nghiep.rss' },
+        { cat: 'macro', url: 'https://cafef.vn/vi-mo-dau-tu.rss' },
+        { cat: 'finance', url: 'https://cafef.vn/tai-chinh-ngan-hang.rss' },
+        { cat: 'realestate', url: 'https://cafef.vn/bat-dong-san.rss' },
+        { cat: 'world', url: 'https://cafef.vn/tai-chinh-quoc-te.rss' },
+      ] },
+      { id: 'vietstock', name: 'Vietstock', home: 'https://vietstock.vn', feeds: [
+        { cat: 'market', url: 'https://vietstock.vn/830/chung-khoan/co-phieu.rss' },
+        { cat: 'business', url: 'https://vietstock.vn/737/doanh-nghiep/hoat-dong-kinh-doanh.rss' },
+        { cat: 'macro', url: 'https://vietstock.vn/761/kinh-te/vi-mo.rss' },
+        { cat: 'world', url: 'https://vietstock.vn/773/the-gioi/chung-khoan-the-gioi.rss' },
+      ] },
+      { id: 'investing', name: 'Investing', home: 'https://vn.investing.com/news', feeds: [
+        { cat: 'market', url: 'https://vn.investing.com/rss/news_25.rss' },
+        { cat: 'world', url: 'https://www.investing.com/rss/news_25.rss' },
+        { cat: 'macro', url: 'https://www.investing.com/rss/news_14.rss' },
+      ] },
+      { id: 'reuters', name: 'Reuters', home: 'https://www.reuters.com/business/', stripTitle: ' - Reuters', noSummary: true, feeds: [
+        { cat: 'world', url: 'https://news.google.com/rss/search?q=when:2d+site:reuters.com+markets&hl=en-US&gl=US&ceid=US:en' },
+        { cat: 'macro', url: 'https://news.google.com/rss/search?q=when:2d+site:reuters.com+economy&hl=en-US&gl=US&ceid=US:en' },
+      ] },
+      { id: 'bloomberg', name: 'Bloomberg', home: 'https://www.bloomberg.com/markets', feeds: [
+        { cat: 'world', url: 'https://feeds.bloomberg.com/markets/news.rss' },
+        { cat: 'macro', url: 'https://feeds.bloomberg.com/economics/news.rss' },
+      ] },
+      { id: 'crawler', name: 'Tổng hợp VN', crawler: true, cat: 'market', home: 'https://github.com/ttqteo/news-crawler' },
+    ],
+  },
+
   // Chỉ báo mặc định bật.
   defaultIndicators: { ma20: true, ma50: true, ma200: true, bb: false, vp: true, vol: true, rsi: true, macd: false },
 };
