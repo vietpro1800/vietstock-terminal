@@ -44,6 +44,15 @@ VST.config = {
     warmupDays: 450,          // tải thêm ~15 tháng trước ngày bắt đầu để MA200 có giá trị ngay
   },
 
+  // Trang danh mục giả lập (paper.html): mua/bán theo chiến lược của js/backtest.js, theo dõi lãi/lỗ.
+  // Cấu hình mỗi danh mục lưu ở bảng paper_portfolios (Supabase); giao dịch tính lại từ dữ liệu giá.
+  paper: {
+    maxSymbols: 10,          // số mã tối đa mỗi danh mục (vốn chia đều)
+    maxPortfolios: 20,       // khớp với giới hạn trong supabase/schema.sql
+    defaultCapital: 100000000,
+    refreshMs: 120000,       // tải lại nến ngày (giá vị thế cập nhật realtime qua bảng giá SSI)
+  },
+
   // Trang RRG (sức mạnh tương đối ngành).
   rrg: {
     benchmark: 'VNINDEX',

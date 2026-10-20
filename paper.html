@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="vi" data-page="paper" class="auth-checking">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0e1117">
+  <title>Danh mục giả lập · ThảoChi Stock</title>
+  <link rel="stylesheet" href="css/style.css?v=20261025">
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="brand"><a href="dashboard.html">ThảoChi<span>Stock</span></a></h1>
+    <span class="page-tag">Danh mục giả lập</span>
+    <div class="status">
+      <span id="status-dot" class="dot"></span>
+      <span id="status-text">Đang tải…</span>
+    </div>
+    <div id="user-bar" class="user-bar"></div>
+  </header>
+
+  <div id="notice" class="notice" role="alert" hidden>
+    <span id="notice-text"></span>
+    <button id="notice-close" type="button" aria-label="Đóng thông báo">×</button>
+  </div>
+
+  <main class="pp">
+    <section class="panel pp-side" aria-labelledby="pp-list-title">
+      <div class="pp-side-head">
+        <h2 id="pp-list-title">Danh mục của tôi</h2>
+        <button id="pp-new" type="button" class="btn btn-sm btn-primary">+ Tạo danh mục</button>
+      </div>
+      <div id="pp-list" class="pp-list"><p class="dim">Đang tải…</p></div>
+      <p class="form-hint">Mỗi danh mục tự mua/bán theo tín hiệu chiến lược từ ngày bắt đầu, khớp ở giá mở cửa phiên sau;
+        phí mua/bán 0,15%, thuế bán 0,1%, lô 100, T+2 (giống trang Backtest). Vốn chia đều cho các mã.</p>
+    </section>
+
+    <section id="pp-detail" class="panel pp-detail" hidden>
+      <div class="pp-head">
+        <div class="pp-head-text">
+          <h2 id="pp-name"></h2>
+          <p id="pp-desc" class="dim small"></p>
+        </div>
+        <div class="pp-actions">
+          <button id="pp-reload" type="button" class="btn btn-sm">Tải lại</button>
+          <button id="pp-edit" type="button" class="btn btn-sm">Sửa</button>
+          <button id="pp-delete" type="button" class="btn btn-sm btn-danger">Xóa</button>
+        </div>
+      </div>
+      <div id="pp-msg" class="pp-msg" hidden></div>
+      <div id="pp-stats" class="pp-stats"></div>
+      <div class="pp-chart-wrap">
+        <div class="pp-chart-legend"><i class="pp-l-nav"></i> Giá trị danh mục <i class="pp-l-bench"></i> VN-Index (cùng số vốn)</div>
+        <div id="pp-chart" class="pp-chart"></div>
+        <div id="pp-loading" class="loading">Đang tính…</div>
+      </div>
+      <h3 class="pp-h3">Lệnh chờ phiên tới</h3>
+      <div id="pp-pending"></div>
+      <h3 class="pp-h3">Cổ phiếu đang nắm giữ</h3>
+      <div class="pp-table-wrap"><table class="pp-table" id="pp-positions"></table></div>
+      <h3 class="pp-h3">Lịch sử giao dịch đã đóng</h3>
+      <div class="pp-table-wrap"><table class="pp-table" id="pp-trades"></table></div>
+    </section>
+
+    <section id="pp-form-panel" class="panel pp-form-panel" hidden>
+      <h2 id="pp-form-title">Tạo danh mục giả lập</h2>
+      <form id="pp-form" class="pp-form" autocomplete="off" novalidate>
+        <label class="form-field"><span>Tên danh mục</span>
+          <input id="pp-f-name" class="input" maxlength="60" required placeholder="Ví dụ: MA cắt nhau nhóm ngân hàng"></label>
+        <label class="form-field"><span>Chiến lược</span>
+          <select id="pp-f-strategy" class="input"></select></label>
+        <p id="pp-f-strategy-desc" class="form-hint"></p>
+        <div id="pp-f-params" class="pp-params"></div>
+        <label class="form-field"><span>Mã cổ phiếu (tối đa 10, cách nhau bởi dấu phẩy hoặc khoảng trắng)</span>
+          <input id="pp-f-symbols" class="input pp-upper" required placeholder="HPG, FPT, MWG" autocapitalize="characters" spellcheck="false"></label>
+        <div class="pp-params">
+          <label class="form-field"><span>Vốn ban đầu (đồng)</span>
+            <input id="pp-f-capital" class="input" type="number" inputmode="numeric" min="1000000" step="1000000" required>
+            <small id="pp-f-capital-hint" class="form-hint"></small></label>
+          <label class="form-field"><span>Ngày bắt đầu</span>
+            <input id="pp-f-start" class="input" type="date" required></label>
+          <label class="form-field"><span>Cắt lỗ (%), để trống = tắt</span>
+            <input id="pp-f-sl" class="input" type="number" inputmode="decimal" min="0" max="100" step="0.5" placeholder="Tắt"></label>
+          <label class="form-field"><span>Chốt lời (%), để trống = tắt</span>
+            <input id="pp-f-tp" class="input" type="number" inputmode="decimal" min="0" max="100" step="0.5" placeholder="Tắt"></label>
+        </div>
+        <p class="form-hint">Chọn ngày bắt đầu là hôm nay để theo dõi chiến lược từ bây giờ; chọn ngày trong quá khứ để xem
+          danh mục sẽ ra sao nếu đã đầu tư từ ngày đó.</p>
+        <p id="pp-form-error" class="auth-msg error" role="alert" hidden></p>
+        <div class="pp-form-actions">
+          <button type="submit" id="pp-save" class="btn btn-primary">Lưu danh mục</button>
+          <button type="button" id="pp-cancel" class="btn">Hủy</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <footer class="footer">
+    Mô phỏng trên dữ liệu nến ngày VNDirect (dchart), giá vị thế cập nhật realtime từ bảng giá SSI (không chính thức).
+    Giao dịch được tính lại từ dữ liệu giá mỗi lần mở trang. Chỉ mang tính tham khảo, không phải khuyến nghị đầu tư.
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+  <script src="js/config.js?v=20261025"></script>
+  <script src="js/universe.js?v=20261025"></script>
+  <script src="js/auth.js?v=20261025"></script>
+  <script src="js/data.js?v=20261025"></script>
+  <script src="js/indicators.js?v=20261025"></script>
+  <script src="js/backtest.js?v=20261025"></script>
+  <script src="js/paper.js?v=20261025"></script>
+  <script src="js/paper-page.js?v=20261025"></script>
+</body>
+</html>

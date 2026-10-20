@@ -255,6 +255,92 @@ begin
 end;
 $$;
 
+-- 8. Danh mục giả lập (paper trading) --------------------------------
+-- Mỗi danh mục chỉ lưu cấu hình (chiến lược, tham số, mã, vốn, ngày bắt đầu) trong cột config;
+-- giao dịch và lãi/lỗ được trình duyệt tính lại từ dữ liệu giá (js/paper.js).
+create table if not exists public.paper_portfolios (
+  id          bigint generated always as identity primary key,
+  user_id     uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  name        text not null check (char_length(btrim(name)) between 1 and 60),
+  config      jsonb not null check (jsonb_typeof(config) = 'object' and pg_column_size(config) <= 8000),
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now()
+);
+
+comment on table public.paper_portfolios is 'Danh mục giả lập theo chiến lược của từng người dùng.';
+
+create index if not exists paper_portfolios_user_idx
+  on public.paper_portfolios (user_id, created_at);
+
+-- Chủ sở hữu và thời gian do máy chủ quyết định; tối đa 20 danh mục mỗi tài khoản.
+create or replace function public.prepare_paper_portfolio()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  total int;
+begin
+  if tg_op = 'INSERT' then
+    new.user_id := coalesce((select auth.uid()), new.user_id);
+    new.created_at := now();
+    select count(*) into total from public.paper_portfolios where user_id = new.user_id;
+    if total >= 20 then
+      raise exception 'Mỗi tài khoản tối đa 20 danh mục giả lập.';
+    end if;
+  else
+    new.user_id := old.user_id;
+    new.created_at := old.created_at;
+  end if;
+  new.name := btrim(new.name);
+  new.updated_at := now();
+  return new;
+end;
+$$;
+
+revoke execute on function public.prepare_paper_portfolio() from public, anon, authenticated;
+
+drop trigger if exists paper_portfolios_prepare on public.paper_portfolios;
+create trigger paper_portfolios_prepare
+  before insert or update on public.paper_portfolios
+  for each row execute function public.prepare_paper_portfolio();
+
+alter table public.paper_portfolios enable row level security;
+
+revoke all on public.paper_portfolios from anon, authenticated;
+grant select, delete on public.paper_portfolios to authenticated;
+grant insert (name, config), update (name, config) on public.paper_portfolios to authenticated;
+
+drop policy if exists "Đọc danh mục giả lập của mình" on public.paper_portfolios;
+create policy "Đọc danh mục giả lập của mình"
+  on public.paper_portfolios
+  for select
+  to authenticated
+  using (user_id = (select auth.uid()) and (select public.is_active()));
+
+drop policy if exists "Tạo danh mục giả lập của mình" on public.paper_portfolios;
+create policy "Tạo danh mục giả lập của mình"
+  on public.paper_portfolios
+  for insert
+  to authenticated
+  with check (user_id = (select auth.uid()) and (select public.is_active()));
+
+drop policy if exists "Sửa danh mục giả lập của mình" on public.paper_portfolios;
+create policy "Sửa danh mục giả lập của mình"
+  on public.paper_portfolios
+  for update
+  to authenticated
+  using (user_id = (select auth.uid()) and (select public.is_active()))
+  with check (user_id = (select auth.uid()) and (select public.is_active()));
+
+drop policy if exists "Xóa danh mục giả lập của mình" on public.paper_portfolios;
+create policy "Xóa danh mục giả lập của mình"
+  on public.paper_portfolios
+  for delete
+  to authenticated
+  using (user_id = (select auth.uid()) and (select public.is_active()));
+
 -- =====================================================================
 -- SAU KHI CHẠY FILE: đăng ký tài khoản trên web, xác nhận email, rồi chạy
 -- câu lệnh sau (thay email của bạn) để đặt làm admin đầu tiên:
