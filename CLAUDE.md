@@ -69,6 +69,10 @@ sau này mở rộng nhiều người dùng có đăng nhập.
     link/tiêu đề, `filter` theo chuyên mục/báo/từ khóa không dấu). `js/reader-page.js` — logic `reader.html`; danh sách báo,
     feed RSS, chuyên mục, proxy CORS ở `VST.config.reader`. Dữ liệu: `VST.FeedSource` (qua proxy, thử lần lượt) và
     `VST.NewsSource` (news-crawler) trong `data.js`. Kiểm thử: `node tests/reader.test.js` (phải đạt hết nếu sửa `reader.js`).
+  - `js/consult.js` — phân tích mã kiểu hội chẩn thuần (`VST.consult.analyze(bars, cfg)` → 6 thẻ điểm 0–1: QUÉT, KỸ THUẬT,
+    HỖ TRỢ/KHÁNG CỰ, BIẾN ĐỘNG, RỦI RO, TỔNG HỢP MUA/THEO DÕI/TRÁNH; công thức ghi trong comment để dùng lại cho backtest).
+    Ngưỡng lọc (gate), trọng số, mốc chấm điểm ở `VST.config.consult`. `js/analysis-page.js` — logic `analysis.html`
+    (mở từ nút "Phân tích" trên dashboard). Kiểm thử: `node tests/consult.test.js` (phải đạt hết nếu sửa `consult.js` hoặc `indicators.js`).
   - `js/backtest.js` — công cụ backtest thuần (không DOM, không mạng), chạy được cả trong Node.
     `js/backtest-page.js` — logic trang `backtest.html`. Kiểm thử: `node tests/backtest.test.js`
     (phải đạt hết trước khi commit nếu sửa `backtest.js` hoặc `indicators.js`).
@@ -96,7 +100,7 @@ sau này mở rộng nhiều người dùng có đăng nhập.
 
 ## Đăng nhập & phân quyền (Supabase Auth)
 
-- Mọi trang dashboard (hiện là `index.html` (khung), `dashboard.html`, `priceboard.html`, `heatmap.html`, `scan.html`, `rrg.html`,
+- Mọi trang dashboard (hiện là `index.html` (khung), `dashboard.html`, `analysis.html`, `priceboard.html`, `heatmap.html`, `scan.html`, `rrg.html`,
   `backtest.html`, `signals.html`, `paper.html`, `reader.html`, `admin.html`) phải: đặt `class="auth-checking"` trên `<html>`,
   nạp supabase-js + `config.js` + `auth.js`, và chỉ chạy code trang bên trong `VST.auth.guard().then(...)`
   (`guard({ admin: true })` cho trang quản trị). Chưa đăng nhập / chưa `active` → tự chuyển về `login.html`.

@@ -257,6 +257,33 @@ VST.config = {
     ],
   },
 
+  // Trang Phân tích mã (analysis.html): hội chẩn 6 vai trò, tính trong js/consult.js. Mọi điểm 0–1.
+  // lin [a, b]: giá trị = a cho 0 điểm, = b cho 1 điểm, ở giữa tuyến tính (a > b thì đảo chiều).
+  consult: {
+    // Ngưỡng lọc: chỉ kết luận MUA khi các thẻ này đạt tối thiểu.
+    gate: { risk: 0.5, tech: 0.6 },
+    // Ngưỡng điểm tổng hợp: ≥ buy → MUA (nếu qua ngưỡng lọc); ≥ watch → THEO DÕI; còn lại TRÁNH.
+    verdict: { buy: 0.6, watch: 0.45 },
+    // Trọng số điểm tổng hợp (tổng = 1).
+    weights: { scan: 0.15, tech: 0.30, sr: 0.15, vol: 0.15, risk: 0.25 },
+    scan: { volRatio: [0.5, 2], flowWeight: 0.5, period: 20 },
+    tech: {
+      weights: { trend: 0.5, rsi: 0.2, macd: 0.3 },
+      maFast: 20, maSlow: 50, rsiPeriod: 14,
+      // RSI ≤ low → 0; low…ideal[0] tăng dần; trong ideal → 1; ideal[1]…high giảm về overbought; > high → overbought.
+      rsi: { low: 30, ideal: [50, 65], high: 75, overbought: 0.3 },
+      // Điểm MACD theo histogram (MACD − tín hiệu) phiên cuối và hướng so với phiên trước.
+      macd: { upRising: 1, up: 0.7, downRising: 0.4, down: 0 },
+    },
+    sr: { period: 20, breakout: 0.75 },
+    vol: { period: 20, sigma: [1.5, 5], valueBn: [1, 50], weightSigma: 0.5 },
+    risk: { atrPeriod: 14, atrMult: 2, stopDist: [3, 10], drawdown: [10, 40], weightStop: 0.6, highBars: 250 },
+    // Thanh điểm: < low → đỏ, < high → vàng, còn lại xanh.
+    colors: { low: 0.4, high: 0.6 },
+    // Số ngày dữ liệu nến ngày tải về (cần ≥ 60 phiên; 52 tuần cho mức giảm từ đỉnh).
+    days: 400,
+  },
+
   // Chỉ báo mặc định bật.
   defaultIndicators: { ma20: true, ma50: true, ma200: true, bb: false, vp: true, vol: true, rsi: true, macd: false },
 };
