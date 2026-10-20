@@ -20,6 +20,9 @@ sau này mở rộng nhiều người dùng có đăng nhập.
   về `index.html#<id>`. Trong khung, `<html>` có class `embedded` và `.topbar` của trang bị ẩn (khung hiện tiêu đề và
   `#status-dot`/`#status-text` của trang). Thêm trang mới: thêm vào `PAGES` trong `js/auth.js`. Chuyển trang trong code
   dùng `VST.nav.open('dashboard.html?symbol=HPG')` (link `<a href>` nội bộ được chặn và đi qua khung tự động).
+  Con nhện hiệu ứng (`VST.spider`, `js/spider.js`): canvas `#shell-fx` phủ vùng trang (pointer-events: none), nhảy liên tục
+  giữa các khung của tab đang mở (danh sách `SELECTOR` trong `spider.js`), chỉ vẽ lúc nhảy, ngừng khi tab ẩn; nút bật/tắt
+  `#shell-fx-btn` lưu `localStorage` `vst.fx.spider` (dùng chung mọi trang), tự tắt khi `prefers-reduced-motion`.
 - **HTML/CSS/JS thuần, không build**: không npm, không bundler, không framework.
   Thư viện ngoài chỉ nạp qua CDN, **ghim phiên bản cụ thể** (ví dụ `lightweight-charts@4.2.3`).
   Mở `index.html` qua một web server tĩnh bất kỳ là chạy được.
@@ -72,8 +75,8 @@ sau này mở rộng nhiều người dùng có đăng nhập.
   - `js/consult.js` — phân tích mã kiểu hội chẩn thuần (`VST.consult.analyze(bars, cfg)` → 6 thẻ điểm 0–1: QUÉT, KỸ THUẬT,
     HỖ TRỢ/KHÁNG CỰ, BIẾN ĐỘNG, RỦI RO, TỔNG HỢP MUA/THEO DÕI/BÁN theo luật, không bù trừ điểm; công thức ghi trong comment để dùng lại cho backtest).
     Ngưỡng bán (sell), ngưỡng lọc mua (gate), trọng số, giờ khớp lệnh để ước tính KL cả phiên, mốc chấm điểm ở `VST.config.consult`. `js/analysis-page.js` — logic `analysis.html`
-    (mở từ nút "Phân tích" trên dashboard). `js/consult-fx.js` — hiệu ứng "hội chẩn" (`VST.ConsultFx`: con nhện vẽ trên canvas phủ lưới thẻ, nhảy qua từng thẻ, màu `--fx-*`;
-    requestAnimationFrame ≤ 3 giây rồi dừng hẳn; bật/tắt lưu `localStorage`, tự tắt khi `prefers-reduced-motion`). Kiểm thử: `node tests/consult.test.js` (phải đạt hết nếu sửa `consult.js` hoặc `indicators.js`).
+    (mở từ nút "Phân tích" trên dashboard). `js/spider.js` — con nhện hiệu ứng (`VST.Spider`,
+    xem mục khung ứng dụng); trang Phân tích dùng `consult()` để nhện đáp lần lượt các thẻ (hội chẩn).
   - `js/backtest.js` — công cụ backtest thuần (không DOM, không mạng), chạy được cả trong Node.
     `js/backtest-page.js` — logic trang `backtest.html`. Kiểm thử: `node tests/backtest.test.js`
     (phải đạt hết trước khi commit nếu sửa `backtest.js` hoặc `indicators.js`).
