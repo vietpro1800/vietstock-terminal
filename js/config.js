@@ -44,6 +44,27 @@ VST.config = {
     warmupDays: 450,          // tải thêm ~15 tháng trước ngày bắt đầu để MA200 có giá trị ngay
   },
 
+  // Trang cảnh báo Mua/Bán theo chiến lược (signals.html, js/signals.js). Chiến lược lấy từ js/backtest.js.
+  signals: {
+    // Phạm vi quét. featured = VST.config.heatmap.featured; vn30/hnx30 = rổ trong VST.config.priceboard.groups;
+    // watchlist = "Danh mục của tôi" trên trang Bảng giá; hose/all = cả sàn (tải lâu).
+    scopes: [
+      { id: 'featured', label: 'Mã nổi bật' },
+      { id: 'vn30', label: 'VN30' },
+      { id: 'hnx30', label: 'HNX30' },
+      { id: 'watchlist', label: 'Danh mục của tôi (Bảng giá)' },
+      { id: 'hose', label: 'Toàn sàn HOSE' },
+      { id: 'all', label: 'Toàn thị trường' },
+    ],
+    defaultScope: 'featured',
+    windows: [5, 10, 20, 60], // tín hiệu trong N phiên gần nhất
+    defaultWindow: 10,
+    defaultStrategies: ['maCross', 'breakout'],
+    batchSize: 10,
+    refreshMs: 300000,  // tự quét lại trong giờ giao dịch (9:00–15:00, thứ Hai–thứ Sáu)
+    realtimeMax: 400,   // số mã nhận giá khớp realtime
+  },
+
   // Trang danh mục giả lập (paper.html): mua/bán theo chiến lược của js/backtest.js, theo dõi lãi/lỗ.
   // Cấu hình mỗi danh mục lưu ở bảng paper_portfolios (Supabase); giao dịch tính lại từ dữ liệu giá.
   paper: {

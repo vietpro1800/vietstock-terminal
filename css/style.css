@@ -1281,8 +1281,8 @@ body.hmpage { background: var(--hm-bg); }
 }
 
 /* ---------- Danh mục giả lập (paper.html) ---------- */
-.pp { display: grid; gap: var(--gutter); padding: var(--gutter); align-items: start; }
-.pp-side, .pp-detail, .pp-form-panel { display: grid; gap: 10px; min-width: 0; }
+.pp { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gutter); padding: var(--gutter); align-items: start; }
+.pp-side, .pp-detail, .pp-form-panel { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; min-width: 0; }
 .pp-detail[hidden], .pp-form-panel[hidden] { display: none; }
 .pp-side-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .pp-side-head h2, .pp-form-panel h2 { font-size: 16px; }
@@ -1352,4 +1352,41 @@ body.hmpage { background: var(--hm-bg); }
 @media (min-width: 1000px) {
   .pp { grid-template-columns: 320px minmax(0, 1fr); }
   .pp-side { position: sticky; top: var(--gutter); }
+}
+
+/* ---------- Cảnh báo Mua/Bán (signals.html) ---------- */
+.sg { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gutter); padding: var(--gutter); align-items: start; }
+.sg-set, .sg-main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; min-width: 0; }
+.sg-set h2, .sg-head h2 { font-size: 16px; }
+.sg-main { order: -1; } /* màn hẹp: bảng tín hiệu lên trước phần thiết lập */
+.sg-strategies { display: grid; gap: 6px; }
+.sg-strat { padding: 6px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); }
+.sg-strat-head { display: flex; align-items: flex-start; gap: 8px; min-height: 40px; padding: 4px 0; cursor: pointer; }
+.sg-strat-head input { width: 18px; height: 18px; margin: 2px 0 0; flex: none; accent-color: var(--accent); }
+.sg-strat-head span { display: grid; gap: 2px; min-width: 0; }
+.sg-strat-head small { font-size: 11px; line-height: 1.4; }
+.sg-params summary { min-height: 36px; display: flex; align-items: center; cursor: pointer; font-size: 12px; color: var(--text-dim); }
+.sg-params[open] summary { margin-bottom: 6px; }
+.sg-params .pp-params { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.sg-param-err { margin-top: 6px; }
+.sg-set-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.sg-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.sg-summary { margin: 0; font-size: 12px; line-height: 1.6; }
+.sg-wrap { position: relative; min-height: 120px; }
+.sg-table th { padding: 0; }
+.sg-table th button {
+  width: 100%; min-height: 36px; padding: 0 8px; border: 0; background: none; cursor: pointer;
+  color: inherit; font: inherit; text-align: inherit; white-space: nowrap;
+}
+.sg-table th[aria-sort="ascending"], .sg-table th[aria-sort="descending"] { color: var(--text); }
+span.sg-side { display: inline-block; min-width: 44px; padding: 2px 8px; border-radius: 999px; font-size: 12px; text-align: center; }
+span.sg-buy { color: var(--up); border: 1px solid var(--up); }
+span.sg-sell { color: var(--down); border: 1px solid var(--down); }
+.sg-badge { display: inline-block; padding: 0 6px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 10px; font-weight: 600; vertical-align: middle; }
+.sg-table tr.sg-new td { background: var(--info-bg); }
+
+@media (min-width: 1000px) {
+  .sg { grid-template-columns: 340px minmax(0, 1fr); }
+  .sg-main { order: 0; }
+  .sg-set { position: sticky; top: var(--gutter); }
 }

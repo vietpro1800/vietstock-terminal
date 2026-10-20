@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="vi" data-page="signals" class="auth-checking">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0e1117">
+  <title>Cảnh báo Mua/Bán · ThảoChi Stock</title>
+  <link rel="stylesheet" href="css/style.css?v=20261027">
+</head>
+<body>
+  <header class="topbar">
+    <h1 class="brand"><a href="dashboard.html">ThảoChi<span>Stock</span></a></h1>
+    <span class="page-tag">Cảnh báo</span>
+    <div class="status">
+      <span id="status-dot" class="dot"></span>
+      <span id="status-text">Đang tải…</span>
+    </div>
+    <div id="user-bar" class="user-bar"></div>
+  </header>
+
+  <div id="notice" class="notice" role="alert" hidden>
+    <span id="notice-text"></span>
+    <button id="notice-close" type="button" aria-label="Đóng thông báo">×</button>
+  </div>
+
+  <main class="sg">
+    <section class="panel sg-set" aria-labelledby="sg-set-title">
+      <h2 id="sg-set-title">Thiết lập cảnh báo</h2>
+      <div class="form-field">
+        <span>Chiến lược</span>
+        <div id="sg-strategies" class="sg-strategies"></div>
+      </div>
+      <label class="form-field"><span>Phạm vi mã</span>
+        <select id="sg-scope" class="input"></select></label>
+      <div class="form-field">
+        <span id="sg-window-label">Tín hiệu trong</span>
+        <div id="sg-window" class="seg" role="group" aria-labelledby="sg-window-label"></div>
+      </div>
+      <div class="sg-set-actions">
+        <button id="sg-reload" type="button" class="btn btn-sm btn-primary">Quét lại</button>
+        <button id="sg-notify" type="button" class="btn btn-sm">Bật thông báo</button>
+      </div>
+      <p class="form-hint">Tín hiệu tính theo giá đóng cửa của phiên báo, cùng quy tắc với trang Backtest. Mỗi đợt tín hiệu
+        liên tiếp chỉ báo một lần. Trong giờ giao dịch trang tự quét lại 5 phút/lần; thông báo chỉ hiện khi web đang mở.</p>
+    </section>
+
+    <section class="panel sg-main" aria-labelledby="sg-title">
+      <div class="sg-head">
+        <h2 id="sg-title">Tín hiệu Mua/Bán</h2>
+        <div id="sg-side-filter" class="seg" role="group" aria-label="Lọc theo loại tín hiệu">
+          <button type="button" data-v="all">Tất cả</button>
+          <button type="button" data-v="buy">Mua</button>
+          <button type="button" data-v="sell">Bán</button>
+        </div>
+      </div>
+      <p id="sg-summary" class="sg-summary dim">Đang tải…</p>
+      <div class="sg-wrap">
+        <div class="pp-table-wrap">
+          <table class="pp-table sg-table">
+            <thead id="sg-head"></thead>
+            <tbody id="sg-list"></tbody>
+          </table>
+        </div>
+        <div id="sg-loading" class="loading">
+          <div class="hm-progress">
+            <span id="sg-progress-text">Đang quét…</span>
+            <div class="bar"><i id="sg-progress-bar"></i></div>
+          </div>
+        </div>
+      </div>
+      <p class="form-hint">Lãi/lỗ: Mua = % giá tăng từ giá đóng cửa ngày báo đến giá hiện tại; Bán = % giá giảm từ ngày báo
+        (bán rồi giá giảm là có lợi). T+ = số phiên kể từ phiên báo (T+0 = phiên gần nhất; mua ở T+0 thì từ T+2 mới bán được).</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    Dữ liệu: nến ngày VNDirect (dchart), giá khớp realtime từ bảng giá SSI (không chính thức).
+    Tín hiệu kỹ thuật chỉ mang tính tham khảo, không phải khuyến nghị đầu tư.
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+  <script src="js/config.js?v=20261027"></script>
+  <script src="js/universe.js?v=20261027"></script>
+  <script src="js/auth.js?v=20261027"></script>
+  <script src="js/data.js?v=20261027"></script>
+  <script src="js/indicators.js?v=20261027"></script>
+  <script src="js/backtest.js?v=20261027"></script>
+  <script src="js/signals.js?v=20261027"></script>
+  <script src="js/signals-page.js?v=20261027"></script>
+</body>
+</html>

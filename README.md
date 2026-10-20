@@ -146,6 +146,7 @@ admin.html          Quản trị tài khoản (chỉ admin)
 scan.html           Lọc cổ phiếu theo nhiều tiêu chí kỹ thuật (cần đăng nhập)
 rrg.html            RRG: sức mạnh tương đối các ngành và các mã trong ngành (cần đăng nhập)
 backtest.html       Backtest chiến lược (cần đăng nhập)
+signals.html        Cảnh báo Mua/Bán theo chiến lược, theo dõi % lãi/lỗ và T+ (cần đăng nhập)
 paper.html          Danh mục giả lập: mua/bán theo chiến lược, theo dõi lãi/lỗ (cần đăng nhập)
 css/style.css       Giao diện (biến màu ở :root)
 js/config.js        Cấu hình: danh sách mã, chu kỳ làm mới, khung thời gian, Supabase URL + publishable key
@@ -158,6 +159,8 @@ js/indicators.js    Tính MA, Bollinger, RSI, MACD
 js/chart.js         Vẽ biểu đồ (dashboard + backtest)
 js/backtest.js      Công cụ backtest: phí/thuế, lô 100, T+2, chiến lược, chỉ số (hàm thuần)
 js/backtest-page.js Logic trang backtest
+js/signals.js       Cảnh báo: tìm tín hiệu Mua/Bán, tính % lãi/lỗ và T+ từ ngày báo (hàm thuần)
+js/signals-page.js  Logic trang cảnh báo
 js/paper.js         Danh mục giả lập: chia vốn, chạy chiến lược từng mã, tổng hợp lãi/lỗ (hàm thuần)
 js/paper-page.js    Logic trang danh mục giả lập
 js/scan.js          Bộ lọc cổ phiếu: tính chỉ số mỗi mã, các tiêu chí, bộ lọc mẫu (hàm thuần)
@@ -169,7 +172,7 @@ js/universe.js      ~1500 cổ phiếu HOSE/HNX/UPCoM theo ngành ICB (sinh bằ
 js/shell.js         Khung ứng dụng (index.html): điều hướng, giữ trang đã mở
 js/heatmap.js       Bản đồ nhiệt: bố cục treemap, % thay đổi, mức màu (hàm thuần)
 js/heatmap-page.js  Logic trang bản đồ nhiệt
-tests/              Kiểm thử: `node tests/<tên>.test.js` (backtest, rrg, scan, priceboard, heatmap, news, paper) hoặc mở tests/index.html
+tests/              Kiểm thử: `node tests/<tên>.test.js` (backtest, rrg, scan, priceboard, heatmap, news, paper, signals) hoặc mở tests/index.html
 js/board.js         Bảng giá
 js/orderbook.js     Sổ lệnh 3 bước giá + khớp lệnh realtime
 js/chat.js          Thảo luận theo mã (Supabase realtime)
@@ -185,6 +188,14 @@ CLAUDE.md           Quy ước phát triển
 mỗi trang chức năng chạy trong một iframe riêng. Trang đã mở được giữ nguyên trạng thái khi chuyển sang trang khác,
 nên quay lại không phải tải lại dữ liệu. Địa chỉ dạng `index.html#rrg`; mở thẳng `scan.html` hay link cũ
 `index.html?symbol=HPG` đều tự chuyển về khung đúng trang.
+
+## Cảnh báo Mua/Bán
+
+Trang `signals.html`: chọn chiến lược (MA cắt nhau, Bắt đáy, Breakout, RSI — chỉnh được tham số), phạm vi mã (mã nổi bật,
+VN30, HNX30, danh mục của tôi trên Bảng giá, cả sàn) và cửa sổ 5/10/20/60 phiên. Bảng liệt kê từng tín hiệu: mã, Mua/Bán,
+chiến lược, ngày báo, giá đóng cửa ngày báo, giá hiện tại (realtime), **% lãi/lỗ** nếu làm theo (Bán: giá giảm là có lợi)
+và **T+ số phiên** kể từ ngày báo; sắp xếp theo cột bất kỳ. Trong giờ giao dịch trang tự quét lại 5 phút/lần, tín hiệu
+mới được đánh dấu "Mới" và có thể hiện thông báo trình duyệt (chỉ khi web đang mở). Thiết lập lưu trên trình duyệt.
 
 ## Danh mục giả lập
 
