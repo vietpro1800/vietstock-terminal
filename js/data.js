@@ -75,18 +75,32 @@ window.VST = window.VST || {};
       return dedupe(bars);
     }
 
-    // Tải nhiều mã theo nhóm nhỏ. Trả về { [symbol]: {bars} | {error} } — không bao giờ reject.
-    // onProgress(đã xong, tổng) — tùy chọn, gọi sau mỗi nhóm.
+    // Tải nhiều mã, tối đa batchSize request cùng lúc (hàng đợi: xong mã nào gọi tiếp mã sau, không chờ cả nhóm).
+    // Trả về { [symbol]: {bars} | {error} } — không bao giờ reject.
+    // onProgress(đã xong, tổng) — tùy chọn, gọi sau mỗi mã (tối đa ~10 lần/giây).
     async getHistoryBatch(symbols, tf, onProgress) {
       const out = {};
-      for (let i = 0; i < symbols.length; i += this.batchSize) {
-        const group = symbols.slice(i, i + this.batchSize);
-        const results = await Promise.allSettled(group.map((s) => this.getHistory(s, tf)));
-        results.forEach(function (r, k) {
-          out[group[k]] = r.status === 'fulfilled' ? { bars: r.value } : { error: r.reason };
-        });
-        if (onProgress) onProgress(Math.min(i + this.batchSize, symbols.length), symbols.length);
-      }
+      const total = symbols.length;
+      let next = 0, done = 0, lastReport = 0;
+      const worker = async () => {
+        while (next < total) {
+          const sym = symbols[next++];
+          try {
+            out[sym] = { bars: await this.getHistory(sym, tf) };
+          } catch (err) {
+            out[sym] = { error: err };
+          }
+          done++;
+          const now = Date.now();
+          if (onProgress && (done === total || now - lastReport > 100)) {
+            lastReport = now;
+            onProgress(done, total);
+          }
+        }
+      };
+      const workers = [];
+      for (let k = 0; k < Math.min(this.batchSize, total); k++) workers.push(worker());
+      await Promise.all(workers);
       return out;
     }
   }

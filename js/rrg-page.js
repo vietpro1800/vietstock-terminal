@@ -1,7 +1,9 @@
 // Trang RRG: sức mạnh tương đối của các ngành và các mã trong từng ngành so với VN-Index.
+// Danh sách ngành & mã: toàn bộ HOSE/HNX/UPCoM (VST.universe, js/universe.js).
 // Chỉ chạy sau khi xác nhận đã đăng nhập và tài khoản đang hoạt động.
 VST.auth.guard().then(function (ctx) {
   const cfg = VST.config.rrg;
+  const sectors = VST.universe.sectors;
   const rrg = VST.rrg;
   const esc = VST.escapeHtml;
   const $ = (id) => document.getElementById(id);
@@ -18,10 +20,12 @@ VST.auth.guard().then(function (ctx) {
     tf: cfg.timeframes[prefs.tf] ? prefs.tf : 'D',
     tail: cfg.tails.indexOf(prefs.tail) >= 0 ? prefs.tail : cfg.defaultTail,
     bench: prefs.bench === 'sector' ? 'sector' : 'index',
+    liq: cfg.liquidity.indexOf(prefs.liq) >= 0 ? prefs.liq : cfg.defaultLiquidity, // GTGD TB20 tối thiểu (tỷ)
     sector: null,       // null = xem tất cả ngành
     hidden: {},         // { [khóa màn hình]: Set id bị ẩn }
     benchBars: null,
-    bars: {},           // { [mã]: nến ngày }
+    bars: {},           // { [mã]: [{time, close}] } — chỉ giữ giá đóng cửa cho nhẹ bộ nhớ (~1500 mã)
+    value: {},          // { [mã]: GTGD trung bình 20 phiên, tỷ đồng }
     loadToken: 0,
     items: [],
   };
@@ -37,7 +41,7 @@ VST.auth.guard().then(function (ctx) {
   // ---------- Điều khiển ----------
 
   function buildControls() {
-    $('rrg-view').innerHTML = '<option value="">Tất cả ngành</option>' + cfg.sectors.map((s) =>
+    $('rrg-view').innerHTML = '<option value="">Tất cả ngành</option>' + sectors.map((s) =>
       '<option value="' + s.id + '">' + esc(s.name) + ' (' + s.symbols.length + ' mã)</option>').join('');
     $('rrg-view').addEventListener('change', function () { go(this.value || null); });
     $('rrg-back').addEventListener('click', function () { go(null); });
@@ -47,6 +51,9 @@ VST.auth.guard().then(function (ctx) {
     $('rrg-tail').innerHTML = cfg.tails.map((n) => '<button type="button" data-v="' + n + '">' + n + '</button>').join('');
     segHandler('rrg-tf', function (v) { state.tf = v; });
     segHandler('rrg-tail', function (v) { state.tail = Number(v); });
+    $('rrg-liq').innerHTML = cfg.liquidity.map((n) =>
+      '<button type="button" data-v="' + n + '">' + (n ? '≥' + n + ' tỷ' : 'Tất cả') + '</button>').join('');
+    segHandler('rrg-liq', function (v) { state.liq = Number(v); });
     $('rrg-bench').addEventListener('click', function (e) {
       const b = e.target.closest('button[data-bench]');
       if (!b) return;
@@ -104,7 +111,7 @@ VST.auth.guard().then(function (ctx) {
 
   function readHash() {
     const id = decodeURIComponent(location.hash.slice(1));
-    state.sector = cfg.sectors.find((s) => s.id === id) || null;
+    state.sector = sectors.find((s) => s.id === id) || null;
     chart.setPinned(null);
   }
 
@@ -114,17 +121,21 @@ VST.auth.guard().then(function (ctx) {
     markPinnedRow();
   }
 
+  // Mã/ngành đang ẩn trên biểu đồ. Lần đầu xem một ngành: chỉ bật sẵn cfg.maxShown mã thanh khoản cao nhất
+  // (state.items đã xếp theo GTGD giảm dần) để biểu đồ không rối.
   function hiddenSet() {
-    const key = state.sector ? state.sector.id : '_all';
-    return state.hidden[key] || (state.hidden[key] = new Set());
+    const key = state.sector ? state.sector.id + ':' + state.liq : '_all';
+    if (!state.hidden[key]) {
+      state.hidden[key] = new Set(state.sector ? state.items.slice(cfg.maxShown).map((it) => it.id) : []);
+    }
+    return state.hidden[key];
   }
 
   // ---------- Dữ liệu ----------
 
   async function load() {
     const token = ++state.loadToken;
-    const symbols = [];
-    cfg.sectors.forEach((s) => s.symbols.forEach((sym) => { if (symbols.indexOf(sym) < 0) symbols.push(sym); }));
+    const symbols = VST.universe.all;
     $('rrg-reload').disabled = true;
     progress(0, symbols.length);
     $('rrg-loading').hidden = false;
@@ -137,14 +148,23 @@ VST.auth.guard().then(function (ctx) {
       if (token !== state.loadToken) return;
       state.benchBars = benchBars;
       state.bars = {};
+      state.value = {};
+      state.hidden = {};
       const failed = [];
       symbols.forEach(function (sym) {
-        if (res[sym].bars) state.bars[sym] = res[sym].bars; else failed.push(sym);
+        const bars = res[sym].bars;
+        if (!bars || !bars.length) { failed.push(sym); return; }
+        let value = 0;
+        const k = Math.min(20, bars.length);
+        for (let i = bars.length - k; i < bars.length; i++) value += bars[i].close * bars[i].volume;
+        state.value[sym] = value / k / 1e6;
+        state.bars[sym] = bars.map((b) => ({ time: b.time, close: b.close }));
       });
       if (failed.length === symbols.length) {
         showNotice('Không tải được dữ liệu các mã. ' + messageOf(res[symbols[0]].error));
       } else if (failed.length) {
-        showNotice('Không tải được ' + failed.length + ' mã (đã bỏ qua): ' + failed.join(', ') + '.');
+        showNotice('Không tải được ' + failed.length + ' mã (đã bỏ qua): ' +
+          failed.slice(0, 40).join(', ') + (failed.length > 40 ? ', …' : '.'));
       } else {
         $('notice').hidden = true;
       }
@@ -172,10 +192,12 @@ VST.auth.guard().then(function (ctx) {
     const params = cfg.timeframes[state.tf];
     const benchC = rrg.toCloses(state.benchBars, state.tf);
     const run = function (series, bench) { return rrg.summarize(rrg.compute(series, bench, params), state.tail); };
-    const members = (s) => s.symbols.filter((sym) => state.bars[sym]);
+    // Thành viên ngành đủ thanh khoản, xếp theo GTGD giảm dần.
+    const members = (s) => s.symbols.filter((sym) => state.bars[sym] && state.value[sym] >= state.liq)
+      .sort((a, b) => state.value[b] - state.value[a]);
 
     if (!state.sector) {
-      return cfg.sectors.map(function (s) {
+      return sectors.map(function (s) {
         const ok = members(s);
         const base = { id: s.id, name: s.name, count: ok.length, total: s.symbols.length };
         if (!ok.length) return Object.assign(base, { summary: null });
@@ -190,9 +212,8 @@ VST.auth.guard().then(function (ctx) {
     if (state.bench === 'sector' && ok.length) {
       bench = rrg.toCloses(rrg.sectorIndex(ok.map((sym) => state.bars[sym]), state.benchBars), state.tf);
     }
-    return s.symbols.map(function (sym) {
-      const bars = state.bars[sym];
-      return { id: sym, name: sym, failed: !bars, summary: bars ? run(rrg.toCloses(bars, state.tf), bench) : null };
+    return ok.map(function (sym) {
+      return { id: sym, name: sym, value: state.value[sym], summary: run(rrg.toCloses(state.bars[sym], state.tf), bench) };
     });
   }
 
@@ -203,6 +224,7 @@ VST.auth.guard().then(function (ctx) {
     markSeg('rrg-tf', state.tf);
     markSeg('rrg-tail', state.tail);
     markSeg('rrg-bench', state.bench);
+    markSeg('rrg-liq', state.liq);
     $('rrg-view').value = s ? s.id : '';
     $('rrg-back').hidden = !s;
     $('rrg-bench-field').hidden = !s;
@@ -257,14 +279,14 @@ VST.auth.guard().then(function (ctx) {
     $('rrg-list').innerHTML = rows.map(function (it) {
       const m = it.summary;
       const name = s
-        ? '<b>' + esc(it.name) + '</b>'
+        ? '<b>' + esc(it.name) + '</b> <span class="dim small" title="GTGD trung bình 20 phiên">' + fmtNum(it.value) + ' tỷ</span>'
         : '<b>' + esc(it.name) + '</b> <span class="dim small">' + it.count + (it.count < it.total ? '/' + it.total : '') + ' mã</span>';
       const link = s && SYMBOL_RE.test(it.id)
         ? '<a class="rrg-open" href="index.html?symbol=' + encodeURIComponent(it.id) + '" title="Xem biểu đồ ' + esc(it.id) + '">Biểu đồ</a>'
         : (!s ? '<span class="rrg-open dim" aria-hidden="true">›</span>' : '');
       if (!m) {
         return '<tr data-id="' + esc(it.id) + '"><td></td><td>' + name + '</td><td colspan="4" class="dim">' +
-          (it.failed ? 'Lỗi tải dữ liệu' : 'Chưa đủ dữ liệu') + '</td><td>' + link + '</td></tr>';
+          'Chưa đủ dữ liệu</td><td>' + link + '</td></tr>';
       }
       const chg = m.change;
       return '<tr data-id="' + esc(it.id) + '">' +
@@ -320,7 +342,7 @@ VST.auth.guard().then(function (ctx) {
 
   function savePrefs() {
     try {
-      localStorage.setItem(STORE_KEY, JSON.stringify({ tf: state.tf, tail: state.tail, bench: state.bench }));
+      localStorage.setItem(STORE_KEY, JSON.stringify({ tf: state.tf, tail: state.tail, bench: state.bench, liq: state.liq }));
     } catch (e) { /* bỏ qua: chế độ ẩn danh hoặc bị chặn lưu trữ */ }
   }
 });

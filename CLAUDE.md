@@ -36,7 +36,8 @@ sau này mở rộng nhiều người dùng có đăng nhập.
   - `js/board.js` — bảng giá nhỏ trong tab của dashboard.
   - `js/priceboard.js` — bảng giá kiểu SSI iBoard (`VST.PriceTable`: Trần/Sàn/TC, 3 bước giá mua/bán, khớp lệnh,
     tổng KL, cao/thấp; trần/sàn tính bằng hàm thuần `VST.priceboard.priceLimits`). `js/priceboard-page.js` — logic trang
-    `priceboard.html` (thẻ chỉ số trong ngày, nhóm Danh mục của tôi/VN30/HNX30/ngành). Rổ chỉ số ở `VST.config.priceboard`.
+    `priceboard.html` (thẻ chỉ số trong ngày, nhóm Danh mục của tôi/VN30/HNX30/ngành). Rổ chỉ số và nhóm ngành rút gọn ở `VST.config.priceboard`
+    (không dùng `VST.universe` vì bảng giá làm mới realtime, nhóm ngành phải gọn).
     Realtime nhiều mã qua `VST.SsiBoardFeed` trong `data.js`. Kiểm thử: `node tests/priceboard.test.js` (phải đạt hết nếu sửa `priceboard.js`).
   - `js/orderbook.js` — khung sổ lệnh/khớp lệnh (chỉ hiển thị; dữ liệu từ `VST.SsiRealtimeFeed` trong `data.js`).
   - `js/chat.js` — thảo luận theo mã (bảng `stock_comments` trong Supabase, realtime).
@@ -44,12 +45,17 @@ sau này mở rộng nhiều người dùng có đăng nhập.
   - `js/backtest.js` — công cụ backtest thuần (không DOM, không mạng), chạy được cả trong Node.
     `js/backtest-page.js` — logic trang `backtest.html`. Kiểm thử: `node tests/backtest.test.js`
     (phải đạt hết trước khi commit nếu sửa `backtest.js` hoặc `indicators.js`).
+  - `js/universe.js` — danh sách ~1500 cổ phiếu toàn 3 sàn (HOSE/HNX/UPCoM) theo ngành ICB (`VST.universe`: `sectors`,
+    `info[mã]` = sàn/ngành, `all`). **File sinh tự động** bằng `python3 tools/build_universe.py` (nguồn: dữ liệu
+    `symbols.json` của vnstock-js) — không sửa tay; chạy lại script để cập nhật mã mới niêm yết/hủy niêm yết.
+    Chỉ nạp ở `rrg.html` và `scan.html` (sau `config.js`).
   - `js/rrg.js` — tính RRG thuần (chỉ số ngành, RS-Ratio, RS-Momentum). `js/rrg-chart.js` — vẽ RRG bằng SVG.
-    `js/rrg-page.js` — logic trang `rrg.html`. Danh sách ngành và mã nằm ở `VST.config.rrg.sectors`.
+    `js/rrg-page.js` — logic trang `rrg.html`. Ngành và mã lấy từ `VST.universe.sectors`; lọc thanh khoản
+    (GTGD TB20) và số mã bật sẵn khi xem một ngành ở `VST.config.rrg`.
     Kiểm thử: `node tests/rrg.test.js` (phải đạt hết nếu sửa `rrg.js` hoặc `indicators.js`).
   - `js/scan.js` — bộ lọc cổ phiếu thuần (`metrics(bars)` tính chỉ số một lần, `run(rows, filters)` lọc; danh sách
     tiêu chí `CRITERIA` và bộ lọc mẫu `PRESETS`). `js/scan-page.js` — logic trang `scan.html`; danh sách mã lấy từ
-    `VST.config.rrg.sectors`. Kiểm thử: `node tests/scan.test.js` (phải đạt hết nếu sửa `scan.js` hoặc `indicators.js`).
+    `VST.universe` (phạm vi lọc theo sàn hoặc ngành). Kiểm thử: `node tests/scan.test.js` (phải đạt hết nếu sửa `scan.js` hoặc `indicators.js`).
   - `js/auth.js` — Supabase client, `VST.auth.guard()`, thanh người dùng, dịch lỗi sang tiếng Việt.
   - `js/login.js`, `js/reset.js`, `js/admin.js` — logic riêng của `login.html`,
     `reset-password.html`, `admin.html`.
@@ -76,7 +82,7 @@ sau này mở rộng nhiều người dùng có đăng nhập.
 
 - Nguồn hiện tại: `https://dchart-api.vndirect.com.vn/dchart/history?resolution=D&symbol=HPG&from=<unix>&to=<unix>`
   trả về `{ s, t[], o[], h[], l[], c[], v[] }`. Giá cổ phiếu tính theo **nghìn đồng**.
-- Gọi theo nhóm nhỏ (mặc định 4 request song song), có timeout và thử lại 1 lần.
+- Gọi song song có giới hạn (mặc định 4 request cùng lúc; RRG/Lọc 10 vì tải ~1500 mã), có timeout và thử lại 1 lần.
 - Vàng, tiền số, ngoại hối (`VST.config.globalAssets`): `BinanceSource` gọi
   `https://data-api.binance.vision/api/v3/klines` (công khai, không khóa, giá theo USD, tối đa 1000 nến/lượt).
   Vàng = `PAXGUSDT` (đại diện XAU/USD), EUR/USD = `EURUSDT`. `MarketRouter` chọn nguồn theo mã, nên biểu đồ

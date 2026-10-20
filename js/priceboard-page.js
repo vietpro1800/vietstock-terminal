@@ -19,7 +19,7 @@ VST.auth.guard().then(function (ctx) {
   // Nhóm: danh mục của tôi, các rổ chỉ số, rồi các ngành (cùng danh sách với trang RRG / Lọc mã).
   const groups = [{ id: 'mine', name: 'Danh mục của tôi' }]
     .concat(cfg.groups)
-    .concat(VST.config.rrg.sectors.map((s) => ({ id: 'sec-' + s.id, name: s.name, symbols: s.symbols, sector: true })));
+    .concat(VST.config.priceboard.sectors.map((s) => ({ id: 'sec-' + s.id, name: s.name, symbols: s.symbols, sector: true })));
   const groupById = {};
   groups.forEach((g) => { groupById[g.id] = g; });
 

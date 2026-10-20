@@ -1,33 +1,32 @@
-// Trang lọc cổ phiếu: tải nến ngày các mã trong danh sách ngành, tính chỉ số một lần (VST.scan.metrics),
+// Trang lọc cổ phiếu: tải nến ngày toàn bộ mã HOSE/HNX/UPCoM (VST.universe), tính chỉ số một lần (VST.scan.metrics),
 // rồi lọc tức thì mỗi khi đổi tiêu chí. Chỉ chạy sau khi xác nhận đã đăng nhập và tài khoản đang hoạt động.
 VST.auth.guard().then(function (ctx) {
   const cfg = VST.config.scan;
-  const sectors = VST.config.rrg.sectors;
+  const uni = VST.universe;
+  const sectors = uni.sectors;
   const scan = VST.scan;
   const esc = VST.escapeHtml;
   const $ = (id) => document.getElementById(id);
   const STORE_KEY = 'vst.scan.v1';
-  const CACHE_KEY = 'vst.scan.cache.v1';
+  const CACHE_KEY = 'vst.scan.cache.v2';
   const SYMBOL_RE = /^[A-Z0-9]{2,10}$/;
 
   // Đổi nguồn dữ liệu tại đây (cùng lớp với dashboard).
   const source = new VST.VndirectSource({ batchSize: cfg.batchSize });
   const LOAD_TF = { label: 'Ngày', resolution: 'D', days: cfg.days };
 
-  // Danh sách mã (không trùng) kèm ngành đầu tiên chứa mã đó.
-  const universe = [];
-  const sectorOf = {};
-  sectors.forEach(function (s) {
-    s.symbols.forEach(function (sym) {
-      if (sectorOf[sym]) return;
-      sectorOf[sym] = s.name;
-      universe.push(sym);
-    });
-  });
+  const universe = uni.all;
+  const EXCHANGES = [['hose', 'HOSE'], ['hnx', 'HNX'], ['upcom', 'UPCoM']];
+  const EX_LABEL = { hose: 'HOSE', hnx: 'HNX', upcom: 'UPCoM' };
+  // Phạm vi lọc: '' = tất cả, 'ex:<sàn>' hoặc id ngành.
+  const SCOPES = [{ id: '', label: 'Toàn thị trường', test: () => true }]
+    .concat(EXCHANGES.map((e) => ({ id: 'ex:' + e[0], label: 'Sàn ' + e[1], count: uni.count[e[0]], test: (r) => r.exchange === e[0] })))
+    .concat(sectors.map((s) => ({ id: s.id, label: s.name, count: s.symbols.length, test: (r) => r.sector === s.name })));
 
   const COLUMNS = [
     { key: 'symbol', label: 'Mã', get: (r) => r.symbol, text: true },
-    { key: 'sector', label: 'Ngành', get: (r) => r.sector, text: true },
+    { key: 'exchange', label: 'Sàn', get: (r) => EX_LABEL[r.exchange], text: true },
+    { key: 'sector', label: 'Ngành', get: (r) => r.industry, text: true },
     { key: 'price', label: 'Giá', get: (r) => r.m.price, fmt: (v) => fmtNum(v, 2) },
     { key: 'chg1', label: '% ngày', get: (r) => r.m.chg1, fmt: fmtPct, color: true },
     { key: 'chg20', label: '% 20 phiên', get: (r) => r.m.chg[20], fmt: fmtPct, color: true },
@@ -42,10 +41,10 @@ VST.auth.guard().then(function (ctx) {
   const state = {
     on: prefs.on && typeof prefs.on === 'object' ? prefs.on : { liquidity: true, aboveMa: true, rsi: true },
     params: {},
-    universe: sectors.some((s) => s.id === prefs.universe) ? prefs.universe : '',
+    universe: SCOPES.some((s) => s.id === prefs.universe) ? prefs.universe : '',
     miss: [0, 1, 2].indexOf(prefs.miss) >= 0 ? prefs.miss : 0,
     sort: prefs.sort && prefs.sort.key ? prefs.sort : { key: 'value20', dir: -1 },
-    rows: null,       // [{ symbol, sector, m }]
+    rows: null,       // [{ symbol, exchange, sector, industry, m }]
     failed: [],
     loadToken: 0,
   };
@@ -68,8 +67,10 @@ VST.auth.guard().then(function (ctx) {
       if (b) applyPreset(b.dataset.preset);
     });
 
-    $('scan-universe').innerHTML = '<option value="">Tất cả ngành (' + universe.length + ' mã)</option>' +
-      sectors.map((s) => '<option value="' + s.id + '">' + esc(s.name) + ' (' + s.symbols.length + ' mã)</option>').join('');
+    const opt = (s) => '<option value="' + esc(s.id) + '">' + esc(s.label) + ' (' + (s.count || universe.length) + ' mã)</option>';
+    $('scan-universe').innerHTML = opt(SCOPES[0]) +
+      '<optgroup label="Theo sàn">' + SCOPES.filter((s) => s.id.indexOf('ex:') === 0).map(opt).join('') + '</optgroup>' +
+      '<optgroup label="Theo ngành">' + SCOPES.slice(1 + EXCHANGES.length).map(opt).join('') + '</optgroup>';
     $('scan-universe').value = state.universe;
     $('scan-universe').addEventListener('change', function () { state.universe = this.value; changed(); });
 
@@ -89,7 +90,7 @@ VST.auth.guard().then(function (ctx) {
       const th = e.target.closest('th[data-sort]');
       if (!th) return;
       const key = th.dataset.sort;
-      const textCol = key === 'symbol' || key === 'sector';
+      const textCol = key === 'symbol' || key === 'sector' || key === 'exchange';
       state.sort = state.sort.key === key ? { key: key, dir: -state.sort.dir } : { key: key, dir: textCol ? 1 : -1 };
       changed();
     });
@@ -198,7 +199,9 @@ VST.auth.guard().then(function (ctx) {
       const failed = [];
       universe.forEach(function (sym) {
         const m = res[sym].bars ? scan.metrics(res[sym].bars) : null;
-        if (m) rows.push({ symbol: sym, sector: sectorOf[sym], m: m }); else failed.push(sym);
+        const info = uni.info[sym];
+        if (m) rows.push({ symbol: sym, exchange: info.exchange, sector: info.sector, industry: info.industry, m: m });
+        else failed.push(sym);
       });
       state.rows = rows;
       state.failed = failed;
@@ -206,7 +209,9 @@ VST.auth.guard().then(function (ctx) {
         const err = (res[universe[0]] || {}).error;
         showNotice('Không tải được dữ liệu các mã. ' + messageOf(err));
       } else {
-        if (failed.length) showNotice('Không tải được hoặc thiếu dữ liệu ' + failed.length + ' mã (đã bỏ qua): ' + failed.join(', ') + '.');
+        if (failed.length) showNotice('Không tải được hoặc thiếu dữ liệu ' + failed.length + ' mã (đã bỏ qua' +
+          (failed.length > 3 ? ', thường là mã mới niêm yết hoặc tạm ngừng giao dịch' : '') + '): ' +
+          failed.slice(0, 40).join(', ') + (failed.length > 40 ? ', …' : '.'));
         else $('notice').hidden = true;
         saveCache();
       }
@@ -227,12 +232,12 @@ VST.auth.guard().then(function (ctx) {
     $('scan-progress-bar').style.width = (total ? (100 * done) / total : 0) + '%';
   }
 
-  // Kết quả tính được giữ trong sessionStorage vài phút: quay lại trang không phải tải lại ~130 mã.
+  // Kết quả tính được giữ trong sessionStorage vài phút: quay lại trang không phải tải lại ~1500 mã.
   function restoreCache() {
     try {
       const c = JSON.parse(sessionStorage.getItem(CACHE_KEY));
       if (!c || !Array.isArray(c.rows) || Date.now() - c.at > cfg.cacheMinutes * 60000) return false;
-      state.rows = c.rows.filter((r) => sectorOf[r.symbol]);
+      state.rows = c.rows.filter((r) => uni.info[r.symbol] && r.exchange);
       state.failed = c.failed || [];
       state.cachedAt = c.at;
       $('scan-loading').hidden = true;
@@ -270,8 +275,8 @@ VST.auth.guard().then(function (ctx) {
     renderHead(cols);
     if (!state.rows) return;
 
-    const sector = sectors.find((s) => s.id === state.universe);
-    const pool = sector ? state.rows.filter((r) => sector.symbols.indexOf(r.symbol) >= 0) : state.rows;
+    const scope = SCOPES.find((s) => s.id === state.universe) || SCOPES[0];
+    const pool = state.rows.filter(scope.test);
     const miss = Math.min(state.miss, Math.max(0, nActive - 1));
     const matches = scan.run(pool, filters, miss);
 
@@ -291,7 +296,7 @@ VST.auth.guard().then(function (ctx) {
     $('scan-head').innerHTML = '<tr>' + cols.map(function (c) {
       const on = state.sort.key === c.key;
       const arrow = on ? (state.sort.dir > 0 ? ' ▲' : ' ▼') : '';
-      return '<th class="' + (c.text ? '' : 'num') + (c.key === 'sector' ? ' scan-sector' : '') + (on ? ' sorted' : '') + '" data-sort="' + c.key + '" aria-sort="' +
+      return '<th class="' + (c.text ? '' : 'num') + (c.key === 'sector' || c.key === 'exchange' ? ' scan-sector' : '') + (on ? ' sorted' : '') + '" data-sort="' + c.key + '" aria-sort="' +
         (on ? (state.sort.dir > 0 ? 'ascending' : 'descending') : 'none') + '"><button type="button">' + esc(c.label) + arrow + '</button></th>';
     }).join('') + '</tr>';
   }
@@ -330,7 +335,8 @@ VST.auth.guard().then(function (ctx) {
         if (c.key === 'symbol') {
           return '<td class="sym"><a href="' + chartUrl(r.symbol) + '" title="Xem biểu đồ ' + esc(r.symbol) + '">' + esc(r.symbol) + '</a></td>';
         }
-        if (c.key === 'sector') return '<td class="dim scan-sector">' + esc(r.sector) + '</td>';
+        if (c.key === 'sector') return '<td class="dim scan-sector" title="' + esc(r.sector) + '">' + esc(r.industry) + '</td>';
+        if (c.key === 'exchange') return '<td class="dim scan-sector">' + esc(EX_LABEL[r.exchange]) + '</td>';
         if (c.key === 'passed') {
           const names = r.failed.map((id) => scan.criterion(id).label).join(', ');
           return '<td class="num' + (r.failed.length ? ' ref' : ' up') + '"' + (names ? ' title="Chưa đạt: ' + esc(names) + '"' : '') + '>' +
