@@ -35,7 +35,7 @@ VST.auth.guard().then(function (ctx) {
   };
 
   const table = new VST.PriceTable($('pb-table'), {
-    onOpen: (s) => { location.href = 'index.html?symbol=' + encodeURIComponent(s); },
+    onOpen: (s) => { VST.nav.open('dashboard.html?symbol=' + encodeURIComponent(s)); },
     onPin: togglePin,
     isPinned: (s) => state.watchlist.indexOf(s) >= 0,
   });

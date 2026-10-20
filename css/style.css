@@ -41,7 +41,25 @@
   --ssi-tab: #1c77a4;
   --ssi-accent: #1aa67c;
 
-  /* Dashboard (index.html): bảng màu lấy mẫu từ FireAnt — giao diện tối, khung biểu đồ nền trắng. */
+  /* Bản đồ nhiệt (heatmap.html): mức màu giảm d5 (mạnh) … d1, đứng giá z, tăng u1 … u5 (mạnh). */
+  --hm-bg: #0b0e14;
+  --hm-d5: #d0343f;
+  --hm-d4: #a8323b;
+  --hm-d3: #823039;
+  --hm-d2: #642d35;
+  --hm-d1: #4b2a31;
+  --hm-z: #3d3a22;
+  --hm-u1: #20403a;
+  --hm-u2: #1d5546;
+  --hm-u3: #1b6c55;
+  --hm-u4: #198a6b;
+  --hm-u5: #17b088;
+  --hm-ceil: #9d3fc4;
+  --hm-floor: #1b8fb8;
+  --hm-na: #252b35;
+  --hm-text: #f4f6f8;
+
+  /* Dashboard (dashboard.html): bảng màu lấy mẫu từ FireAnt — giao diện tối, khung biểu đồ nền trắng. */
   --fa-nav: #252a31;
   --fa-bar: #131722;
   --fa-line: #2a2e39;
@@ -717,9 +735,9 @@ select.input { appearance: none; padding-right: 32px;
 }
 .rrg-tools button:hover { background: var(--bg-hover); }
 .rrg-zoom { font-size: 11px; color: var(--text-dim); margin-right: 4px; }
-.rrg-progress { display: grid; gap: 8px; justify-items: center; width: min(260px, 80%); }
-.rrg-progress .bar { width: 100%; height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; }
-.rrg-progress .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+.rrg-progress, .hm-progress { display: grid; gap: 8px; justify-items: center; width: min(260px, 80%); }
+.rrg-progress .bar, .hm-progress .bar { width: 100%; height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; }
+.rrg-progress .bar i, .hm-progress .bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
 .rrg-hint { margin-top: 8px; }
 
 .rrg-table td { height: 42px; }
@@ -941,7 +959,7 @@ body.pbpage .footer { padding: 6px var(--gutter); background: var(--ssi-deep); c
   body.pbpage .footer { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }
 
-/* ---------- Dashboard (index.html), kiểu FireAnt ---------- */
+/* ---------- Dashboard (dashboard.html), kiểu FireAnt ---------- */
 /* Đặt trên <html> để chart.js đọc đúng màu khi khởi tạo (các biến --chart-* chỉ dùng cho vùng biểu đồ). */
 html.fa-theme {
   --bg: var(--fa-bar); --bg-panel: var(--fa-nav); --bg-hover: var(--fa-row-a); --bg-active: var(--fa-row-a);
@@ -1121,4 +1139,122 @@ body.fa .footer { padding: 6px var(--gutter) 14px; }
   body.fa .ob-book td, body.fa .ob-trades td { height: 26px; }
   body.fa .ob-note { display: none; }
   body.fa .footer { padding: 2px var(--gutter) 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
+
+/* ---------- Khung ứng dụng (index.html, js/shell.js) ---------- */
+/* Thanh trên cùng cố định; mỗi trang chức năng là một iframe chiếm phần còn lại, trang ẩn vẫn giữ trạng thái. */
+body.shell {
+  display: flex; flex-direction: column;
+  height: 100vh; height: 100dvh; overflow: hidden; padding-bottom: 0;
+}
+.shell-bar {
+  flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--gutter);
+  padding: 0 var(--gutter);
+  padding-top: env(safe-area-inset-top);
+  background: var(--bg-panel); border-bottom: 1px solid var(--border);
+}
+.shell-bar .brand { padding: 8px 0; white-space: nowrap; }
+.shell-user { order: 2; margin-left: auto; }
+.shell-status { order: 1; min-width: 0; margin-left: auto; }
+.shell-status[hidden] { display: none; }
+.shell-status span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 40vw; }
+.shell-status + .shell-user { margin-left: 0; }
+.shell-nav {
+  order: 3; flex: 1 1 100%; display: flex; min-width: 0;
+  margin: 0 calc(-1 * var(--gutter)); padding: 0 calc(var(--gutter) - 6px);
+  overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.shell-nav::-webkit-scrollbar { display: none; }
+.shell-tab {
+  flex: none; display: inline-flex; align-items: center; min-height: 40px; padding: 0 10px;
+  color: var(--text-dim); text-decoration: none; font-size: 14px; white-space: nowrap;
+  border-bottom: 2px solid transparent;
+}
+.shell-tab:hover { color: var(--text); }
+.shell-tab[aria-current="page"] { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+.shell-frames { position: relative; flex: 1; min-height: 0; }
+.shell-frame {
+  position: absolute; inset: 0; width: 100%; height: 100%; border: 0;
+  visibility: hidden; background: var(--bg);
+}
+.shell-frame.active { visibility: visible; }
+
+@media (min-width: 900px) {
+  .shell-bar { flex-wrap: nowrap; }
+  .shell-nav { order: 0; flex: 1 1 auto; margin: 0; padding: 0; align-self: stretch; }
+  .shell-tab { min-height: 44px; }
+  .shell-status { order: 0; margin-left: 0; }
+  .shell-user { order: 0; margin-left: 0; }
+}
+
+/* Trang chức năng chạy trong khung: thanh trên của trang do khung đảm nhận. */
+html.embedded .topbar { display: none; }
+
+/* ---------- Bản đồ nhiệt (heatmap.html) ---------- */
+body.hmpage { background: var(--hm-bg); }
+.hm { display: flex; flex-direction: column; gap: 6px; padding: 8px var(--gutter) 10px; }
+.hm-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.hm-title { font-size: 15px; white-space: nowrap; }
+.hm-title .dim { font-weight: 400; }
+.hm-summary { font-size: 12px; min-width: 0; }
+.hm-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; flex: 1 1 100%; }
+.hm-scope { width: auto; flex: 1 1 160px; height: 40px; font-size: 14px; }
+.hm-controls .seg button { min-height: 34px; padding: 0 8px; }
+.hm-wrap { position: relative; }
+.hm-map {
+  position: relative; overflow: hidden;
+  height: max(520px, calc(100dvh - 190px));
+  background: var(--hm-bg); user-select: none; -webkit-user-select: none;
+}
+.hm-group { position: absolute; border: 1px solid var(--border); border-radius: 2px; pointer-events: none; }
+.hm-group-name {
+  display: block; height: 16px; padding: 0 4px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  font-size: 10px; line-height: 16px; letter-spacing: 0.3px; text-transform: uppercase; color: var(--text-dim);
+}
+.hm-tile {
+  position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  overflow: hidden; box-shadow: inset 0 0 0 1px var(--hm-bg);
+  color: var(--hm-text); line-height: 1.15; text-align: center; cursor: pointer;
+  background: var(--hm-na);
+}
+.hm-tile:hover { box-shadow: inset 0 0 0 2px var(--hm-text); z-index: 1; }
+.hm-sym { font-weight: 700; letter-spacing: 0.3px; }
+.hm-pct { font-variant-numeric: tabular-nums; font-weight: 600; opacity: 0.95; }
+.hm-tile.hm-z .hm-pct { color: var(--ref); }
+.hm-tile.hm-flash { animation: hm-flash 0.8s ease-out; }
+@keyframes hm-flash { from { filter: brightness(1.6); } to { filter: none; } }
+
+.hm-d5 { background: var(--hm-d5); } .hm-d4 { background: var(--hm-d4); } .hm-d3 { background: var(--hm-d3); }
+.hm-d2 { background: var(--hm-d2); } .hm-d1 { background: var(--hm-d1); } .hm-z { background: var(--hm-z); }
+.hm-u1 { background: var(--hm-u1); } .hm-u2 { background: var(--hm-u2); } .hm-u3 { background: var(--hm-u3); }
+.hm-u4 { background: var(--hm-u4); } .hm-u5 { background: var(--hm-u5); }
+.hm-ceil { background: var(--hm-ceil); } .hm-floor { background: var(--hm-floor); }
+
+.hm-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; font-size: 11px; color: var(--text-dim); }
+.hm-scale { display: inline-flex; align-items: center; gap: 2px; white-space: nowrap; }
+.hm-scale i { display: inline-block; width: 14px; height: 10px; border-radius: 1px; }
+.hm-scale i:first-child { margin-left: 4px; }
+
+.hm-tip {
+  position: absolute; z-index: 5; max-width: min(280px, calc(100% - 8px));
+  padding: 8px 10px; display: grid; gap: 2px;
+  background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5); font-size: 12px; pointer-events: none;
+}
+.hm-tip[hidden] { display: none; }
+.hm-tip b { font-size: 13px; }
+.hm-tip-open { margin-top: 6px; min-height: 40px; pointer-events: auto; text-decoration: none; }
+@media (hover: none) { .hm-tip { pointer-events: auto; } }
+
+@media (min-width: 768px) {
+  .hm-controls { flex: 0 1 auto; margin-left: auto; }
+  .hm-scope { flex: 0 0 200px; }
+}
+/* Màn rộng và đủ cao: gói trong 1 màn hình, bản đồ chiếm hết phần còn lại. */
+@media (min-width: 768px) and (min-height: 560px) {
+  body.hmpage { display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; padding-bottom: 0; }
+  body.hmpage > * { flex: none; }
+  body.hmpage .hm { flex: 1; min-height: 0; }
+  body.hmpage .hm-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  body.hmpage .hm-map { flex: 1; height: auto; min-height: 0; }
 }

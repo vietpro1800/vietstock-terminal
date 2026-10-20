@@ -113,6 +113,46 @@ VST.config = {
     defaultWatchlist: ['HPG', 'FPT', 'VCB', 'SSI', 'MWG'],
   },
 
+  // Trang bản đồ nhiệt (heatmap.html). Ngành và sàn của mỗi mã lấy từ js/universe.js (VST.universe).
+  heatmap: {
+    days: 130,          // số ngày lịch sử tải về (đủ ~85 phiên cho kỳ 3 tháng)
+    batchSize: 10,      // số request song song
+    cacheMinutes: 10,   // giữ dữ liệu nến trong phiên trình duyệt, chuyển phạm vi/quay lại không tải lại
+    valueDays: 5,       // diện tích ô = GTGD bình quân N phiên
+    realtimeMax: 400,   // số mã (GTGD lớn nhất) nhận giá khớp realtime qua bảng giá SSI
+    // Kỳ so sánh: n phiên; scale giãn ngưỡng màu vì biến động kỳ dài lớn hơn.
+    periods: [
+      { id: '1d', label: '1 phiên', n: 1, scale: 1 },
+      { id: '1w', label: '1 tuần', n: 5, scale: 2 },
+      { id: '1m', label: '1 tháng', n: 20, scale: 4 },
+      { id: '3m', label: '3 tháng', n: 60, scale: 6 },
+    ],
+    steps: [1, 2, 3, 5], // ngưỡng % đổi mức màu (× scale của kỳ)
+    // Phạm vi: featured = danh sách dưới; hose/hnx/upcom = cả sàn; all = toàn thị trường (~1500 mã, tải lâu).
+    scopes: [
+      { id: 'featured', label: 'Mã nổi bật' },
+      { id: 'hose', label: 'HOSE' },
+      { id: 'hnx', label: 'HNX' },
+      { id: 'upcom', label: 'UPCoM' },
+      { id: 'all', label: 'Toàn thị trường' },
+    ],
+    defaultScope: 'featured',
+    // Mã thanh khoản cao, đại diện các ngành.
+    featured: (
+      'SHB TCB HDB VPB MBB MSB ACB VCB VIB TPB LPB NVB SSB NAB STB CTG BID EIB OCB BVB ' +
+      'KLB ABB VAB SGB PGB BAB VIC VHM NVL VPI DXG CEO KDH VPL VRE DIG TCH PDR NLG KHG ' +
+      'HDG HDC NTL SCR DXS AGG CRE HQC ITC IJC NBB QCG VIX SSI VCI VND SHS BVH HCM MBS ' +
+      'ORS CTS DSE AAS BVS BSI TCX VCK FTS AGR APG EVS TVS VDS PVI BMI MIG BIC PTI BSR ' +
+      'PLX PVT PVS PVD GAS OIL PVC PVB CNG MSN MWG MCH PNJ FRT DGW SBT VNM PET QNS SAB ' +
+      'VEA TLG KDC MML BHN VLC FPT CMG VGI CTR ELC ITD FOX VTP SAM HPG HSG NKG TLH SMC ' +
+      'VGS HT1 KSB NTP CII VCG GEL CTD HUT HHV PC1 LCG FCN C4G CTI HBC VC3 PLC DCM DPM ' +
+      'DDV CSV BFC DGC LAS AAA PAC IDC KBC VGC SZC BCM SIP LHG NTC TIP D2D BAF ANV DBC ' +
+      'HAG VHC PAN IDI FMC CMX ASM MPC LTG HNG VJC VSC GMD HAH PVP VOS PHP ACV HVN SCS ' +
+      'SGP VTO GEX POW GEE NT2 REE QTP GEG PPC BCG TV2 VSH GVR DPR PHR TRC DRC CSM DHC ' +
+      'VTZ EVF HHP BMP DHG IMP DBD TNG MSH TCM VGT STK GIL VPG HAX DPG'
+    ).split(' '),
+  },
+
   // Trang lọc cổ phiếu. Danh sách mã = toàn bộ HOSE/HNX/UPCoM trong js/universe.js (VST.universe).
   scan: {
     days: 420,       // số ngày lịch sử tải về (đủ ~250 phiên cho MA200 và đỉnh 52 tuần)
