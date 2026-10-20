@@ -1,5 +1,5 @@
 // Trang Phân tích mã (analysis.html): hội chẩn 6 vai trò cho một mã, điểm tính bằng VST.consult (js/consult.js)
-// từ nến ngày VNDirect; hiệu ứng "hội chẩn" bằng VST.ConsultFx (js/consult-fx.js). Chỉ chạy sau khi xác nhận đã đăng nhập và tài khoản đang hoạt động.
+// từ nến ngày VNDirect; hiệu ứng "hội chẩn" bằng con nhện VST.Spider (js/spider.js). Chỉ chạy sau khi xác nhận đã đăng nhập và tài khoản đang hoạt động.
 VST.auth.guard().then(function (ctx) {
   const cfg = VST.config.consult;
   const consult = VST.consult;
@@ -19,11 +19,18 @@ VST.auth.guard().then(function (ctx) {
     symbol: null,
     recent: Array.isArray(prefs.recent) ? prefs.recent.filter((s) => SYMBOL_RE.test(s)).slice(0, MAX_RECENT) : [],
     loadToken: 0,
-    fx: prefs.fx !== false, // người dùng bật hiệu ứng (mặc định bật)
   };
-  // Máy bật "giảm chuyển động" thì tự tắt hiệu ứng.
-  const reducedMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
-  const fx = new VST.ConsultFx($('an-stage'), $('an-fx'));
+  // Con nhện: chạy trong khung ứng dụng thì dùng con nhện chung của khung (có ở mọi tab);
+  // mở riêng trang thì dùng canvas của trang, nhện lang thang giữa các thẻ.
+  let spider = null;
+  try { if (VST.nav.embedded && window.parent.VST.spider) spider = window.parent.VST.spider; } catch (e) { /* bỏ qua */ }
+  if (!spider) {
+    spider = new VST.Spider($('an-fx'), {
+      stage: $('an-stage'),
+      candidates: () => Array.prototype.slice.call($('an-grid').querySelectorAll('.an-card')),
+    });
+    spider.setEnabled(VST.Spider.allowed());
+  }
 
   VST.auth.mountUserBar($('user-bar'), ctx.profile, 'analysis');
   $('an-list').innerHTML = VST.config.boardSymbols.map((s) => '<option value="' + s + '">').join('');
@@ -42,19 +49,16 @@ VST.auth.guard().then(function (ctx) {
   $('an-chart').addEventListener('click', function () {
     if (state.symbol) VST.nav.open('dashboard.html?symbol=' + encodeURIComponent(state.symbol));
   });
+  // Bật/tắt dùng chung mọi trang (lưu localStorage); đổi ở trang khác hoặc đổi chế độ giảm chuyển động thì cập nhật theo.
   $('an-fx-toggle').addEventListener('click', function () {
-    state.fx = !state.fx;
-    savePrefs();
+    VST.Spider.setPref(!VST.Spider.prefOn());
+    spider.setEnabled(VST.Spider.allowed());
     renderFxToggle();
-    if (!fxEnabled()) { fx.finish(); fx.stop(); }
   });
-  if (reducedMotion) {
-    const onChange = function () { renderFxToggle(); if (!fxEnabled()) { fx.finish(); fx.stop(); } };
-    if (reducedMotion.addEventListener) reducedMotion.addEventListener('change', onChange);
-    else if (reducedMotion.addListener) reducedMotion.addListener(onChange);
-  }
-  // Tab bị ẩn giữa chừng: hiện kết quả ngay, dừng vòng lặp vẽ.
-  document.addEventListener('visibilitychange', function () { if (document.hidden) fx.finish(); });
+  VST.Spider.onPrefChange(function () {
+    spider.setEnabled(VST.Spider.allowed());
+    renderFxToggle();
+  });
   renderFxToggle();
   renderRecent();
 
@@ -73,7 +77,7 @@ VST.auth.guard().then(function (ctx) {
     $('an-date').textContent = '';
     $('an-verdict').hidden = true;
     $('an-chart').hidden = false;
-    fx.stop();
+    spider.finish();
     $('an-grid').innerHTML = '<p class="dim">Đang tải dữ liệu…</p>';
     setStatus('loading', 'Đang phân tích ' + symbol + '…');
     try {
@@ -107,7 +111,7 @@ VST.auth.guard().then(function (ctx) {
     const v = $('an-verdict');
     v.textContent = r.verdict;
     v.className = 'an-verdict ' + VERDICT_CLASS[r.verdict];
-    const animate = fxEnabled();
+    const animate = spider.enabled;
     v.hidden = animate;
 
     $('an-grid').innerHTML = r.cards.map(function (c) {
@@ -129,7 +133,7 @@ VST.auth.guard().then(function (ctx) {
     const els = Array.prototype.slice.call($('an-grid').querySelectorAll('.an-card'));
     const summary = els.pop();
     const levels = r.cards.slice(0, els.length).map((c) => consult.level(c.score, cfg));
-    fx.play(els, summary, levels, {
+    spider.consult(els, summary, levels, {
       reveal: function (i) {
         els[i].classList.remove('an-pending');
         els[i].classList.add('an-lit');
@@ -145,14 +149,13 @@ VST.auth.guard().then(function (ctx) {
     });
   }
 
-  function fxEnabled() { return state.fx && !(reducedMotion && reducedMotion.matches); }
-
   function renderFxToggle() {
     const b = $('an-fx-toggle');
-    const reduced = !!(reducedMotion && reducedMotion.matches);
+    const reduced = VST.Spider.reducedMotion();
     b.disabled = reduced;
-    b.setAttribute('aria-pressed', fxEnabled() ? 'true' : 'false');
-    b.textContent = reduced ? 'Hiệu ứng: Tắt (máy đang giảm chuyển động)' : 'Hiệu ứng: ' + (state.fx ? 'Bật' : 'Tắt');
+    b.setAttribute('aria-pressed', VST.Spider.allowed() ? 'true' : 'false');
+    b.textContent = reduced ? 'Hiệu ứng nhện: Tắt (máy đang giảm chuyển động)'
+      : 'Hiệu ứng nhện: ' + (VST.Spider.prefOn() ? 'Bật' : 'Tắt');
   }
 
   function remember(symbol) {
@@ -191,7 +194,7 @@ VST.auth.guard().then(function (ctx) {
   }
   function savePrefs() {
     try {
-      localStorage.setItem(STORE_KEY, JSON.stringify({ recent: state.recent, fx: state.fx }));
+      localStorage.setItem(STORE_KEY, JSON.stringify({ recent: state.recent }));
     } catch (e) { /* bỏ qua: chế độ ẩn danh hoặc bị chặn lưu trữ */ }
   }
 });

@@ -2,6 +2,8 @@
 // Trang đã mở được giữ nguyên (ẩn đi) khi chuyển sang trang khác, nên quay lại không phải tải lại dữ liệu.
 // Địa chỉ: index.html#<trang>, ví dụ #scan, #rrg; #dashboard?symbol=HPG hoặc index.html?symbol=HPG (link cũ).
 // Trang con điều hướng qua VST.nav.open() / link thường (js/auth.js) → VST.shell.open().
+// Con nhện hiệu ứng (VST.spider, js/spider.js) vẽ trên canvas phủ vùng trang, nhảy giữa các khung của tab đang mở;
+// trang Phân tích mã gọi window.parent.VST.spider để chạy hội chẩn.
 (function () {
   const $ = (id) => document.getElementById(id);
   const PAGES = VST.auth.PAGES;
@@ -21,6 +23,25 @@
       '<span class="ub-email" title="' + VST.escapeHtml(ctx.profile.email) + '">' + VST.escapeHtml(ctx.profile.email) + '</span>' +
       '<button type="button" class="ub-btn" data-action="signout">Đăng xuất</button>';
     $('shell-user').querySelector('[data-action="signout"]').addEventListener('click', VST.auth.signOut);
+
+    VST.spider = new VST.Spider($('shell-fx'), {
+      stage: $('shell-frames'),
+      candidates: function () {
+        const doc = docOf(frames[current]);
+        return doc ? VST.Spider.findCandidates(doc) : [];
+      },
+    });
+    VST.spider.setEnabled(VST.Spider.allowed());
+    $('shell-fx-btn').addEventListener('click', function () {
+      VST.Spider.setPref(!VST.Spider.prefOn());
+      VST.spider.setEnabled(VST.Spider.allowed());
+      renderFxButton();
+    });
+    VST.Spider.onPrefChange(function () {
+      VST.spider.setEnabled(VST.Spider.allowed());
+      renderFxButton();
+    });
+    renderFxButton();
 
     window.addEventListener('hashchange', openFromUrl);
     openFromUrl();
@@ -90,6 +111,17 @@
       }
     });
     renderMeta();
+    // Đổi tab: kết thúc hiệu ứng đang chạy ở tab cũ, nhện chuyển sang các khung của tab mới.
+    if (VST.spider) { VST.spider.finish(); VST.spider.refresh(); }
+  }
+
+  function renderFxButton() {
+    const b = $('shell-fx-btn');
+    const reduced = VST.Spider.reducedMotion();
+    b.disabled = reduced;
+    b.setAttribute('aria-pressed', VST.Spider.allowed() ? 'true' : 'false');
+    b.title = reduced ? 'Hiệu ứng nhện: Tắt (máy đang giảm chuyển động)'
+      : 'Hiệu ứng nhện: ' + (VST.Spider.prefOn() ? 'Bật' : 'Tắt') + ' (bấm để đổi)';
   }
 
   // Theo dõi tiêu đề và trạng thái (#status-dot, #status-text) của trang con để hiện trên thanh của khung.
@@ -98,6 +130,7 @@
     const doc = docOf(f);
     if (f.obs) f.obs.disconnect();
     if (!doc) return;
+    if (VST.spider) VST.spider.watch(doc); // nhện bám theo khung khi cuộn trong trang
     f.obs = new MutationObserver(function () { if (current === id) renderMeta(); });
     [doc.getElementById('status-dot'), doc.getElementById('status-text'), doc.querySelector('title')].forEach(function (n) {
       if (n) f.obs.observe(n, { attributes: true, childList: true, characterData: true, subtree: true });
