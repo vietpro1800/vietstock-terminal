@@ -1,5 +1,5 @@
-// Dashboard (dashboard.html, chạy trong khung index.html), bố cục kiểu FireAnt: tab mã vừa xem, công cụ vẽ dọc, biểu đồ kỹ thuật ở giữa,
-// nút chọn khoảng thời gian (5 năm … 1 ngày) phía dưới; cột phải có sổ lệnh realtime + thảo luận/bảng giá.
+// Đồ thị kỹ thuật (dashboard.html, chạy trong khung index.html), bố cục kiểu FireAnt: tab mã vừa xem, công cụ vẽ dọc, biểu đồ ở giữa,
+// nút chọn khoảng thời gian (5 năm … 1 ngày) phía dưới; cột phải có sổ lệnh realtime + thảo luận/tin tức/bảng giá.
 // Khởi tạo, gắn sự kiện giao diện và tự làm mới.
 // Chỉ chạy sau khi xác nhận đã đăng nhập và tài khoản đang hoạt động.
 VST.auth.guard().then(function (ctx) {
@@ -47,7 +47,7 @@ VST.auth.guard().then(function (ctx) {
     range: RANGES.some((r) => r.key === prefs.range) ? prefs.range : null,
     indicators: Object.assign({}, cfg.defaultIndicators, prefs.indicators),
     recent: Array.isArray(prefs.recent) ? prefs.recent.filter((s) => SYMBOL_RE.test(s)).slice(0, MAX_RECENT) : [],
-    sideTab: prefs.sideTab === 'board' ? 'board' : 'chat',
+    sideTab: ['chat', 'news', 'board'].indexOf(prefs.sideTab) >= 0 ? prefs.sideTab : 'chat',
     loadToken: 0,
     refreshing: false,
     lastRefresh: 0,
@@ -73,6 +73,8 @@ VST.auth.guard().then(function (ctx) {
       $('chat-badge').hidden = !n;
     },
   });
+  // Tin tức liên quan đến mã đang xem (tải khi mở tab Tin tức).
+  const news = new VST.StockNews($('news'), new VST.NewsSource());
   VST.auth.mountUserBar($('user-bar'), ctx.profile, 'dashboard');
 
   buildControls();
@@ -193,8 +195,10 @@ VST.auth.guard().then(function (ctx) {
       b.setAttribute('aria-selected', on);
     });
     $('pane-chat').hidden = state.sideTab !== 'chat';
+    $('pane-news').hidden = state.sideTab !== 'news';
     $('pane-board').hidden = state.sideTab !== 'board';
     chat.setVisible(state.sideTab === 'chat');
+    news.setVisible(state.sideTab === 'news');
   }
 
   function renderTf() {
@@ -243,6 +247,7 @@ VST.auth.guard().then(function (ctx) {
       feed.watch(symbol, (q) => book.push(q), (s) => book.setStatus(s));
     }
     chat.setSymbol(symbol);
+    news.setSymbol(symbol, asset ? asset.news : null, asset ? asset.label : symbol);
     savePrefs();
     renderRecent();
     if (state.lastRefresh === 0) refreshAll();

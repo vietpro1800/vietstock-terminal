@@ -11,9 +11,9 @@ sau này mở rộng nhiều người dùng có đăng nhập.
   Màu giá theo thói quen thị trường VN: tăng = xanh lá, giảm = đỏ, đứng giá = vàng.
 - **Ưu tiên điện thoại (mobile-first)**: CSS viết cho màn hình hẹp trước, mở rộng bằng
   `@media (min-width: ...)`. Không để trang bị cuộn ngang; vùng bấm tối thiểu ~40px.
-  Dashboard (`dashboard.html`, `<html class="fa-theme">`, `<body class="dash fa">`) theo kiểu FireAnt (màu `--fa-*`): tab mã vừa xem,
+  Đồ thị kỹ thuật (tên trên thanh điều hướng; file `dashboard.html`, `<html class="fa-theme">`, `<body class="dash fa">`) theo kiểu FireAnt (màu `--fa-*`): tab mã vừa xem,
   công cụ vẽ dọc, biểu đồ nền trắng, nút 5 năm … 1 ngày. Từ 768px chia 2 cột — biểu đồ 3/4 trái, sổ lệnh + thảo luận/bảng giá
-  1/4 phải; nếu cao ≥ 560px thì gói trong 1 màn hình (không cuộn trang), các khung danh sách tự co giãn và cuộn bên trong.
+  1/4 phải (tab Thảo luận / Tin tức / Bảng giá); nếu cao ≥ 560px thì gói trong 1 màn hình (không cuộn trang), các khung danh sách tự co giãn và cuộn bên trong.
   `chart.html` chỉ còn chuyển hướng về `index.html` (link cũ).
 - **Khung ứng dụng (`index.html` + `js/shell.js`)**: thanh trên cùng cố định, mỗi trang chức năng chạy trong iframe riêng
   (giữ nguyên khi chuyển trang, không tải lại). Trang chức năng đặt `data-page="<id>"` trên `<html>`; mở thẳng sẽ tự chuyển
@@ -46,6 +46,9 @@ sau này mở rộng nhiều người dùng có đăng nhập.
     Realtime nhiều mã qua `VST.SsiBoardFeed` trong `data.js`. Kiểm thử: `node tests/priceboard.test.js` (phải đạt hết nếu sửa `priceboard.js`).
   - `js/orderbook.js` — khung sổ lệnh/khớp lệnh (chỉ hiển thị; dữ liệu từ `VST.SsiRealtimeFeed` trong `data.js`).
   - `js/chat.js` — thảo luận theo mã (bảng `stock_comments` trong Supabase, realtime).
+  - `js/news.js` — tab Tin tức: `VST.news.matcher` (hàm thuần lọc tin theo mã, ranh giới từ Unicode, mã dễ nhầm như
+    HCM/CEO cần ngữ cảnh) + khung `VST.StockNews`. Dữ liệu: `VST.NewsSource` trong `data.js`. Từ khóa tin cho tài sản
+    thế giới ở `VST.config.globalAssets[].news`. Kiểm thử: `node tests/news.test.js`.
   - `js/app.js` — dashboard: khởi tạo, gắn sự kiện, tự làm mới; `VST.dashboard.selectSymbol()` cho khung đổi mã.
   - `js/shell.js` — khung ứng dụng (`index.html`): thanh điều hướng, tạo/giữ iframe từng trang, đồng bộ `#hash`.
   - `js/heatmap.js` — bản đồ nhiệt thuần (`layout` treemap squarified 2 cấp, `change`, `bucket`, `avgValue`).
@@ -99,6 +102,9 @@ sau này mở rộng nhiều người dùng có đăng nhập.
   kỹ thuật dùng chung cho mọi tài sản; tài sản này không có sổ lệnh SSI (khung sổ lệnh chỉ hiện giá).
 - Sổ lệnh realtime: WebSocket `wss://iboard-pushstream.ssi.com.vn/realtime` (không chính thức, định dạng
   chuỗi `|` theo vnstock-js), lớp `SsiRealtimeFeed` trong `data.js`. Giá trong tin nhắn tính theo đồng → chia 1000.
+- Tin tức (`NewsSource`): file JSON mỗi ngày `https://raw.githubusercontent.com/ttqteo/news-crawler/master/docs/news/MM-DD-YYYY.json`
+  (dự án mã nguồn mở, tổng hợp Vietstock, VnExpress, Markettimes, ĐTCK…; GitHub cho phép CORS). Không có lọc theo mã
+  phía máy chủ → tải theo ngày (mặc định 7, tối đa 28) và lọc ở trình duyệt; chỉ tải khi mở tab Tin tức.
 - Lỗi phải được đổi sang câu tiếng Việt dễ hiểu trước khi hiển thị (xem `DataError` trong `js/data.js`).
 - Thời gian API là Unix UTC; khi vẽ cộng 7 giờ để hiển thị giờ Việt Nam.
 

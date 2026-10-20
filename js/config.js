@@ -20,11 +20,12 @@ VST.config = {
   // pair: cặp trên Binance; decimals: số chữ số thập phân khi hiển thị giá (USD).
   // Vàng dùng PAXG (1 token = 1 ounce vàng London) làm đại diện cho XAU/USD;
   // EUR/USD lấy từ cặp EURUSDT nên có thể lệch nhẹ so với tỷ giá liên ngân hàng.
+  // news: từ khóa lọc tin tức (tab Tin tức), không phân biệt hoa thường; từ đầu tiên dùng để tìm trên Google Tin tức.
   globalAssets: [
-    { symbol: 'XAUUSD', label: 'Vàng', name: 'Vàng (USD/ounce)', pair: 'PAXGUSDT', decimals: 2, aliases: ['XAU', 'GOLD', 'VANG'] },
-    { symbol: 'BTCUSD', label: 'Bitcoin', name: 'Bitcoin (USD)', pair: 'BTCUSDT', decimals: 2, aliases: ['BTC', 'BITCOIN'] },
-    { symbol: 'ETHUSD', label: 'Ethereum', name: 'Ethereum (USD)', pair: 'ETHUSDT', decimals: 2, aliases: ['ETH'] },
-    { symbol: 'EURUSD', label: 'EUR/USD', name: 'Tỷ giá EUR/USD', pair: 'EURUSDT', decimals: 4, aliases: ['EUR'] },
+    { symbol: 'XAUUSD', label: 'Vàng', name: 'Vàng (USD/ounce)', pair: 'PAXGUSDT', decimals: 2, aliases: ['XAU', 'GOLD', 'VANG'], news: ['giá vàng', 'vàng thế giới', 'vàng miếng', 'vàng nhẫn'] },
+    { symbol: 'BTCUSD', label: 'Bitcoin', name: 'Bitcoin (USD)', pair: 'BTCUSDT', decimals: 2, aliases: ['BTC', 'BITCOIN'], news: ['bitcoin', 'BTC', 'tiền số', 'tiền mã hóa'] },
+    { symbol: 'ETHUSD', label: 'Ethereum', name: 'Ethereum (USD)', pair: 'ETHUSDT', decimals: 2, aliases: ['ETH'], news: ['ethereum', 'ETH'] },
+    { symbol: 'EURUSD', label: 'EUR/USD', name: 'Tỷ giá EUR/USD', pair: 'EURUSDT', decimals: 4, aliases: ['EUR'], news: ['tỷ giá EUR', 'đồng euro', 'EUR/USD'] },
   ],
 
   // Khung thời gian: resolution gửi lên API và số ngày lịch sử cần tải.

@@ -137,7 +137,7 @@ python3 -m http.server 8000
 
 ```
 index.html          Khung ứng dụng: thanh trên cùng cố định, các trang chức năng mở trong khung (cần đăng nhập)
-dashboard.html      Dashboard biểu đồ kỹ thuật kiểu FireAnt (cần đăng nhập)
+dashboard.html      Đồ thị kỹ thuật kiểu FireAnt + sổ lệnh, thảo luận, tin tức theo mã (cần đăng nhập)
 priceboard.html     Bảng giá kiểu SSI iBoard (cần đăng nhập)
 heatmap.html        Bản đồ nhiệt thị trường theo ngành (cần đăng nhập)
 login.html          Đăng nhập / đăng ký / quên mật khẩu / chờ duyệt
@@ -166,10 +166,11 @@ js/universe.js      ~1500 cổ phiếu HOSE/HNX/UPCoM theo ngành ICB (sinh bằ
 js/shell.js         Khung ứng dụng (index.html): điều hướng, giữ trang đã mở
 js/heatmap.js       Bản đồ nhiệt: bố cục treemap, % thay đổi, mức màu (hàm thuần)
 js/heatmap-page.js  Logic trang bản đồ nhiệt
-tests/              Kiểm thử: `node tests/<tên>.test.js` (backtest, rrg, scan, priceboard, heatmap) hoặc mở tests/index.html
+tests/              Kiểm thử: `node tests/<tên>.test.js` (backtest, rrg, scan, priceboard, heatmap, news) hoặc mở tests/index.html
 js/board.js         Bảng giá
 js/orderbook.js     Sổ lệnh 3 bước giá + khớp lệnh realtime
 js/chat.js          Thảo luận theo mã (Supabase realtime)
+js/news.js          Tin tức liên quan đến mã đang xem (lọc tin tổng hợp từ các báo tài chính)
 js/app.js           Khởi tạo, sự kiện, tự làm mới
 supabase/schema.sql Bảng profiles, stock_comments, trigger, RLS — chạy trong Supabase SQL Editor
 CLAUDE.md           Quy ước phát triển
@@ -177,7 +178,7 @@ CLAUDE.md           Quy ước phát triển
 
 ## Khung ứng dụng & điều hướng
 
-`index.html` là khung: thanh trên cùng (Dashboard, Bảng giá, Bản đồ nhiệt, Lọc mã, RRG, Backtest, Quản trị) luôn giữ nguyên,
+`index.html` là khung: thanh trên cùng (Đồ thị kỹ thuật, Bảng giá, Bản đồ nhiệt, Lọc mã, RRG, Backtest, Quản trị) luôn giữ nguyên,
 mỗi trang chức năng chạy trong một iframe riêng. Trang đã mở được giữ nguyên trạng thái khi chuyển sang trang khác,
 nên quay lại không phải tải lại dữ liệu. Địa chỉ dạng `index.html#rrg`; mở thẳng `scan.html` hay link cũ
 `index.html?symbol=HPG` đều tự chuyển về khung đúng trang.
