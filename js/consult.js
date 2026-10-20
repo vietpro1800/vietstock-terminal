@@ -1,7 +1,7 @@
 // Phân tích mã kiểu hội chẩn nhiều vai trò — hàm thuần, không đụng DOM, không gọi mạng; chạy được cả trong Node
 // (để sau này dùng lại cho backtest: gọi analyze() trên bars cắt tới từng ngày).
 // analyze(bars, cfg) → 6 thẻ, mỗi thẻ điểm 0–1 (càng cao càng thuận lợi cho việc MUA):
-//   QUÉT, KỸ THUẬT, HỖ TRỢ/KHÁNG CỰ, BIẾN ĐỘNG, RỦI RO (cao = rủi ro thấp), TỔNG HỢP (MUA / THEO DÕI / TRÁNH).
+//   QUÉT, KỸ THUẬT, HỖ TRỢ/KHÁNG CỰ, BIẾN ĐỘNG, RỦI RO (cao = rủi ro thấp), TỔNG HỢP (MUA / THEO DÕI / BÁN).
 // cfg: VST.config.consult (ngưỡng, trọng số, mốc chấm điểm). Công thức từng thẻ ghi ngay trên hàm tính thẻ đó.
 window.VST = window.VST || {};
 
@@ -24,15 +24,16 @@ VST.consult = (function () {
   function pct(x, d) { return num(x, d) + '%'; }
 
   // ---------- QUÉT ----------
-  // volRatio = KL phiên cuối / KL trung bình 20 phiên TRƯỚC đó.
+  // volRatio = KL phiên cuối / KL trung bình 20 phiên TRƯỚC đó. Nếu phiên cuối chưa kết thúc (frac < 1: tỷ lệ thời gian
+  // khớp lệnh đã qua, xem sessionFraction), KL phiên cuối được ước tính cả phiên = KL hiện tại / frac.
   // flow (dòng tiền) = Σ(GTGD_i × dấu(close_i − close_{i−1})) / Σ GTGD_i trong 20 phiên gần nhất, ∈ [−1, 1].
   // Điểm = (1 − w)·lin(volRatio, [0,5; 2]) + w·(flow + 1)/2, w = cfg.scan.flowWeight (0,5).
-  function scoreScan(b, c) {
+  function scoreScan(b, c, frac) {
     const n = b.closes.length, p = c.period;
     let s = 0;
     for (let i = n - 1 - p; i < n - 1; i++) s += b.vols[i];
     const avgVol = s / p;
-    const volRatio = avgVol > 0 ? b.vols[n - 1] / avgVol : 0;
+    const volRatio = avgVol > 0 ? b.vols[n - 1] / frac / avgVol : 0;
     let signed = 0, total = 0;
     for (let i = n - p; i < n; i++) {
       const v = b.closes[i] * b.vols[i];
@@ -48,8 +49,8 @@ VST.consult = (function () {
     const flowTxt = flow >= 0.2 ? 'dòng tiền vào' : flow <= -0.2 ? 'dòng tiền ra' : 'dòng tiền giằng co';
     return {
       score: score,
-      note: volTxt + ', ' + flowTxt + ' (' + (flow >= 0 ? '+' : '') + num(flow * 100, 0) + '%).',
-      detail: { volRatio: volRatio, flow: flow, avgVol20: avgVol },
+      note: volTxt + (frac < 1 ? ' (ước tính cả phiên)' : '') + ', ' + flowTxt + ' (' + (flow >= 0 ? '+' : '') + num(flow * 100, 0) + '%).',
+      detail: { volRatio: volRatio, flow: flow, avgVol20: avgVol, sessionFraction: frac },
     };
   }
 
@@ -91,28 +92,43 @@ VST.consult = (function () {
     return {
       score: score,
       note: trendTxt + '; RSI ' + num(rsi, 0) + (rsiTxt ? ' (' + rsiTxt + ')' : '') + '; ' + macdTxt + '.',
-      detail: { ma20: ma20, ma50: ma50, trend: trend, rsi: rsi, rsiScore: rsiScore, hist: h, macdScore: macdScore },
+      detail: { price: price, ma20: ma20, ma50: ma50, trend: trend, rsi: rsi, rsiScore: rsiScore, hist: h, macdScore: macdScore },
     };
   }
 
   // ---------- HỖ TRỢ/KHÁNG CỰ ----------
   // S = đáy thấp nhất, R = đỉnh cao nhất của 20 phiên gần nhất (tính cả phiên cuối).
-  // Điểm = 1 − (giá − S)/(R − S): giá càng gần hỗ trợ càng còn nhiều dư địa tới kháng cự.
-  // Ngoại lệ bứt phá: giá đóng cửa > đỉnh 20 phiên TRƯỚC phiên cuối → điểm = 0,75. R = S → 0,5.
+  // Điểm cơ bản = 1 − (giá − S)/(R − S): giá càng gần hỗ trợ càng còn nhiều dư địa tới kháng cự. R = S → 0,5.
+  // Bứt phá: trong 3 phiên gần nhất có phiên đóng cửa > đỉnh 20 phiên trước nó, và giá hiện tại vẫn ≥ đỉnh cũ đó
+  //   → điểm = max(điểm cơ bản, 0,75).
+  // Xu hướng tăng: giá > MA50 → điểm = max(điểm, 0,5) (mã khỏe thường sát đỉnh, không bị phạt vì gần kháng cự).
   function scoreSr(b, c) {
     const n = b.closes.length, p = c.period, price = b.closes[n - 1];
-    let S = Infinity, R = -Infinity, prevHigh = -Infinity;
+    let S = Infinity, R = -Infinity;
     for (let i = n - p; i < n; i++) { S = Math.min(S, b.lows[i]); R = Math.max(R, b.highs[i]); }
-    for (let i = n - 1 - p; i < n - 1; i++) prevHigh = Math.max(prevHigh, b.highs[i]);
-    const breakout = price > prevHigh;
+    let brokeLevel = null;
+    for (let j = n - c.breakoutBars; j < n && brokeLevel == null; j++) {
+      let h = -Infinity;
+      for (let i = j - p; i < j; i++) h = Math.max(h, b.highs[i]);
+      if (b.closes[j] > h && price >= h) brokeLevel = h;
+    }
+    const breakout = brokeLevel != null;
+    const ma = last(ind.sma(b.closes, c.ma));
+    const uptrend = price > ma;
     const pos = R > S ? clamp01((price - S) / (R - S)) : 0.5;
-    const score = breakout ? c.breakout : R > S ? 1 - pos : 0.5;
+    let score = R > S ? 1 - pos : 0.5;
+    if (breakout) score = Math.max(score, c.breakout);
+    if (uptrend) score = Math.max(score, c.uptrendFloor);
     const toS = (price / S - 1) * 100, toR = (R / price - 1) * 100;
-    const note = breakout ? 'Bứt phá đỉnh 20 phiên ' + num(prevHigh, 2) + ', cần xác nhận giữ được vùng này.'
+    const note = breakout ? 'Bứt phá đỉnh 20 phiên ' + num(brokeLevel, 2) + ', giá đang giữ trên vùng này.'
       : pos <= 0.3 ? 'Giá gần hỗ trợ ' + num(S, 2) + ' (cách ' + pct(toS) + '), còn ' + pct(toR) + ' tới kháng cự ' + num(R, 2) + '.'
-        : pos >= 0.7 ? 'Giá sát kháng cự ' + num(R, 2) + ' (còn ' + pct(toR) + '), dư địa tăng hẹp.'
+        : pos >= 0.7 ? 'Giá sát kháng cự ' + num(R, 2) + ' (còn ' + pct(toR) + ')' +
+            (uptrend ? ', xu hướng tăng (trên MA' + c.ma + ').' : ', dư địa tăng hẹp.')
           : 'Giá giữa vùng ' + num(S, 2) + '–' + num(R, 2) + ', cách hỗ trợ ' + pct(toS) + '.';
-    return { score: score, note: note, detail: { support: S, resistance: R, prevHigh: prevHigh, position: pos, breakout: breakout } };
+    return {
+      score: score, note: note,
+      detail: { support: S, resistance: R, breakoutLevel: brokeLevel, position: pos, breakout: breakout, uptrend: uptrend },
+    };
   }
 
   // ---------- BIẾN ĐỘNG ----------
@@ -164,37 +180,63 @@ VST.consult = (function () {
   }
 
   // ---------- TỔNG HỢP ----------
-  // total = Σ trọng số × điểm thẻ (Quét 0,15; Kỹ thuật 0,30; HT/KC 0,15; Biến động 0,15; Rủi ro 0,25).
-  // MUA: total ≥ verdict.buy (0,6) VÀ qua ngưỡng lọc (Rủi ro ≥ gate.risk 0,5, Kỹ thuật ≥ gate.tech 0,6).
-  // THEO DÕI: total ≥ verdict.watch (0,45), hoặc đủ điểm MUA nhưng trượt ngưỡng lọc. Còn lại: TRÁNH.
+  // total = Σ trọng số × điểm thẻ (Quét 0,15; Kỹ thuật 0,35; HT/KC 0,10; Biến động 0,15; Rủi ro 0,25).
+  // Kết luận theo luật, xét lần lượt (các thẻ tốt KHÔNG bù được cho kỹ thuật/rủi ro xấu):
+  //   1) BÁN: (Kỹ thuật < sell.tech 0,35 VÀ giá < MA50) HOẶC Rủi ro < sell.risk 0,3.
+  //   2) MUA: Kỹ thuật ≥ gate.tech 0,6 VÀ Rủi ro ≥ gate.risk 0,5 VÀ total ≥ verdict.buy 0,55.
+  //   3) THEO DÕI: còn lại.
   function summarize(cards, cfg) {
     const w = cfg.weights;
     let total = 0, wsum = 0;
     Object.keys(w).forEach(function (k) { total += w[k] * cards[k].score; wsum += w[k]; });
     total = wsum > 0 ? total / wsum : 0;
-    const failed = Object.keys(cfg.gate).filter((k) => cards[k].score < cfg.gate[k]);
+    const tech = cards.tech.score, risk = cards.risk.score;
+    const belowMa = !(cards.tech.detail.price > cards.tech.detail.ma50);
+
+    const sellReasons = [];
+    if (tech < cfg.sell.tech && belowMa) sellReasons.push('kỹ thuật yếu (' + num(tech, 2) + ') và giá dưới MA50');
+    if (risk < cfg.sell.risk) sellReasons.push('rủi ro cao (điểm ' + num(risk, 2) + ')');
+    const gateFailed = Object.keys(cfg.gate).filter((k) => cards[k].score < cfg.gate[k]);
+
     let verdict, note;
-    if (total >= cfg.verdict.buy && !failed.length) {
+    if (sellReasons.length) {
+      verdict = 'BÁN';
+      note = 'Điểm tổng ' + num(total, 2) + '; ' + sellReasons.join(', ') + '.';
+    } else if (!gateFailed.length && total >= cfg.verdict.buy) {
       verdict = 'MUA';
       note = 'Điểm tổng ' + num(total, 2) + ', qua ngưỡng lọc rủi ro và kỹ thuật.';
-    } else if (total >= cfg.verdict.watch) {
-      verdict = 'THEO DÕI';
-      note = failed.length
-        ? 'Điểm tổng ' + num(total, 2) + ' nhưng chưa qua ngưỡng ' +
-          failed.map((k) => LABELS[k] + ' ≥ ' + num(cfg.gate[k], 1) + ' (đang ' + num(cards[k].score, 2) + ')').join(', ') + '.'
-        : 'Điểm tổng ' + num(total, 2) + ', chưa đủ ' + num(cfg.verdict.buy, 2) + ' để mua.';
     } else {
-      verdict = 'TRÁNH';
-      note = 'Điểm tổng ' + num(total, 2) + ' thấp' +
-        (failed.length ? ', trượt ngưỡng ' + failed.map((k) => LABELS[k]).join(', ') : '') + '.';
+      verdict = 'THEO DÕI';
+      note = gateFailed.length
+        ? 'Điểm tổng ' + num(total, 2) + ', chưa qua ngưỡng ' +
+          gateFailed.map((k) => LABELS[k] + ' ≥ ' + num(cfg.gate[k], 1) + ' (đang ' + num(cards[k].score, 2) + ')').join(', ') + '.'
+        : 'Điểm tổng ' + num(total, 2) + ', chưa đủ ' + num(cfg.verdict.buy, 2) + ' để mua.';
     }
-    return { score: total, verdict: verdict, note: note, detail: { gateFailed: failed } };
+    return { score: total, verdict: verdict, note: note, detail: { gateFailed: gateFailed, sellReasons: sellReasons } };
+  }
+
+  // Tỷ lệ thời gian khớp lệnh đã qua của phiên chứa nến cuối (0–1), theo giờ Việt Nam.
+  // barTime, now: Unix giây. Nến cuối không phải hôm nay (theo giờ VN) hoặc đã hết giờ khớp lệnh → 1.
+  // Kết quả không nhỏ hơn c.minFraction. now không có (backtest, dữ liệu lịch sử) → 1.
+  function sessionFraction(barTime, now, c) {
+    if (now == null) return 1;
+    const day = (t) => Math.floor((t + 7 * 3600) / 86400);
+    if (day(barTime) !== day(now)) return 1;
+    const minutes = Math.floor(((now + 7 * 3600) % 86400) / 60);
+    let done = 0, total = 0;
+    c.sessions.forEach(function (s) {
+      total += s[1] - s[0];
+      done += Math.max(0, Math.min(minutes, s[1]) - s[0]);
+    });
+    const f = total > 0 ? done / total : 1;
+    return f >= 1 ? 1 : Math.max(f, c.minFraction);
   }
 
   // bars: nến ngày [{time, open, high, low, close, volume}] tăng dần theo thời gian, giá theo nghìn đồng.
+  // opts.now (Unix giây, tùy chọn): thời điểm hiện tại, để ước tính KL cả phiên khi phiên hôm nay chưa xong.
   // Trả về null nếu ít hơn 60 phiên. Kết quả: { time, price, verdict, cards: [{ id, label, score, note, detail }] }
   // với score làm tròn 2 chữ số; thứ tự thẻ theo ORDER.
-  function analyze(bars, cfg) {
+  function analyze(bars, cfg, opts) {
     if (!bars || bars.length < MIN_BARS) return null;
     const b = {
       closes: bars.map((x) => x.close),
@@ -203,7 +245,8 @@ VST.consult = (function () {
       vols: bars.map((x) => x.volume || 0),
     };
     const cards = {};
-    cards.scan = scoreScan(b, cfg.scan);
+    const frac = sessionFraction(bars[bars.length - 1].time, opts && opts.now, cfg.scan);
+    cards.scan = scoreScan(b, cfg.scan, frac);
     cards.tech = scoreTech(b, cfg.tech);
     cards.sr = scoreSr(b, cfg.sr);
     cards.vol = scoreVol(b, cfg.vol);
@@ -222,5 +265,5 @@ VST.consult = (function () {
   // Mức màu thanh điểm: 'low' (đỏ) / 'mid' (vàng) / 'high' (xanh).
   function level(score, cfg) { return score < cfg.colors.low ? 'low' : score < cfg.colors.high ? 'mid' : 'high'; }
 
-  return { analyze: analyze, level: level, lin: lin, LABELS: LABELS, ORDER: ORDER, MIN_BARS: MIN_BARS };
+  return { analyze: analyze, level: level, sessionFraction: sessionFraction, lin: lin, LABELS: LABELS, ORDER: ORDER, MIN_BARS: MIN_BARS };
 })();
