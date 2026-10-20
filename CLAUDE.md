@@ -65,6 +65,10 @@ sau này mở rộng nhiều người dùng có đăng nhập.
     cho từng mã, `summarize` lãi/lỗ đã chốt/tạm tính, có giá realtime). `js/paper-page.js` — logic `paper.html`;
     chỉ lưu cấu hình ở bảng `paper_portfolios` (Supabase, RLS theo chủ sở hữu), giao dịch tính lại từ dữ liệu giá.
     Kiểm thử: `node tests/paper.test.js` (phải đạt hết nếu sửa `paper.js` hoặc `backtest.js`).
+  - `js/reader.js` — đọc báo thuần (`parseFeed` RSS/Atom bằng regex, `fromRss2Json`, `tag`, `merge` gộp tin trùng theo
+    link/tiêu đề, `filter` theo chuyên mục/báo/từ khóa không dấu). `js/reader-page.js` — logic `reader.html`; danh sách báo,
+    feed RSS, chuyên mục, proxy CORS ở `VST.config.reader`. Dữ liệu: `VST.FeedSource` (qua proxy, thử lần lượt) và
+    `VST.NewsSource` (news-crawler) trong `data.js`. Kiểm thử: `node tests/reader.test.js` (phải đạt hết nếu sửa `reader.js`).
   - `js/backtest.js` — công cụ backtest thuần (không DOM, không mạng), chạy được cả trong Node.
     `js/backtest-page.js` — logic trang `backtest.html`. Kiểm thử: `node tests/backtest.test.js`
     (phải đạt hết trước khi commit nếu sửa `backtest.js` hoặc `indicators.js`).
@@ -93,7 +97,7 @@ sau này mở rộng nhiều người dùng có đăng nhập.
 ## Đăng nhập & phân quyền (Supabase Auth)
 
 - Mọi trang dashboard (hiện là `index.html` (khung), `dashboard.html`, `priceboard.html`, `heatmap.html`, `scan.html`, `rrg.html`,
-  `backtest.html`, `signals.html`, `paper.html`, `admin.html`) phải: đặt `class="auth-checking"` trên `<html>`,
+  `backtest.html`, `signals.html`, `paper.html`, `reader.html`, `admin.html`) phải: đặt `class="auth-checking"` trên `<html>`,
   nạp supabase-js + `config.js` + `auth.js`, và chỉ chạy code trang bên trong `VST.auth.guard().then(...)`
   (`guard({ admin: true })` cho trang quản trị). Chưa đăng nhập / chưa `active` → tự chuyển về `login.html`.
 - Bảng `profiles`: `role` ∈ admin/user, `status` ∈ pending/active/locked. Người mới luôn là `pending`.
@@ -116,6 +120,9 @@ sau này mở rộng nhiều người dùng có đăng nhập.
 - Tin tức (`NewsSource`): file JSON mỗi ngày `https://raw.githubusercontent.com/ttqteo/news-crawler/master/docs/news/MM-DD-YYYY.json`
   (dự án mã nguồn mở, tổng hợp Vietstock, VnExpress, Markettimes, ĐTCK…; GitHub cho phép CORS). Không có lọc theo mã
   phía máy chủ → tải theo ngày (mặc định 7, tối đa 28) và lọc ở trình duyệt; chỉ tải khi mở tab Tin tức.
+- Đọc báo (`FeedSource`): RSS của VnEconomy, CafeF, Vietstock, Investing, Bloomberg; Reuters không còn RSS nên lấy qua
+  Google Tin tức (`site:reuters.com`). Các báo không bật CORS → đi qua proxy công khai trong `VST.config.reader.proxies`
+  (rss2json trả JSON, allorigins/codetabs trả XML), không khóa API.
 - Lỗi phải được đổi sang câu tiếng Việt dễ hiểu trước khi hiển thị (xem `DataError` trong `js/data.js`).
 - Thời gian API là Unix UTC; khi vẽ cộng 7 giờ để hiển thị giờ Việt Nam.
 

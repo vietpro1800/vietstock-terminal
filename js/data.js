@@ -176,7 +176,10 @@ window.VST = window.VST || {};
     }
   }
 
-  async function fetchJson(url) {
+  function fetchJson(url) { return fetchBody(url, 'json'); }
+  function fetchText(url) { return fetchBody(url, 'text'); }
+
+  async function fetchBody(url, as) {
     const ctrl = new AbortController();
     const timer = setTimeout(function () { ctrl.abort(); }, TIMEOUT_MS);
     let res;
@@ -198,7 +201,7 @@ window.VST = window.VST || {};
       throw err;
     }
     try {
-      return await res.json();
+      return as === 'text' ? await res.text() : await res.json();
     } catch (e) {
       const err = new Error('parse');
       err.kind = 'parse';
@@ -429,6 +432,51 @@ window.VST = window.VST || {};
     }
   }
 
+  // Tin RSS của các báo (trang Đọc báo). Báo không bật CORS nên đọc qua proxy công khai (VST.config.reader.proxies):
+  // thử lần lượt, proxy nào vừa chạy được thì ưu tiên cho lần sau. Kết quả mỗi feed giữ cacheMs.
+  // getFeed(url) → [{ title, link, summary, image, time }] (dạng của VST.reader.parseFeed).
+  class FeedSource {
+    constructor(opts) {
+      this.proxies = opts.proxies;
+      this.cacheMs = opts.cacheMs || 0;
+      this.cache = new Map(); // url → { at, p }
+      this.best = 0;          // chỉ số proxy chạy được gần nhất
+    }
+
+    getFeed(url, force) {
+      const hit = this.cache.get(url);
+      if (hit && !force && Date.now() - hit.at < this.cacheMs) return hit.p;
+      const p = this._load(url);
+      p.catch(() => { if (this.cache.get(url) && this.cache.get(url).p === p) this.cache.delete(url); });
+      this.cache.set(url, { at: Date.now(), p: p });
+      return p;
+    }
+
+    async _load(url) {
+      const n = this.proxies.length;
+      let firstErr = null;
+      for (let k = 0; k < n; k++) {
+        const i = (this.best + k) % n;
+        const px = this.proxies[i];
+        try {
+          let items;
+          if (px.type === 'rss2json') {
+            items = VST.reader.fromRss2Json(await fetchJson(px.url + encodeURIComponent(url)));
+          } else {
+            const text = await fetchText(px.url + encodeURIComponent(url));
+            items = /<(rss|feed|rdf:RDF)[\s>]/i.test(text) ? VST.reader.parseFeed(text) : null;
+          }
+          if (!items) throw Object.assign(new Error('parse'), { kind: 'parse' });
+          this.best = i;
+          return items;
+        } catch (e) {
+          if (!firstErr) firstErr = e;
+        }
+      }
+      throw toDataError(firstErr || {});
+    }
+  }
+
   // Chỉ giữ trường cần dùng; link phải là http(s).
   function slimNews(json) {
     const out = [];
@@ -442,6 +490,7 @@ window.VST = window.VST || {};
         title: String(it.title).trim(),
         summary: String(it.summary || '').trim().slice(0, 400),
         link: link,
+        image: /^https?:\/\//i.test(it.image || '') ? String(it.image) : '',
         source: String(it.source || ''),
         time: Math.floor(time / 1000),
       });
@@ -456,5 +505,6 @@ window.VST = window.VST || {};
   VST.SsiBoardFeed = SsiBoardFeed;
   VST.SsiRealtimeFeed = SsiRealtimeFeed;
   VST.NewsSource = NewsSource;
+  VST.FeedSource = FeedSource;
   VST.parseSsiQuote = parseSsi;
 })();
