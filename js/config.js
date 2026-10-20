@@ -47,7 +47,13 @@ VST.config = {
   rrg: {
     benchmark: 'VNINDEX',
     days: 550,     // số ngày lịch sử tải về (đủ cho khung tuần)
-    batchSize: 6,  // số mã gọi song song khi tải cả danh sách ngành
+    batchSize: 10, // số request song song khi tải toàn bộ ~1500 mã
+    // Danh sách mã & ngành: toàn bộ HOSE/HNX/UPCoM trong js/universe.js (VST.universe.sectors).
+    // Lọc thanh khoản: GTGD trung bình 20 phiên (tỷ đồng) tối thiểu để mã được tính vào chỉ số ngành
+    // và hiện trong danh sách mã của ngành (bỏ mã gần như không giao dịch, gây nhiễu).
+    liquidity: [0, 1, 5, 20],
+    defaultLiquidity: 1,
+    maxShown: 30, // khi xem một ngành: chỉ bật sẵn trên biểu đồ N mã thanh khoản cao nhất
     tails: [4, 8, 12, 20],
     defaultTail: 8,
     // ratio: chu kỳ SMA của RS-Ratio; momentum: số kỳ so sánh RS-Momentum; smooth: EMA làm mượt RS.
@@ -55,25 +61,6 @@ VST.config = {
       D: { label: 'Ngày', ratio: 50, momentum: 10, smooth: 5 },
       W: { label: 'Tuần', ratio: 26, momentum: 4, smooth: 3 },
     },
-    // Nhóm ngành và các mã đại diện (vốn hóa / thanh khoản lớn). Sửa danh sách tại đây.
-    sectors: [
-      { id: 'bank', name: 'Ngân hàng', symbols: ['VCB', 'BID', 'CTG', 'TCB', 'VPB', 'MBB', 'ACB', 'STB', 'HDB', 'VIB', 'TPB', 'SHB'] },
-      { id: 'sec', name: 'Chứng khoán & Bảo hiểm', symbols: ['SSI', 'VND', 'VCI', 'HCM', 'SHS', 'MBS', 'FTS', 'VIX', 'BVH', 'BMI', 'MIG', 'PVI'] },
-      { id: 'realestate', name: 'Bất động sản', symbols: ['VHM', 'VIC', 'VRE', 'NVL', 'PDR', 'DXG', 'KDH', 'NLG', 'DIG', 'CEO', 'NTL'] },
-      { id: 'ip', name: 'Khu công nghiệp', symbols: ['KBC', 'IDC', 'SZC', 'BCM', 'VGC', 'SIP', 'LHG', 'NTC'] },
-      { id: 'steel', name: 'Thép & Vật liệu', symbols: ['HPG', 'HSG', 'NKG', 'SMC', 'TLH', 'VGS', 'HT1', 'KSB'] },
-      { id: 'oil', name: 'Dầu khí', symbols: ['GAS', 'PLX', 'PVD', 'PVS', 'BSR', 'OIL', 'PVC', 'PVB'] },
-      { id: 'power', name: 'Điện & Năng lượng', symbols: ['POW', 'REE', 'PC1', 'GEG', 'NT2', 'HDG', 'QTP', 'GEX'] },
-      { id: 'tech', name: 'Công nghệ & Viễn thông', symbols: ['FPT', 'CMG', 'VGI', 'CTR', 'FOX', 'ELC', 'ITD'] },
-      { id: 'retail', name: 'Bán lẻ', symbols: ['MWG', 'PNJ', 'FRT', 'DGW', 'PET'] },
-      { id: 'food', name: 'Thực phẩm & Đồ uống', symbols: ['VNM', 'MSN', 'SAB', 'QNS', 'KDC', 'MCH', 'SBT', 'DBC'] },
-      { id: 'rubber', name: 'Cao su & Săm lốp', symbols: ['GVR', 'PHR', 'DPR', 'DRC', 'CSM', 'TRC'] },
-      { id: 'chem', name: 'Hóa chất & Phân bón', symbols: ['DGC', 'DCM', 'DPM', 'CSV', 'LAS', 'BFC'] },
-      { id: 'build', name: 'Xây dựng & Đầu tư công', symbols: ['CTD', 'HHV', 'VCG', 'LCG', 'FCN', 'C4G', 'CII', 'PLC'] },
-      { id: 'seafood', name: 'Thủy sản', symbols: ['VHC', 'ANV', 'IDI', 'FMC', 'MPC', 'CMX'] },
-      { id: 'textile', name: 'Dệt may', symbols: ['TCM', 'TNG', 'MSH', 'VGT', 'STK', 'GIL'] },
-      { id: 'transport', name: 'Vận tải, Cảng & Hàng không', symbols: ['GMD', 'HAH', 'VSC', 'VOS', 'PVT', 'SCS', 'VJC', 'HVN', 'ACV'] },
-    ],
   },
 
   // Trang bảng giá (priceboard.html), kiểu bảng giá SSI iBoard.
@@ -102,15 +89,34 @@ VST.config = {
         'PVC', 'PVI', 'PVS', 'SHS', 'SLS', 'TIG', 'TNG', 'VC3', 'VCS', 'VFS',
       ] },
     ],
+    // Nhóm ngành rút gọn (mã đại diện vốn hóa / thanh khoản lớn) cho ô "Ngành…" của bảng giá.
+    sectors: [
+      { id: 'bank', name: 'Ngân hàng', symbols: ['VCB', 'BID', 'CTG', 'TCB', 'VPB', 'MBB', 'ACB', 'STB', 'HDB', 'VIB', 'TPB', 'SHB'] },
+      { id: 'sec', name: 'Chứng khoán & Bảo hiểm', symbols: ['SSI', 'VND', 'VCI', 'HCM', 'SHS', 'MBS', 'FTS', 'VIX', 'BVH', 'BMI', 'MIG', 'PVI'] },
+      { id: 'realestate', name: 'Bất động sản', symbols: ['VHM', 'VIC', 'VRE', 'NVL', 'PDR', 'DXG', 'KDH', 'NLG', 'DIG', 'CEO', 'NTL'] },
+      { id: 'ip', name: 'Khu công nghiệp', symbols: ['KBC', 'IDC', 'SZC', 'BCM', 'VGC', 'SIP', 'LHG', 'NTC'] },
+      { id: 'steel', name: 'Thép & Vật liệu', symbols: ['HPG', 'HSG', 'NKG', 'SMC', 'TLH', 'VGS', 'HT1', 'KSB'] },
+      { id: 'oil', name: 'Dầu khí', symbols: ['GAS', 'PLX', 'PVD', 'PVS', 'BSR', 'OIL', 'PVC', 'PVB'] },
+      { id: 'power', name: 'Điện & Năng lượng', symbols: ['POW', 'REE', 'PC1', 'GEG', 'NT2', 'HDG', 'QTP', 'GEX'] },
+      { id: 'tech', name: 'Công nghệ & Viễn thông', symbols: ['FPT', 'CMG', 'VGI', 'CTR', 'FOX', 'ELC', 'ITD'] },
+      { id: 'retail', name: 'Bán lẻ', symbols: ['MWG', 'PNJ', 'FRT', 'DGW', 'PET'] },
+      { id: 'food', name: 'Thực phẩm & Đồ uống', symbols: ['VNM', 'MSN', 'SAB', 'QNS', 'KDC', 'MCH', 'SBT', 'DBC'] },
+      { id: 'rubber', name: 'Cao su & Săm lốp', symbols: ['GVR', 'PHR', 'DPR', 'DRC', 'CSM', 'TRC'] },
+      { id: 'chem', name: 'Hóa chất & Phân bón', symbols: ['DGC', 'DCM', 'DPM', 'CSV', 'LAS', 'BFC'] },
+      { id: 'build', name: 'Xây dựng & Đầu tư công', symbols: ['CTD', 'HHV', 'VCG', 'LCG', 'FCN', 'C4G', 'CII', 'PLC'] },
+      { id: 'seafood', name: 'Thủy sản', symbols: ['VHC', 'ANV', 'IDI', 'FMC', 'MPC', 'CMX'] },
+      { id: 'textile', name: 'Dệt may', symbols: ['TCM', 'TNG', 'MSH', 'VGT', 'STK', 'GIL'] },
+      { id: 'transport', name: 'Vận tải, Cảng & Hàng không', symbols: ['GMD', 'HAH', 'VSC', 'VOS', 'PVT', 'SCS', 'VJC', 'HVN', 'ACV'] },
+    ],
     defaultGroup: 'VN30',
     // Mã có sẵn trong "Danh mục của tôi" lần đầu mở trang.
     defaultWatchlist: ['HPG', 'FPT', 'VCB', 'SSI', 'MWG'],
   },
 
-  // Trang lọc cổ phiếu. Danh sách mã = tất cả mã trong VST.config.rrg.sectors (kèm tên ngành).
+  // Trang lọc cổ phiếu. Danh sách mã = toàn bộ HOSE/HNX/UPCoM trong js/universe.js (VST.universe).
   scan: {
     days: 420,       // số ngày lịch sử tải về (đủ ~250 phiên cho MA200 và đỉnh 52 tuần)
-    batchSize: 6,    // số mã gọi song song
+    batchSize: 10,   // số request song song
     cacheMinutes: 10, // giữ kết quả tính trong phiên trình duyệt, tránh tải lại khi quay lại trang
   },
 

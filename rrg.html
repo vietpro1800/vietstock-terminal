@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0e1117">
   <title>RRG ngành · ThảoChi Stock</title>
-  <link rel="stylesheet" href="css/style.css?v=20261021">
+  <link rel="stylesheet" href="css/style.css?v=20261022">
 </head>
 <body>
   <header class="topbar">
@@ -40,6 +40,10 @@
         <div class="form-field">
           <span id="rrg-tail-label">Đuôi (số kỳ)</span>
           <div id="rrg-tail" class="seg" role="group" aria-labelledby="rrg-tail-label"></div>
+        </div>
+        <div class="form-field">
+          <span id="rrg-liq-label" title="Giá trị giao dịch trung bình 20 phiên tối thiểu để mã được tính vào chỉ số ngành">GTGD TB20</span>
+          <div id="rrg-liq" class="seg" role="group" aria-labelledby="rrg-liq-label"></div>
         </div>
         <div id="rrg-bench-field" class="form-field" hidden>
           <span id="rrg-bench-label">So với</span>
@@ -97,12 +101,13 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
-  <script src="js/config.js?v=20261021"></script>
-  <script src="js/auth.js?v=20261021"></script>
-  <script src="js/data.js?v=20261021"></script>
-  <script src="js/indicators.js?v=20261021"></script>
-  <script src="js/rrg.js?v=20261021"></script>
-  <script src="js/rrg-chart.js?v=20261021"></script>
-  <script src="js/rrg-page.js?v=20261021"></script>
+  <script src="js/config.js?v=20261022"></script>
+  <script src="js/universe.js?v=20261022"></script>
+  <script src="js/auth.js?v=20261022"></script>
+  <script src="js/data.js?v=20261022"></script>
+  <script src="js/indicators.js?v=20261022"></script>
+  <script src="js/rrg.js?v=20261022"></script>
+  <script src="js/rrg-chart.js?v=20261022"></script>
+  <script src="js/rrg-page.js?v=20261022"></script>
 </body>
 </html>
