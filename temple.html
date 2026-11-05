@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="vi" data-page="temple" class="auth-checking">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1a0806">
+  <title>Khấn mã · ThảoChi Stock</title>
+  <link rel="stylesheet" href="css/style.css?v=20261106">
+</head>
+<body class="tppage">
+  <header class="topbar">
+    <h1 class="brand"><a href="dashboard.html">ThảoChi<span>Stock</span></a></h1>
+    <span class="page-tag">Khấn mã</span>
+    <div class="status">
+      <span id="status-dot" class="dot"></span>
+      <span id="status-text">Đang tải…</span>
+    </div>
+    <div id="user-bar" class="user-bar"></div>
+  </header>
+
+  <div id="notice" class="notice" role="alert" hidden>
+    <span id="notice-text"></span>
+    <button id="notice-close" type="button" aria-label="Đóng thông báo">×</button>
+  </div>
+
+  <main class="tp">
+    <section class="tp-hall" aria-label="Điện khấn mã">
+      <div class="tp-eaves" aria-hidden="true"></div>
+      <span class="tp-lantern tp-lantern-l" aria-hidden="true">福</span>
+      <span class="tp-lantern tp-lantern-r" aria-hidden="true">祿</span>
+
+      <div class="tp-head">
+        <div class="tp-info">
+          <h2 class="tp-name">🏯 Điện <span id="tp-sym">—</span></h2>
+          <p class="tp-line">
+            <span id="tp-online">Kênh 1 · 1 đạo hữu</span>
+            <span id="tp-mode" class="tp-badge" hidden></span>
+          </p>
+          <p class="tp-line">Pháp danh: <b id="tp-dharma" class="tp-gold">—</b></p>
+          <p class="tp-line">🙌 <span id="tp-count">0 lời khấn</span> trong 24 giờ</p>
+          <p class="tp-line">🪔 <span id="tp-incense">Chưa có nén nhang nào</span></p>
+        </div>
+
+        <div class="tp-tools" role="toolbar" aria-label="Công cụ">
+          <button id="tp-music" type="button" class="tp-tool" aria-pressed="false" title="Nhạc thiền: Tắt">🎵<span class="sr-only">Nhạc thiền</span></button>
+          <button id="tp-sound" type="button" class="tp-tool" aria-pressed="true" title="Âm thanh: Bật">🔊<span class="sr-only">Âm thanh</span></button>
+          <button id="tp-chart" type="button" class="tp-tool" title="Xem đồ thị kỹ thuật">📈<span class="sr-only">Xem đồ thị kỹ thuật</span></button>
+          <button id="tp-fortune" type="button" class="tp-tool" title="Xin quẻ hôm nay">🎋<span class="sr-only">Xin quẻ</span></button>
+          <button id="tp-switch" type="button" class="tp-tool" title="Đổi mã" aria-expanded="false" aria-controls="tp-pick">⇄<span class="sr-only">Đổi mã</span></button>
+        </div>
+      </div>
+
+      <form id="tp-pick" class="tp-pick" autocomplete="off" hidden>
+        <label for="tp-pick-input" class="sr-only">Mã cổ phiếu</label>
+        <input id="tp-pick-input" class="input" maxlength="10" placeholder="Nhập mã, ví dụ HPG" list="tp-pick-list" enterkeyhint="go">
+        <datalist id="tp-pick-list"></datalist>
+        <button type="submit" class="btn btn-sm">Vào điện</button>
+      </form>
+
+      <div id="tp-board" class="tp-board" aria-label="Bảng giá trong điện">
+        <div id="tp-ix" class="tp-ix"></div>
+        <div id="tp-grid" class="tp-grid"></div>
+        <p id="tp-board-foot" class="tp-board-foot">Đang tải bảng giá…</p>
+      </div>
+
+      <div id="tp-omen" class="tp-omen" role="status" hidden></div>
+
+      <div class="tp-altar">
+        <div class="tp-altar-top">
+          <span class="tp-candle" aria-hidden="true"></span>
+          <div class="tp-bowl" aria-hidden="true">
+            <div id="tp-sticks" class="tp-sticks"></div>
+            <div id="tp-smoke" class="tp-smoke"></div>
+          </div>
+          <span class="tp-candle" aria-hidden="true"></span>
+        </div>
+        <div class="tp-altar-table">
+          <span id="tp-plaque" class="tp-plaque">—</span>
+          <span id="tp-target" class="tp-target"></span>
+        </div>
+      </div>
+
+      <div class="tp-floor" aria-hidden="true">
+        <div class="tp-carpet"></div>
+        <div id="tp-monks" class="tp-monks"></div>
+      </div>
+
+      <div class="tp-mo-wrap">
+        <button id="tp-mo" type="button" class="tp-mo" aria-label="Gõ mõ tích công đức">
+          <svg viewBox="0 0 64 48" aria-hidden="true">
+            <ellipse cx="32" cy="28" rx="27" ry="17" class="tp-mo-body"/>
+            <path d="M10 28h44" class="tp-mo-slit"/>
+            <circle cx="20" cy="20" r="2.4" class="tp-mo-eye"/>
+            <path d="M44 6l12 10" class="tp-mo-stick"/>
+            <circle cx="57" cy="17" r="4" class="tp-mo-knob"/>
+          </svg>
+          <span>Gõ mõ</span>
+        </button>
+        <span id="tp-merit" class="tp-merit">0 công đức</span>
+        <span id="tp-session" class="tp-session">—</span>
+      </div>
+      <div id="tp-fx" class="tp-fx" aria-hidden="true"></div>
+    </section>
+
+    <details id="tp-log" class="tp-log">
+      <summary>Lời khấn trong điện (<span id="tp-log-n">0</span>)</summary>
+      <ul id="tp-list" class="tp-list" aria-live="polite"></ul>
+    </details>
+
+    <section class="tp-compose" aria-label="Khấn">
+      <div id="tp-presets" class="tp-presets"></div>
+      <form id="tp-form" class="tp-form" autocomplete="off">
+        <label for="tp-input" class="sr-only">Lời khấn</label>
+        <input id="tp-input" class="input tp-input" maxlength="120" placeholder="Lời khấn của đạo hữu…" enterkeyhint="send">
+        <button id="tp-pray" type="submit" class="tp-btn tp-btn-pray">Khấn 🙏</button>
+        <button id="tp-light" type="button" class="tp-btn tp-btn-light">🪔 Thắp nhang</button>
+      </form>
+      <p class="tp-note">Chỉ để vui — không phải khuyến nghị đầu tư. Mọi tài khoản đang hoạt động đều thấy lời khấn.</p>
+    </section>
+
+    <div id="tp-dialog" class="tp-dialog" role="dialog" aria-modal="true" aria-labelledby="tp-dialog-title" hidden>
+      <div class="tp-dialog-card">
+        <h3 id="tp-dialog-title">Quẻ hôm nay</h3>
+        <div id="tp-dialog-body"></div>
+        <button id="tp-dialog-close" type="button" class="btn btn-block">Nam mô, đã hiểu 🙏</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+  <script src="js/config.js?v=20261106"></script>
+  <script src="js/universe.js?v=20261106"></script>
+  <script src="js/auth.js?v=20261106"></script>
+  <script src="js/data.js?v=20261106"></script>
+  <script src="js/priceboard.js?v=20261106"></script>
+  <script src="js/temple.js?v=20261106"></script>
+  <script src="js/temple-page.js?v=20261106"></script>
+</body>
+</html>

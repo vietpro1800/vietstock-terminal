@@ -77,13 +77,18 @@ sau này mở rộng nhiều người dùng có đăng nhập.
     Ngưỡng bán (sell), ngưỡng lọc mua (gate), trọng số, giờ khớp lệnh để ước tính KL cả phiên, mốc chấm điểm ở `VST.config.consult`. `js/analysis-page.js` — logic `analysis.html`
     (mở từ nút "Phân tích" trên dashboard). `js/spider.js` — con nhện hiệu ứng (`VST.Spider`,
     xem mục khung ứng dụng); trang Phân tích dùng `consult()` để nhện đáp lần lượt các thẻ (hội chẩn).
+  - `js/temple.js` — trang Khấn mã thuần (`dharmaName` pháp danh theo id, `fortune` quẻ theo người/mã/ngày, `session` giờ giao dịch,
+    `quoteState` trần/sàn + % tới trần qua `VST.priceboard`, `burning` số nén nhang còn cháy). `js/temple-page.js` — logic
+    `temple.html` (cấu hình `VST.config.temple`, màu `--tp-*`; bảng giá rổ VN30 + mã đang khấn, giá realtime qua `VST.SsiBoardFeed`;
+    lời khấn/nhang ở bảng `temple_prayers` (Supabase realtime + presence đếm đạo hữu), thiếu bảng thì "demo offline" lưu `localStorage`;
+    công đức gõ mõ chỉ lưu `localStorage`; âm thanh Web Audio tự tổng hợp). Kiểm thử: `node tests/temple.test.js`.
   - `js/backtest.js` — công cụ backtest thuần (không DOM, không mạng), chạy được cả trong Node.
     `js/backtest-page.js` — logic trang `backtest.html`. Kiểm thử: `node tests/backtest.test.js`
     (phải đạt hết trước khi commit nếu sửa `backtest.js` hoặc `indicators.js`).
   - `js/universe.js` — danh sách ~1500 cổ phiếu toàn 3 sàn (HOSE/HNX/UPCoM) theo ngành ICB (`VST.universe`: `sectors`,
     `info[mã]` = sàn/ngành, `all`). **File sinh tự động** bằng `python3 tools/build_universe.py` (nguồn: dữ liệu
     `symbols.json` của vnstock-js) — không sửa tay; chạy lại script để cập nhật mã mới niêm yết/hủy niêm yết.
-    Chỉ nạp ở `rrg.html`, `scan.html`, `heatmap.html`, `signals.html`, `paper.html` (sau `config.js`).
+    Chỉ nạp ở `rrg.html`, `scan.html`, `heatmap.html`, `signals.html`, `paper.html`, `temple.html` (sau `config.js`).
   - `js/rrg.js` — tính RRG thuần (chỉ số ngành, RS-Ratio, RS-Momentum). `js/rrg-chart.js` — vẽ RRG bằng SVG.
     `js/rrg-page.js` — logic trang `rrg.html`. Ngành và mã lấy từ `VST.universe.sectors`; lọc thanh khoản
     (GTGD TB20) và số mã bật sẵn khi xem một ngành ở `VST.config.rrg`.
@@ -105,7 +110,7 @@ sau này mở rộng nhiều người dùng có đăng nhập.
 ## Đăng nhập & phân quyền (Supabase Auth)
 
 - Mọi trang dashboard (hiện là `index.html` (khung), `dashboard.html`, `analysis.html`, `priceboard.html`, `heatmap.html`, `scan.html`, `rrg.html`,
-  `backtest.html`, `signals.html`, `paper.html`, `reader.html`, `admin.html`) phải: đặt `class="auth-checking"` trên `<html>`,
+  `backtest.html`, `signals.html`, `paper.html`, `reader.html`, `temple.html`, `admin.html`) phải: đặt `class="auth-checking"` trên `<html>`,
   nạp supabase-js + `config.js` + `auth.js`, và chỉ chạy code trang bên trong `VST.auth.guard().then(...)`
   (`guard({ admin: true })` cho trang quản trị). Chưa đăng nhập / chưa `active` → tự chuyển về `login.html`.
 - Bảng `profiles`: `role` ∈ admin/user, `status` ∈ pending/active/locked. Người mới luôn là `pending`.

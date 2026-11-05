@@ -145,6 +145,7 @@ window.VST = window.VST || {};
     { id: 'signals', label: 'Cảnh báo' },
     { id: 'paper', label: 'Danh mục giả lập' },
     { id: 'reader', label: 'Đọc báo' },
+    { id: 'temple', label: 'Khấn mã' },
     { id: 'admin', label: 'Quản trị', admin: true },
   ];
 

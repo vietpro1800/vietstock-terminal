@@ -144,6 +144,24 @@ VST.config = {
     defaultWatchlist: ['HPG', 'FPT', 'VCB', 'SSI', 'MWG'],
   },
 
+  // Trang "Khấn mã" (temple.html, js/temple.js): điện thờ vui, bảng giá rổ VN30 + mã đang khấn, gõ mõ, thắp nhang.
+  // Lời khấn / nén nhang lưu ở bảng temple_prayers (Supabase); công đức gõ mõ chỉ lưu localStorage.
+  temple: {
+    boardGroup: 'VN30',     // rổ hiện trên bảng giá trong điện (id trong VST.config.priceboard.groups)
+    indices: [
+      { symbol: 'VNINDEX', name: 'VN-Index' },
+      { symbol: 'HNX', name: 'HNX' },
+      { symbol: 'UPCOM', name: 'UPCoM' },
+    ],
+    days: 12,               // số ngày nến tải để lấy giá đóng cửa và tham chiếu
+    batchSize: 6,
+    refreshMs: 30000,       // làm mới chỉ số / nến ngày (giá khớp mã là realtime)
+    incenseMinutes: 30,     // một nén nhang cháy trong N phút
+    prayerHours: 24,        // hiện lời khấn trong N giờ gần nhất
+    prayerLimit: 60,
+    maxLen: 120,            // độ dài tối đa lời khấn (khớp supabase/schema.sql)
+  },
+
   // Trang bản đồ nhiệt (heatmap.html). Ngành và sàn của mỗi mã lấy từ js/universe.js (VST.universe).
   heatmap: {
     days: 130,          // số ngày lịch sử tải về (đủ ~85 phiên cho kỳ 3 tháng)

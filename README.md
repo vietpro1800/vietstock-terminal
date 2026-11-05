@@ -149,6 +149,7 @@ backtest.html       Backtest chiến lược (cần đăng nhập)
 signals.html        Cảnh báo Mua/Bán theo chiến lược, theo dõi % lãi/lỗ và T+ (cần đăng nhập)
 paper.html          Danh mục giả lập: mua/bán theo chiến lược, theo dõi lãi/lỗ (cần đăng nhập)
 reader.html         Đọc báo: tin tổng hợp VnEconomy, CafeF, Vietstock, Investing, Reuters, Bloomberg theo chuyên mục (cần đăng nhập)
+temple.html         Khấn mã: điện thờ vui — bảng giá VN30 + mã đang khấn, gõ mõ, thắp nhang, lời khấn chung (cần đăng nhập)
 css/style.css       Giao diện (biến màu ở :root)
 js/config.js        Cấu hình: danh sách mã, chu kỳ làm mới, khung thời gian, Supabase URL + publishable key
 js/auth.js          Supabase client, kiểm tra đăng nhập/quyền, thông báo lỗi tiếng Việt
@@ -166,6 +167,8 @@ js/paper.js         Danh mục giả lập: chia vốn, chạy chiến lược t
 js/paper-page.js    Logic trang danh mục giả lập
 js/reader.js        Đọc báo: đọc RSS/Atom, gộp tin trùng, lọc theo chuyên mục/báo/từ khóa (hàm thuần)
 js/reader-page.js   Logic trang đọc báo
+js/temple.js        Khấn mã: pháp danh, quẻ, phiên giao dịch, trần/sàn, nén nhang (hàm thuần)
+js/temple-page.js   Logic trang khấn mã
 js/scan.js          Bộ lọc cổ phiếu: tính chỉ số mỗi mã, các tiêu chí, bộ lọc mẫu (hàm thuần)
 js/scan-page.js     Logic trang lọc cổ phiếu
 js/rrg.js           Tính RRG: chỉ số ngành, RS-Ratio, RS-Momentum (hàm thuần)
@@ -175,13 +178,13 @@ js/universe.js      ~1500 cổ phiếu HOSE/HNX/UPCoM theo ngành ICB (sinh bằ
 js/shell.js         Khung ứng dụng (index.html): điều hướng, giữ trang đã mở
 js/heatmap.js       Bản đồ nhiệt: bố cục treemap, % thay đổi, mức màu (hàm thuần)
 js/heatmap-page.js  Logic trang bản đồ nhiệt
-tests/              Kiểm thử: `node tests/<tên>.test.js` (backtest, rrg, scan, priceboard, heatmap, news, paper, signals, reader) hoặc mở tests/index.html
+tests/              Kiểm thử: `node tests/<tên>.test.js` (backtest, rrg, scan, priceboard, heatmap, news, paper, signals, reader, temple) hoặc mở tests/index.html
 js/board.js         Bảng giá
 js/orderbook.js     Sổ lệnh 3 bước giá + khớp lệnh realtime
 js/chat.js          Thảo luận theo mã (Supabase realtime)
 js/news.js          Tin tức liên quan đến mã đang xem (lọc tin tổng hợp từ các báo tài chính)
 js/app.js           Khởi tạo, sự kiện, tự làm mới
-supabase/schema.sql Bảng profiles, stock_comments, trigger, RLS — chạy trong Supabase SQL Editor
+supabase/schema.sql Bảng profiles, stock_comments, paper_portfolios, temple_prayers, trigger, RLS — chạy trong Supabase SQL Editor
 CLAUDE.md           Quy ước phát triển
 ```
 
@@ -208,6 +211,16 @@ chia chuyên mục Chứng khoán / Doanh nghiệp / Vĩ mô – Đầu tư / T�
 Bật/tắt từng báo, tìm theo từ khóa (không cần gõ dấu), tin trùng giữa các mục/báo được gộp; bấm tin để đọc bài gốc.
 Danh sách feed RSS ở `VST.config.reader`. Báo không cho đọc RSS trực tiếp từ trình duyệt (CORS) nên đi qua proxy công khai
 (rss2json, allorigins, codetabs — thử lần lượt); nếu proxy lỗi, tin từ news-crawler vẫn hiện.
+
+## Khấn mã
+
+Trang `temple.html` (tab "Khấn mã"): điện thờ vui cho một mã. Bảng giá LED gồm VN-Index/HNX/UPCoM, rổ VN30 và mã đang khấn
+ở giữa (giá khớp realtime qua bảng giá SSI; bấm ô khác để sang điện mã đó, nút ⇄ để nhập mã bất kỳ). Bàn thờ hiện giá trần
+và còn bao nhiêu % tới trần; khi mã tím trần thì "linh nghiệm" (hoa sen rơi, chuông). Gõ mõ tích công đức (lưu trên trình duyệt),
+thắp nhang (một nén cháy 30 phút) và khấn bằng lời mẫu hoặc tự viết — mọi tài khoản đang hoạt động cùng thấy, realtime, kèm số
+đạo hữu đang trong điện. Xin quẻ mỗi ngày một quẻ cho mỗi mã. Âm thanh mõ/chuông/nhạc thiền tự tổng hợp bằng Web Audio.
+Lời khấn lưu ở bảng `temple_prayers` — **chạy lại `supabase/schema.sql`** để bật; khi chưa có bảng, trang chạy chế độ
+"demo offline" (lời khấn chỉ lưu trên máy). Chỉ để vui, không phải khuyến nghị đầu tư.
 
 ## Danh mục giả lập
 

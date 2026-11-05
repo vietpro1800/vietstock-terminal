@@ -20,7 +20,7 @@ VST.Spider = (function () {
   const SPREAD_CHANCE = 0.3; // tỷ lệ đáp xòe chân giữa khung (còn lại bám một điểm trên mép khung)
   // Phần tử nhện có thể đáp khi lang thang (trong trang đang mở): khung, thẻ, bảng, hàng bảng, nút, ô nhập…
   const SELECTOR = '.panel, .an-card, .fa-main, .fa-book, .fa-side-tabs, .pb-top, .pb-toolbar, .pb-ix-sum, ' +
-    '.hm-wrap, .hm-bar, .hm-controls, .bt-disclaimer, table, tbody tr, .btn, .seg, .input, .tabs, .an-chip, h2';
+    '.hm-wrap, .hm-bar, .hm-controls, .tp-board, .tp-info, .tp-compose, .bt-disclaimer, table, tbody tr, .btn, .seg, .input, .tabs, .an-chip, h2';
   const MIN_W = 60, MIN_H = 22;          // nhỏ hơn thì bỏ qua
   const SPREAD_W = 120, SPREAD_H = 60;   // phần đang thấy đủ lớn mới đáp xòe chân
   const EDGE_PAD = 6;                    // điểm bám cách mép canvas tối thiểu

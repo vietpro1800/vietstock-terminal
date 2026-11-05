@@ -341,6 +341,96 @@ create policy "Xóa danh mục giả lập của mình"
   to authenticated
   using (user_id = (select auth.uid()) and (select public.is_active()));
 
+-- 9. Khấn mã (temple.html) --------------------------------------------
+-- Lời khấn và lượt thắp nhang theo mã. kind: pray (có lời) | incense (thắp nhang, lời có thể trống).
+create table if not exists public.temple_prayers (
+  id           bigint generated always as identity primary key,
+  symbol       text not null check (symbol ~ '^[A-Z0-9]{2,10}$'),
+  user_id      uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  author_name  text not null default '',
+  kind         text not null default 'pray' check (kind in ('pray', 'incense')),
+  body         text not null default '' check (char_length(body) <= 120),
+  created_at   timestamptz not null default now(),
+  constraint temple_prayers_body_check check (kind = 'incense' or char_length(btrim(body)) >= 1)
+);
+
+comment on table public.temple_prayers is 'Lời khấn và lượt thắp nhang theo mã (trang Khấn mã, chỉ để vui).';
+
+create index if not exists temple_prayers_symbol_created_idx
+  on public.temple_prayers (symbol, created_at desc);
+
+-- Tên, giờ gửi do máy chủ quyết định; chống spam (tối đa 6 lượt / 30 giây).
+create or replace function public.prepare_temple_prayer()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  recent int;
+begin
+  new.user_id := (select auth.uid());
+  new.created_at := now();
+  new.body := btrim(coalesce(new.body, ''));
+  select coalesce(nullif(btrim(p.display_name), ''), split_part(p.email, '@', 1))
+    into new.author_name
+    from public.profiles p where p.id = new.user_id;
+  new.author_name := coalesce(new.author_name, '');
+  select count(*) into recent from public.temple_prayers
+    where user_id = new.user_id and created_at > now() - interval '30 seconds';
+  if recent >= 6 then
+    raise exception 'Bạn gửi quá nhanh, vui lòng đợi một lát.';
+  end if;
+  return new;
+end;
+$$;
+
+revoke execute on function public.prepare_temple_prayer() from public, anon, authenticated;
+
+drop trigger if exists temple_prayers_prepare on public.temple_prayers;
+create trigger temple_prayers_prepare
+  before insert on public.temple_prayers
+  for each row execute function public.prepare_temple_prayer();
+
+alter table public.temple_prayers enable row level security;
+
+revoke all on public.temple_prayers from anon, authenticated;
+grant select, delete on public.temple_prayers to authenticated;
+grant insert (symbol, kind, body) on public.temple_prayers to authenticated;
+
+drop policy if exists "Tài khoản hoạt động được xem lời khấn" on public.temple_prayers;
+create policy "Tài khoản hoạt động được xem lời khấn"
+  on public.temple_prayers
+  for select
+  to authenticated
+  using ((select public.is_active()));
+
+drop policy if exists "Tài khoản hoạt động được khấn" on public.temple_prayers;
+create policy "Tài khoản hoạt động được khấn"
+  on public.temple_prayers
+  for insert
+  to authenticated
+  with check (user_id = (select auth.uid()) and (select public.is_active()));
+
+drop policy if exists "Xóa lời khấn của mình hoặc admin xóa" on public.temple_prayers;
+create policy "Xóa lời khấn của mình hoặc admin xóa"
+  on public.temple_prayers
+  for delete
+  to authenticated
+  using ((user_id = (select auth.uid()) and (select public.is_active())) or (select public.is_admin()));
+
+do $$
+begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
+     and not exists (
+       select 1 from pg_publication_tables
+       where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'temple_prayers'
+     ) then
+    alter publication supabase_realtime add table public.temple_prayers;
+  end if;
+end;
+$$;
+
 -- =====================================================================
 -- SAU KHI CHẠY FILE: đăng ký tài khoản trên web, xác nhận email, rồi chạy
 -- câu lệnh sau (thay email của bạn) để đặt làm admin đầu tiên:
